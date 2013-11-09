@@ -24,6 +24,6 @@
   <run_depend>unique_id</run_depend>
   <run_depend>uuid_msgs</run_depend>
 
-  <test_depend>unittest</test_depend>
+  <test_depend>rosunit</test_depend>
 
 </package>

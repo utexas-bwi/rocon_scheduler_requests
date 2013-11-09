@@ -14,5 +14,5 @@ catkin_python_setup()
 
 ## Unit tests
 if (CATKIN_ENABLE_TESTING)
-  #catkin_add_nosetests(test_your_node tests/test_your_node.py)
+  add_subdirectory(tests)
 endif()
