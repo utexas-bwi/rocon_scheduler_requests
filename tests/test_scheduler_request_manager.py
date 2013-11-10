@@ -13,12 +13,16 @@ from uuid_msgs.msg import UniqueID
 import unique_id
 
 # module being tested:
-from scheduler_request_manager import *
+import scheduler_request_manager.requester as requester
 
 class TestSchedulerRequestManager(unittest.TestCase):
     """Unit tests for rocon scheduler request manager.
     """
-    pass
+
+    def test_empty_request(self):
+        """ Issue empty allocation request.
+        """
+        r = requester.Requester()
 
 if __name__ == '__main__':
     import rosunit
