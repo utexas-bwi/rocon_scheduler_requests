@@ -1,0 +1,14 @@
+<!-- rostest launch file for Python scheduler and requester tests
+
+     This unit test uses rostest, because the scheduler request
+     interface requires a ROS environment.  
+-->
+
+<launch>
+
+  <!-- start requester Python node -->
+  <test pkg="scheduler_request_manager" type="test_requester.py"
+        name="py_requester"
+        test-name="py_requester" time-limit="5.0" />
+
+</launch>
