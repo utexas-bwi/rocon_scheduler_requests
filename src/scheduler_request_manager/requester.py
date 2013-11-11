@@ -46,11 +46,13 @@ knowledge of scheduler request state transitions.
 # enable some python3 compatibility options:
 from __future__ import absolute_import, print_function, unicode_literals
 
+import rospy
 import unique_id
 from scheduler_msgs.msg import AllocateResources
 from scheduler_msgs.msg import Request
 from scheduler_msgs.msg import SchedulerFeedback
 
+SCHEDULER_TOPIC = "rocon_scheduler"
 
 """
     :class:`Requester` manages the scheduler resources requested by a
@@ -73,3 +75,26 @@ class Requester:
         if uuid is None:
             uuid = unique_id.fromRandom()
         self.requester_id = uuid
+        self.topic_name = SCHEDULER_TOPIC + '_' + str(uuid)
+        rospy.loginfo('Rocon resource requester topic: ' + self.topic_name)
+        self.sub = rospy.Subscriber(self.topic_name,
+                                    SchedulerFeedback,
+                                    self.feedback)
+        self.alloc = AllocateResources()
+        self.alloc.requester = unique_id.toMsg(self.requester_id)
+        self.pub = rospy.Publisher(SCHEDULER_TOPIC, AllocateResources)
+        self.timer = rospy.Timer(rospy.Duration(1.0), self.heartbeat)
+
+    def feedback(self, msg):
+        """ Scheduler feedback message handler."""
+        pass                    # test scaffolding
+
+    def heartbeat(self, event):
+        """ Scheduler request heartbeat timer handler.
+
+        Publishes all current allocation requests to the scheduler.
+        """
+        rospy.loginfo('Rocon resource requester heartbeat')
+        print('Rocon resource requester heartbeat')
+        self.alloc.header.stamp = event.current_real
+        self.pub.publish(self.alloc)

@@ -11,4 +11,14 @@
         name="py_requester"
         test-name="py_requester" time-limit="5.0" />
 
+  <!-- check that /rocon_scheduler topic is sent -->
+  <test test-name="empty_request_test"
+        pkg="rostest" type="hztest" name="empty_request_test" >
+    <param name="hz" value="1.0" />
+    <param name="hzerror" value="0.75" />
+    <param name="test_duration" value="4.0" />    
+    <param name="topic" value="rocon_scheduler" />  
+    <param name="wait_time" value="1.0" />
+  </test>
+
 </launch>
