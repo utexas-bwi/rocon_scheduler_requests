@@ -8,7 +8,7 @@
 
   <!-- start requester Python node -->
   <test pkg="scheduler_request_manager" type="test_requester.py"
-        name="py_requester"
+        name="test_requester_py"
         test-name="py_requester" time-limit="5.0" />
 
   <!-- check that /rocon_scheduler topic is sent -->

@@ -36,7 +36,7 @@ def run_tests():
 
 if __name__ == '__main__':
 
-    rospy.init_node("test_camera_info_manager")
+    rospy.init_node("test_requester")
 
     # create asynchronous thread for running the tests
     import threading

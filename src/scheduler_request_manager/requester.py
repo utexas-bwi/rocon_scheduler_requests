@@ -1,6 +1,6 @@
 # Software License Agreement (BSD License)
 #
-# Copyright (C) 2012, Jack O'Quin
+# Copyright (C) 2013, Jack O'Quin
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
