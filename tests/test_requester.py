@@ -12,6 +12,7 @@ from uuid_msgs.msg import UniqueID
 import unique_id
 
 # module being tested:
+import scheduler_request_manager.scheduler as scheduler
 import scheduler_request_manager.requester as requester
 
 class TestSchedulerRequestManager(unittest.TestCase):

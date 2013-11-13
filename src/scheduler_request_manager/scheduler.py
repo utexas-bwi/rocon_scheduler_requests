@@ -52,22 +52,23 @@ from scheduler_msgs.msg import AllocateResources
 from scheduler_msgs.msg import Request
 from scheduler_msgs.msg import SchedulerFeedback
 
-SCHEDULER_TOPIC = "rocon_scheduler"
-
 class Scheduler:
     """
-    :class:`Scheduler` manages the resource request messages sent by
-    various rocon services.
+    This class is used by a rocon scheduler to manage all the resource
+    requests sent by various rocon services.
+
+    :param topic: Topic name for resource allocation requests.
+    :type topic: str
 
     """
 
-    def __init__(self):
+    def __init__(self, topic='rocon_scheduler'):
         """Constructor.
 
         Initializes the :class:`Scheduler` and subscribes to the
-        **/scheduler_requests** topic.
+        rocon_scheduler topic.
         """
-        self.topic_name = SCHEDULER_TOPIC
+        self.topic_name = topic
         rospy.loginfo('Rocon scheduler request topic: ' + self.topic_name)
         self.sub = rospy.Subscriber(self.topic_name,
                                     AllocateResources,

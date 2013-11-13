@@ -52,37 +52,38 @@ from scheduler_msgs.msg import AllocateResources
 from scheduler_msgs.msg import Request
 from scheduler_msgs.msg import SchedulerFeedback
 
-SCHEDULER_TOPIC = "rocon_scheduler"
-
 class Requester:
     """
-    :class:`Requester` manages the scheduler resources requested by a
-    rocon service.
+    This class is used by a rocon service to handle its resource
+    requests.
 
     :param uuid: UUID_ of this requester. If None provided, a random
                  uuid will be assigned.
     :type uuid: Standard Python :class:`uuid.UUID` object.
+    :param topic: Topic name for allocating resources.
+    :type topic: str
 
     """
 
-    def __init__(self, uuid=None):
+    def __init__(self, uuid=None, topic='rocon_scheduler'):
         """Constructor.
 
-        Initializes the :class:`Requester`, advertises the scheduler
-        feedback topic and subscribes to the **/scheduler_requests**
+        Initializes the :class:`Requester`, subscribes to its own
+        scheduler feedback topic and advertises the rocon scheduler
         topic.
         """
         if uuid is None:
             uuid = unique_id.fromRandom()
         self.requester_id = uuid
-        self.topic_name = SCHEDULER_TOPIC + '_' + str(uuid)
-        rospy.loginfo('Rocon resource requester topic: ' + self.topic_name)
-        self.sub = rospy.Subscriber(self.topic_name,
+        self.pub_topic = topic
+        self.sub_topic = self.pub_topic + '_' + str(uuid)
+        rospy.loginfo('Rocon resource requester topic: ' + self.sub_topic)
+        self.sub = rospy.Subscriber(self.sub_topic,
                                     SchedulerFeedback,
                                     self.feedback)
         self.alloc = AllocateResources()
         self.alloc.requester = unique_id.toMsg(self.requester_id)
-        self.pub = rospy.Publisher(SCHEDULER_TOPIC, AllocateResources)
+        self.pub = rospy.Publisher(self.pub_topic, AllocateResources)
         self.timer = rospy.Timer(rospy.Duration(1.0), self.heartbeat)
 
     def feedback(self, msg):
