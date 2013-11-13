@@ -8,6 +8,7 @@ Contents:
 
    README
    requester
+   scheduler
    CHANGELOG
 
 Indices and tables

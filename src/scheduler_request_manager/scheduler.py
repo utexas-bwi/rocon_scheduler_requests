@@ -31,9 +31,9 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 """
-.. module:: requester
+.. module:: scheduler
 
-Python interface for rocon services making scheduler requests.
+Python interface for rocon schedulers handling resource requests.
 
 This module provides a relatively simple API, not requiring detailed
 knowledge of scheduler request state transitions.
@@ -54,47 +54,35 @@ from scheduler_msgs.msg import SchedulerFeedback
 
 SCHEDULER_TOPIC = "rocon_scheduler"
 
-class Requester:
+class Scheduler:
     """
-    :class:`Requester` manages the scheduler resources requested by a
-    rocon service.
-
-    :param uuid: UUID_ of this requester. If None provided, a random
-                 uuid will be assigned.
-    :type uuid: Standard Python :class:`uuid.UUID` object.
+    :class:`Scheduler` manages the resource request messages sent by
+    various rocon services.
 
     """
 
-    def __init__(self, uuid=None):
+    def __init__(self):
         """Constructor.
 
-        Initializes the :class:`Requester`, advertises the scheduler
-        feedback topic and subscribes to the **/scheduler_requests**
-        topic.
+        Initializes the :class:`Scheduler` and subscribes to the
+        **/scheduler_requests** topic.
         """
-        if uuid is None:
-            uuid = unique_id.fromRandom()
-        self.requester_id = uuid
-        self.topic_name = SCHEDULER_TOPIC + '_' + str(uuid)
-        rospy.loginfo('Rocon resource requester topic: ' + self.topic_name)
+        self.topic_name = SCHEDULER_TOPIC
+        rospy.loginfo('Rocon scheduler request topic: ' + self.topic_name)
         self.sub = rospy.Subscriber(self.topic_name,
-                                    SchedulerFeedback,
-                                    self.feedback)
+                                    AllocateResources,
+                                    self.allocate_resources)
         self.alloc = AllocateResources()
-        self.alloc.requester = unique_id.toMsg(self.requester_id)
-        self.pub = rospy.Publisher(SCHEDULER_TOPIC, AllocateResources)
-        self.timer = rospy.Timer(rospy.Duration(1.0), self.heartbeat)
+        self.timer = rospy.Timer(rospy.Duration(1.0), self.watchdog)
 
-    def feedback(self, msg):
-        """ Scheduler feedback message handler."""
-        pass                    # test scaffolding
-
-    def heartbeat(self, event):
-        """ Scheduler request heartbeat timer handler.
-
-        Publishes all current allocation requests to the scheduler.
+    def allocate_resources(self, msg):
+        """ Scheduler resource allocation message handler.
         """
-        rospy.loginfo('Rocon resource requester heartbeat')
-        print('Rocon resource requester heartbeat')
-        self.alloc.header.stamp = event.current_real
-        self.pub.publish(self.alloc)
+        # test scaffolding
+        rospy.loginfo('Rocon scheduler request: \n' + msg)
+
+    def watchdog(self, event):
+        """ Scheduler request watchdog timer handler.
+        """
+        # test scaffolding
+        rospy.loginfo('Rocon resource watchdog heartbeat')
