@@ -1,5 +1,5 @@
 scheduler
 ---------
 
-.. automodule:: scheduler
+.. automodule:: scheduler_request_manager.scheduler
    :members:

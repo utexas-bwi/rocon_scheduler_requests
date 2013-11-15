@@ -2,10 +2,11 @@ Overview
 ========
 
 The scheduler_request_manager is a ROS package providing Python and
-C++ interfaces for managing rocon scheduler requests.
+C++ interfaces for managing scheduler requests for the `Robotics in
+Concert`_ project.
 
-*There is initially only an experimental Python module.*  *A similar
-C++ interface will be provided following that proof of concept.*
+*There is initially only an experimental Python module.*  
+*A similar C++ interface will be provided following that proof of concept.*
 
 Scheduler Topics
 ----------------
@@ -40,6 +41,7 @@ request.
 This package provides Python and C++ interface implementations for
 schedulers and requesters to perform those transitions correctly.
 
+.. _`Robotics in Concert`: http://www.robotconcert.org/wiki/Main_Page
 .. _`scheduler_msgs/AllocateResources`: https://github.com/robotics-in-concert/rocon_msgs/blob/hydro-devel/scheduler_msgs/msg/AllocateResources.msg
 .. _`scheduler_msgs/Request`: https://github.com/robotics-in-concert/rocon_msgs/blob/hydro-devel/scheduler_msgs/msg/Request.msg
 .. _`scheduler_msgs/SchedulerFeedback`: https://github.com/robotics-in-concert/rocon_msgs/blob/hydro-devel/scheduler_msgs/msg/SchedulerFeedback.msg

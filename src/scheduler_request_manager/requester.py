@@ -51,6 +51,7 @@ import unique_id
 from scheduler_msgs.msg import AllocateResources
 from scheduler_msgs.msg import Request
 from scheduler_msgs.msg import SchedulerFeedback
+from . import common
 
 class Requester:
     """
@@ -65,7 +66,7 @@ class Requester:
 
     """
 
-    def __init__(self, uuid=None, topic='rocon_scheduler'):
+    def __init__(self, uuid=None, topic=common.SCHEDULER_TOPIC):
         """Constructor.
 
         Initializes the :class:`Requester`, subscribes to its own
@@ -76,7 +77,7 @@ class Requester:
             uuid = unique_id.fromRandom()
         self.requester_id = uuid
         self.pub_topic = topic
-        self.sub_topic = self.pub_topic + '_' + str(uuid)
+        self.sub_topic = common.feedback_topic(uuid, topic)
         rospy.loginfo('Rocon resource requester topic: ' + self.sub_topic)
         self.sub = rospy.Subscriber(self.sub_topic,
                                     SchedulerFeedback,
