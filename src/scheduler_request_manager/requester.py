@@ -81,17 +81,17 @@ class Requester:
         rospy.loginfo('Rocon resource requester topic: ' + self.sub_topic)
         self.sub = rospy.Subscriber(self.sub_topic,
                                     SchedulerFeedback,
-                                    self.feedback)
+                                    self._feedback)
         self.alloc = AllocateResources()
         self.alloc.requester = unique_id.toMsg(self.requester_id)
         self.pub = rospy.Publisher(self.pub_topic, AllocateResources)
-        self.timer = rospy.Timer(rospy.Duration(1.0), self.heartbeat)
+        self.timer = rospy.Timer(rospy.Duration(1.0), self._heartbeat)
 
-    def feedback(self, msg):
+    def _feedback(self, msg):
         """ Scheduler feedback message handler."""
         pass                    # test scaffolding
 
-    def heartbeat(self, event):
+    def _heartbeat(self, event):
         """ Scheduler request heartbeat timer handler.
 
         Publishes all current allocation requests to the scheduler.

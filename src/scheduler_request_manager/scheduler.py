@@ -51,6 +51,7 @@ import unique_id
 from scheduler_msgs.msg import AllocateResources
 from scheduler_msgs.msg import Request
 from scheduler_msgs.msg import SchedulerFeedback
+from . import common
 
 class Scheduler:
     """
@@ -62,27 +63,27 @@ class Scheduler:
 
     """
 
-    def __init__(self, topic='rocon_scheduler'):
+    def __init__(self, topic=common.SCHEDULER_TOPIC):
         """Constructor.
 
-        Initializes the :class:`Scheduler` and subscribes to the
-        rocon_scheduler topic.
+        Initializes the :class:`Scheduler` and subscribes to the rocon
+        scheduler topic.
         """
         self.topic_name = topic
         rospy.loginfo('Rocon scheduler request topic: ' + self.topic_name)
         self.sub = rospy.Subscriber(self.topic_name,
                                     AllocateResources,
-                                    self.allocate_resources)
+                                    self._allocate_resources)
         self.alloc = AllocateResources()
-        self.timer = rospy.Timer(rospy.Duration(1.0), self.watchdog)
+        self.timer = rospy.Timer(rospy.Duration(1.0), self._watchdog)
 
-    def allocate_resources(self, msg):
+    def _allocate_resources(self, msg):
         """ Scheduler resource allocation message handler.
         """
         # test scaffolding
         rospy.loginfo('Rocon scheduler request: \n' + msg)
 
-    def watchdog(self, event):
+    def _watchdog(self, event):
         """ Scheduler request watchdog timer handler.
         """
         # test scaffolding
