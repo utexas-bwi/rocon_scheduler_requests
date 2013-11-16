@@ -101,7 +101,5 @@ class Requester:
 
         Publishes all current allocation requests to the scheduler.
         """
-        rospy.loginfo('Rocon resource requester heartbeat')
-        print('Rocon resource requester heartbeat')
         self.alloc.header.stamp = event.current_real
         self.pub.publish(self.alloc)

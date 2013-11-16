@@ -48,10 +48,81 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import rospy
 import unique_id
+
+# ROS messages
 from scheduler_msgs.msg import AllocateResources
 from scheduler_msgs.msg import Request
 from scheduler_msgs.msg import SchedulerFeedback
+
+# internal modules
 from . import common
+
+
+class Requests:
+    """
+    This class tracks the status of all resource requests made by a
+    single requester.
+
+    :param msg: Initial resource allocation request.
+    :type msg: scheduler_msgs/AllocateResources
+    :param topic: Topic name for resource allocation requests.
+    :type topic: str
+
+    """
+
+    def __init__(self, msg, topic):
+        """ Constructor.
+
+        Initializes the :class:`Requests` and subscribes to the
+        requester feedback topic.
+        """
+        requester_id = unique_id.fromMsg(msg.requester)
+        self.feedback_topic = common.feedback_topic(requester_id, topic)
+        rospy.loginfo('Rocon scheduler feedback topic: ' + self.feedback_topic)
+        self.pub = rospy.Publisher(self.feedback_topic, SchedulerFeedback)
+
+        # set initial status using this message
+        self.resources = {}
+        self.update(msg)
+
+    def _send_feedback(self):
+        """ Build feedback message and send it to the requester. """
+        pass                    # test scaffolding
+
+    def update(self, msg):
+        """ Update requester status.
+
+        :param msg: Latest resource allocation request.
+        :type msg: scheduler_msgs/AllocateResources
+
+        """
+        # Add any new requests to the dictionary.
+        for res in msg.resources:
+            rid = unique_id.fromMsg(res.id)
+            if rid not in self.resources: # new request?
+                self.resources[rid] = res
+
+        # Update status of all requests.  Must iterate over a copy of
+        # the dictionary items, because some may be deleted inside the
+        # loop.
+        for res in self.resources.items():
+            # if res already known
+            rid = unique_id.fromMsg(res.id)
+            rq = self.resources.get(rid)
+            if rq:              # known request?
+                rq.update(msg)
+            else:               # new resource request
+                self.resources[rid] = res
+
+        self._send_feedback()
+
+    def timeout(self, limit, event):
+        """ Check for requester timeout.
+
+        :returns: true if time limit exceeded.
+
+        """
+        return False            # test scaffolding
 
 class Scheduler:
     """
@@ -73,23 +144,31 @@ class Scheduler:
         Initializes the :class:`Scheduler` and subscribes to the rocon
         scheduler topic.
         """
-        self.topic_name = topic
-        rospy.loginfo('Rocon scheduler request topic: ' + self.topic_name)
-        self.sub = rospy.Subscriber(self.topic_name,
+        self.requests = {}      # dict of requesters and their requests
+        self.topic = topic
+        rospy.loginfo('Rocon scheduler request topic: ' + self.topic)
+        self.sub = rospy.Subscriber(self.topic,
                                     AllocateResources,
                                     self._allocate_resources)
-        self.alloc = AllocateResources()
-        self.timer = rospy.Timer(rospy.Duration(1.0 / frequency),
-                                 self._watchdog)
+        self.duration = rospy.Duration(1.0 / frequency)
+        self.time_limit = self.duration * 4.0
+        self.timer = rospy.Timer(self.duration, self._watchdog)
 
     def _allocate_resources(self, msg):
-        """ Scheduler resource allocation message handler.
-        """
+        """ Scheduler resource allocation message handler. """
         # test scaffolding
-        rospy.loginfo('Rocon scheduler request: \n' + msg)
+        rospy.loginfo('Rocon scheduler request: \n' + str(msg))
+        requester_id = unique_id.fromMsg(msg.requester)
+        rqr = self.requests.get(requester_id)
+        if rqr:                 # known requester?
+            rqr.update(msg)
+        else:                   # new requester
+            self.requests[requester_id] = Requests(msg, self.topic)
 
     def _watchdog(self, event):
-        """ Scheduler request watchdog timer handler.
-        """
-        # test scaffolding
-        rospy.loginfo('Rocon resource watchdog heartbeat')
+        """ Scheduler request watchdog timer handler. """
+        # Must iterate over a copy of the dictionary items, because
+        # some may be deleted inside the loop.
+        for requester, rq in self.requests.items():
+            if rq.timeout(self.time_limit, event):
+                del self.requests[requester]

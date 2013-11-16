@@ -41,8 +41,8 @@ scheduler, part of the `Robotics in Concert`_ project.
 
 """
 
-# enable some python3 compatibility options:
-from __future__ import absolute_import, print_function, unicode_literals
+# (unicode_literals not compatible with python2 uuid module)
+from __future__ import absolute_import, print_function
 
 HEARTBEAT_HZ = 1.0 / 4.0
 """ Default requester heartbeat frequency (Hz)."""
