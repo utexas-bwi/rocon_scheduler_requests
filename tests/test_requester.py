@@ -20,9 +20,8 @@ class TestSchedulerRequestManager(unittest.TestCase):
     """
 
     def test_empty_request(self):
-        """ Issue empty allocation request.
-        """
-        r = requester.Requester()
+        """ Issue empty allocation request at 1Hz frequency. """
+        r = requester.Requester(frequency=1.0)
         rospy.sleep(4.0)        # run requester for a while
 
 def run_tests():

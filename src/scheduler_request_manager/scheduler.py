@@ -58,12 +58,16 @@ class Scheduler:
     This class is used by a rocon scheduler to manage all the resource
     requests sent by various rocon services.
 
+    :param frequency: requester heartbeat frequency in Hz.
+    :type frequency: float
     :param topic: Topic name for resource allocation requests.
     :type topic: str
 
     """
 
-    def __init__(self, topic=common.SCHEDULER_TOPIC):
+    def __init__(self,
+                 frequency=common.HEARTBEAT_HZ,
+                 topic=common.SCHEDULER_TOPIC):
         """Constructor.
 
         Initializes the :class:`Scheduler` and subscribes to the rocon
@@ -75,7 +79,8 @@ class Scheduler:
                                     AllocateResources,
                                     self._allocate_resources)
         self.alloc = AllocateResources()
-        self.timer = rospy.Timer(rospy.Duration(1.0), self._watchdog)
+        self.timer = rospy.Timer(rospy.Duration(1.0 / frequency),
+                                 self._watchdog)
 
     def _allocate_resources(self, msg):
         """ Scheduler resource allocation message handler.

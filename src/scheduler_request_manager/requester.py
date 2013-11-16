@@ -61,12 +61,16 @@ class Requester:
     :param uuid: UUID_ of this requester. If None provided, a random
                  uuid will be assigned.
     :type uuid: Standard Python :class:`uuid.UUID` object.
+    :param frequency: requester heartbeat frequency in Hz.
+    :type frequency: float
     :param topic: Topic name for allocating resources.
     :type topic: str
 
     """
 
-    def __init__(self, uuid=None, topic=common.SCHEDULER_TOPIC):
+    def __init__(self, uuid=None,
+                 frequency=common.HEARTBEAT_HZ,
+                 topic=common.SCHEDULER_TOPIC):
         """Constructor.
 
         Initializes the :class:`Requester`, subscribes to its own
@@ -85,7 +89,8 @@ class Requester:
         self.alloc = AllocateResources()
         self.alloc.requester = unique_id.toMsg(self.requester_id)
         self.pub = rospy.Publisher(self.pub_topic, AllocateResources)
-        self.timer = rospy.Timer(rospy.Duration(1.0), self._heartbeat)
+        self.timer = rospy.Timer(rospy.Duration(1.0 / frequency),
+                                 self._heartbeat)
 
     def _feedback(self, msg):
         """ Scheduler feedback message handler."""

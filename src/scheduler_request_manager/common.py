@@ -44,6 +44,9 @@ scheduler, part of the `Robotics in Concert`_ project.
 # enable some python3 compatibility options:
 from __future__ import absolute_import, print_function, unicode_literals
 
+HEARTBEAT_HZ = 1.0 / 4.0
+""" Default requester heartbeat frequency (Hz)."""
+
 SCHEDULER_TOPIC = 'rocon_scheduler'
 """ Default rocon scheduler topic name. """
 
@@ -60,3 +63,4 @@ def feedback_topic(uuid, scheduler_topic=SCHEDULER_TOPIC):
     
     """
     return scheduler_topic + '_' + str(uuid)
+
