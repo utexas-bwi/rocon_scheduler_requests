@@ -82,12 +82,15 @@ class Requests:
         self.pub = rospy.Publisher(self.feedback_topic, SchedulerFeedback)
 
         # set initial status using this message
+        self.feedback_msg = SchedulerFeedback(requester=msg.requester,
+                                              priority=msg.priority)
         self.resources = {}
         self.update(msg)
 
     def _send_feedback(self):
         """ Build feedback message and send it to the requester. """
-        pass                    # test scaffolding
+        self.feedback_msg.header.stamp = rospy.Time.now()
+        self.pub.publish(self.feedback_msg)
 
     def update(self, msg):
         """ Update requester status.
