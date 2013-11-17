@@ -7,8 +7,8 @@ import rospy
 import uuid
 import scheduler_request_manager.requester as requester
 
-TEST_UUID_STR = '01234567-89ab-cdef-0123-456789abcdef'
-TEST_UUID = uuid.UUID(TEST_UUID_STR)
+TEST_UUID_HEX = '0123456789abcdef0123456789abcdef'
+TEST_UUID = uuid.UUID(hex=TEST_UUID_HEX)
 
 if __name__ == '__main__':
 

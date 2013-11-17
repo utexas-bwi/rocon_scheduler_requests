@@ -62,5 +62,5 @@ def feedback_topic(uuid, scheduler_topic=SCHEDULER_TOPIC):
     :returns: Topic name string for replying to this requester.
     
     """
-    return scheduler_topic + '_' + str(uuid)
+    return scheduler_topic + '_' + uuid.hex
 

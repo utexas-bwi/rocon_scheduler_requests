@@ -10,8 +10,8 @@ import unittest
 # module being tested:
 import scheduler_request_manager.common as common
 
-TEST_UUID_STR = '01234567-89ab-cdef-0123-456789abcdef'
-TEST_UUID = uuid.UUID(TEST_UUID_STR)
+TEST_UUID_HEX = '0123456789abcdef0123456789abcdef'
+TEST_UUID = uuid.UUID(hex=TEST_UUID_HEX)
 
 class TestCommonModule(unittest.TestCase):
     """Unit tests for scheduler request manager common module.
@@ -21,11 +21,11 @@ class TestCommonModule(unittest.TestCase):
 
     def test_feedback_default_topic(self):
         self.assertEqual(common.feedback_topic(TEST_UUID),
-                         common.SCHEDULER_TOPIC + '_' + TEST_UUID_STR)
+                         common.SCHEDULER_TOPIC + '_' + TEST_UUID_HEX)
 
     def test_feedback_topic(self):
         topic = common.feedback_topic(TEST_UUID, scheduler_topic='xxx')
-        self.assertEqual(topic, 'xxx_' + TEST_UUID_STR)
+        self.assertEqual(topic, 'xxx_' + TEST_UUID_HEX)
 
 if __name__ == '__main__':
     import rosunit

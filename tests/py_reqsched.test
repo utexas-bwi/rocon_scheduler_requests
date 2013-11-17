@@ -31,7 +31,7 @@
     <param name="hz" value="1.0" />
     <param name="hzerror" value="0.75" />
     <param name="test_duration" value="4.0" />    
-    <param name="topic" value="rocon_scheduler_01234567-89ab-cdef-0123-456789abcdef" />  
+    <param name="topic" value="rocon_scheduler_0123456789abcdef0123456789abcdef" />  
     <param name="wait_time" value="1.0" />
   </test>
   -->

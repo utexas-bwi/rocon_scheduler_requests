@@ -19,7 +19,7 @@ sending messages to that topic is called a **requester**.  Each
 requester assigns itself a `Universally Unique Identifier`_ and
 subscribes to a feedback topic using the string representation of its
 unique ID, in the form
-**/rocon_scheduler_01234567-89ab-cdef-0123-456789abcdef**. The
+**/rocon_scheduler_0123456789abcdef0123456789abcdef**. The
 scheduler will provide status feedback on that topic via
 `scheduler_msgs/SchedulerFeedback`_ messages.
 
