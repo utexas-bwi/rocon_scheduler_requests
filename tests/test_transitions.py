@@ -12,7 +12,7 @@ import unique_id
 from scheduler_msgs.msg import Request
 
 # module being tested:
-import scheduler_request_manager.request as request
+import scheduler_request_manager.transitions as transitions
 
 TEST_UUID = uuid.UUID('01234567-89ab-cdef-fedc-ba9876543210')
 TEST_NEW_MSG = Request(id=unique_id.toMsg(TEST_UUID))
@@ -24,11 +24,11 @@ class TestTransitions(unittest.TestCase):
     """
 
     def test_constructor(self):
-        rq = request.Request(TEST_NEW_MSG)
+        rq = transitions.Request(TEST_NEW_MSG)
         self.assertIsNotNone(rq)
 
     #def test_update(self):
-    #    rq = request.Request(TEST_NEW_MSG)
+    #    rq = transitions.Request(TEST_NEW_MSG)
     #    rq.update()
 
 if __name__ == '__main__':

@@ -8,9 +8,9 @@ Contents:
 
    README
    common
-   request
    requester
    scheduler
+   transitions
    CHANGELOG
 
 Indices and tables

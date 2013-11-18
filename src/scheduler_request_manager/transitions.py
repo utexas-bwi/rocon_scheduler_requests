@@ -31,13 +31,10 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 """
-.. module:: request
+.. module:: transitions
 
-This module tracks the state of a single resource request for rocon
-resource scheduling, part of the `Robotics in Concert`_ project.
-
-.. _`Robotics in Concert`: http://www.robotconcert.org/wiki/Main_Page
-.. _UUID: http://en.wikipedia.org/wiki/Uuid
+This module tracks resource request state transtions as messages flow
+between schedulers and requesters.
 
 """
 
