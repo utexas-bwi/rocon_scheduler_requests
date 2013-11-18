@@ -103,19 +103,15 @@ class Requests:
         for res in msg.resources:
             rid = unique_id.fromMsg(res.id)
             if rid not in self.resources: # new request?
-                self.resources[rid] = res
+                self.resources[rid] = request.Request(res)
 
         # Update status of all requests.  Must iterate over a copy of
         # the dictionary items, because some may be deleted inside the
         # loop.
-        for res in self.resources.items():
-            # if res already known
-            rid = unique_id.fromMsg(res.id)
-            rq = self.resources.get(rid)
-            if rq:              # known request?
-                rq.update(msg)
-            else:               # new resource request
-                self.resources[rid] = res
+        for rid, rq in self.resources.items():
+            rq.update(msg)
+            #if rq.status = ZOMBIE:
+            #    del self.resources[rid]
 
         self._send_feedback()
 

@@ -8,6 +8,7 @@ Contents:
 
    README
    common
+   request
    requester
    scheduler
    CHANGELOG
