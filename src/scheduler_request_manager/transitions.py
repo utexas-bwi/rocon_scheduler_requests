@@ -41,18 +41,30 @@ between schedulers and requesters.
 # (unicode_literals not compatible with python2 uuid module)
 from __future__ import absolute_import, print_function
 
-class Request:
+# Ros messages
+from scheduler_msgs.msg import Request
+
+class ResourceRequest:
     """
     This class tracks the status of a single resource request.
-
-    :param msg: Initial resource allocation request.
-    :type msg: scheduler_msgs/Request
-
     """
 
-    def __init__(self, msg):
+    def __init__(self):
         """ Constructor. """
-        self.msg = msg
+        self.msg = Request()
+
+    def get_resource(self):
+        """ Rocon resource accessor.
+
+        :returns: resource requested.
+        :rtype: rocon_std_msgs/PlatformInfo.
+
+        """
+        return self.msg.resource
+
+    def get_status(self):
+        """ :returns: current status of this request. """
+        return self.msg.status
 
     def update(self, msg):
         """ Update status based on message contents.

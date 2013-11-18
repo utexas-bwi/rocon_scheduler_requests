@@ -103,7 +103,7 @@ class Requests:
         for res in msg.resources:
             rid = unique_id.fromMsg(res.id)
             if rid not in self.resources: # new request?
-                self.resources[rid] = transitions.Request(res)
+                self.resources[rid] = transitions.ResourceRequest(res)
 
         # Update status of all requests.  Must iterate over a copy of
         # the dictionary items, because some may be deleted inside the
