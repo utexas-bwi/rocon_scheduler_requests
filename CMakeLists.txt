@@ -7,10 +7,15 @@ set(${PROJECT_NAME}_MSG_DEPENDENCIES
   scheduler_msgs
   uuid_msgs)
 find_package(catkin REQUIRED
-  COMPONENTS unique_id ${${PROJECT_NAME}_MSG_DEPENDENCIES})
+  COMPONENTS roslint unique_id ${${PROJECT_NAME}_MSG_DEPENDENCIES})
 
 ## Install Python modules
 catkin_python_setup()
+
+# Lint Python modules files
+file(GLOB_RECURSE ${PROJECT_NAME}_PY_SRCS 
+     RELATIVE ${PROJECT_SOURCE_DIR} src/*.py)
+roslint_python(${${PROJECT_NAME}_PY_SRCS})
 
 ## Unit tests
 if (CATKIN_ENABLE_TESTING)
