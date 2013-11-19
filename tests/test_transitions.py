@@ -16,11 +16,16 @@ from scheduler_msgs.msg import Request
 from scheduler_request_manager.transitions import *
 
 TEST_UUID = uuid.UUID('01234567-89ab-cdef-fedc-ba9876543210')
-TEST_RESOURCE = PlatformInfo(os=PlatformInfo.OS_LINUX,
-                             version=PlatformInfo.VERSION_UBUNTU_PRECISE,
-                             system=PlatformInfo.SYSTEM_ROS,
+TEST_RESOURCE = PlatformInfo(os='linux',
+                             version='precise',
+                             system='ros',
                              platform='segbot',
                              name='roberto')
+TEST_WILDCARD = PlatformInfo(os='linux',
+                             version='precise',
+                             system='ros',
+                             platform='segbot',
+                             name=PlatformInfo.NAME_ANY)
 TEST_NEW_MSG = Request(id=unique_id.toMsg(TEST_UUID),
                        resource=TEST_RESOURCE)
 
@@ -31,10 +36,10 @@ class TestTransitions(unittest.TestCase):
     """
 
     def test_constructor(self):
-        rq = ResourceRequest(TEST_RESOURCE)
+        rq = ResourceRequest(TEST_WILDCARD)
         self.assertIsNotNone(rq)
         self.assertEqual(rq.get_status(), Request.NEW)
-        self.assertEqual(rq.get_resource(), TEST_RESOURCE)
+        self.assertEqual(rq.get_resource(), TEST_WILDCARD)
         self.assertNotEqual(rq.get_uuid, TEST_UUID)
 
     def test_constructor_with_uuid(self):
@@ -44,10 +49,11 @@ class TestTransitions(unittest.TestCase):
         self.assertEqual(rq.get_uuid(), TEST_UUID)
 
     def test_grant(self):
-        rq = ResourceRequest(TEST_RESOURCE, uuid=TEST_UUID)
+        rq = ResourceRequest(TEST_WILDCARD, uuid=TEST_UUID)
         self.assertEqual(rq.get_status(), Request.NEW)
         rq.grant(TEST_RESOURCE)
         self.assertEqual(rq.get_status(), Request.GRANTED)
+        self.assertEqual(rq.get_resource(), TEST_RESOURCE)
 
     def test_release(self):
         rq = ResourceRequest(TEST_RESOURCE, uuid=TEST_UUID)
@@ -66,6 +72,17 @@ class TestTransitions(unittest.TestCase):
         self.assertEqual(rq.get_status(), Request.RELEASING)
         rq.free()
         self.assertEqual(rq.get_status(), Request.RELEASED)
+
+    def test_matches(self):
+        rq = ResourceRequest(TEST_WILDCARD)
+        self.assertTrue(rq.matches(TEST_RESOURCE))
+        kobuki = (PlatformInfo(os='linux',
+                               version='precise',
+                               system='ros',
+                               platform='kobuki',
+                               name='roberto'))
+        self.assertFalse(rq.matches(kobuki))
+        
 
     #def test_update(self):
     #    rq = transitions.Request(TEST_NEW_MSG)

@@ -42,11 +42,16 @@ between schedulers and requesters.
 from __future__ import absolute_import, print_function
 
 # Ros dependencies
+from rocon_std_msgs.msg import PlatformInfo
 from scheduler_msgs.msg import Request
 import unique_id
 
+class ResourceNotRequestedError(Exception):
+    """ Error exception: resource does not match the request. """
+    pass
+
 class TransitionError(Exception):
-    """ Invalid state transition request error. """
+    """ Error exception: invalid state transition. """
     pass
 
 class ResourceRequest:
@@ -103,8 +108,7 @@ class ResourceRequest:
         :param resource: Exact resource granted.
         :type resource: rocon_std_msgs/PlatformInfo
         :raises: :class:`TransitionError`
-
-        :todo: check that resource matches the original request
+        :raises: :class:`ResourceNotRequestedError`
 
         """
         if (self.msg.status != Request.NEW and
@@ -112,7 +116,36 @@ class ResourceRequest:
             raise TransitionError('invalid resource grant, status = '
                                   + str(self.msg.status))
         self.msg.status = Request.GRANTED
+        if not self.matches(resource):
+            raise ResourceNotRequestedError(str(resource)
+                                            + ' does not match '
+                                            + str(self.msg.resource))
         self.msg.resource = resource
+
+    def matches(self, resource):
+        """ Check whether a specific resource matches this request.
+
+        :param resource: Exact resource to match.
+        :type resource: rocon_std_msgs/PlatformInfo
+        :returns: true if this resource matches.
+
+        """
+        if (resource.os != self.msg.resource.os and
+            self.msg.resource.os != PlatformInfo.OS_ANY):
+            return False
+        if (resource.version != self.msg.resource.version and
+            self.msg.resource.version != PlatformInfo.VERSION_ANY):
+            return False
+        if (resource.system != self.msg.resource.system and
+            self.msg.resource.system != PlatformInfo.SYSTEM_ANY):
+            return False
+        if (resource.platform != self.msg.resource.platform and
+            self.msg.resource.platform != PlatformInfo.PLATFORM_ANY):
+            return False
+        if (resource.name != self.msg.resource.name and
+            self.msg.resource.name != PlatformInfo.NAME_ANY):
+            return False
+        return True
 
     def release(self):
         """ Release a requested and currently granted resource. 
