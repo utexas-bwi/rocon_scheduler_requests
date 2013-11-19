@@ -44,6 +44,10 @@ from __future__ import absolute_import, print_function
 # Ros messages
 from scheduler_msgs.msg import Request
 
+class TransitionError(Exception):
+    """ Invalid state transition request error. """
+    pass
+
 class ResourceRequest:
     """
     This class tracks the status of a single resource request.
@@ -57,7 +61,7 @@ class ResourceRequest:
         """ Rocon resource accessor.
 
         :returns: resource requested.
-        :rtype: rocon_std_msgs/PlatformInfo.
+        :rtype: rocon_std_msgs/PlatformInfo
 
         """
         return self.msg.resource
@@ -65,6 +69,33 @@ class ResourceRequest:
     def get_status(self):
         """ :returns: current status of this request. """
         return self.msg.status
+
+    def grant(self, resource):
+        """ Grant the requested resource.
+
+        :param resource: Exact resource granted.
+        :type resource: rocon_std_msgs/PlatformInfo
+        :raises: TransitionError
+        """
+        # :todo: implement a proper state transition function
+        if (self.msg.status != Request.NEW and
+            self.msg.status != Request.WAITING):
+            raise TransitionError('invalid resource grant, status = '
+                                  + str(self.msg.status))
+            
+        self.msg.status = Request.GRANTED
+        self.msg.resource = resource
+
+    def release(self):
+        """ Release a requested and currently granted resource. 
+
+        :raises: TransitionError
+        """
+        # :todo: implement a proper state transition function
+        if self.msg.status != Request.GRANTED:
+            raise TransitionError('invalid resource release, status = '
+                                  + str(self.msg.status))
+        self.msg.status = Request.RELEASING
 
     def update(self, msg):
         """ Update status based on message contents.
