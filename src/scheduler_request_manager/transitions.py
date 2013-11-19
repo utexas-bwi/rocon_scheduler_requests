@@ -41,8 +41,9 @@ between schedulers and requesters.
 # (unicode_literals not compatible with python2 uuid module)
 from __future__ import absolute_import, print_function
 
-# Ros messages
+# Ros dependencies
 from scheduler_msgs.msg import Request
+import unique_id
 
 class TransitionError(Exception):
     """ Invalid state transition request error. """
@@ -51,15 +52,35 @@ class TransitionError(Exception):
 class ResourceRequest:
     """
     This class tracks the status of a single resource request.
+
+    :param resource: Rocon resource requested, may contain wild cards.
+    :type resource: rocon_std_msgs/PlatformInfo
+    :param uuid: UUID_ of this request. If None provided, a random
+                 uuid will be assigned.
+    :type uuid: Standard Python :class:`uuid.UUID` object.
+
+    :todo: implement a proper state transition function
+
     """
 
-    def __init__(self):
-        """ Constructor. """
-        self.msg = Request()
+    def __init__(self, resource, uuid=None):
+        """ Constructor. """ 
+        if uuid is None:
+            uuid = unique_id.fromRandom()
+        self.msg = Request(id=unique_id.toMsg(uuid), resource=resource)
+
+    def free(self):
+        """ Free up previously-assigned resource that was released. 
+
+        :raises: :class:`TransitionError`
+        """
+        if self.msg.status != Request.RELEASING:
+            raise TransitionError('invalid resource release, status = '
+                                  + str(self.msg.status))
+        self.msg.status = Request.RELEASED
 
     def get_resource(self):
-        """ Rocon resource accessor.
-
+        """
         :returns: resource requested.
         :rtype: rocon_std_msgs/PlatformInfo
 
@@ -70,28 +91,35 @@ class ResourceRequest:
         """ :returns: current status of this request. """
         return self.msg.status
 
+    def get_uuid(self):
+        """ :returns: UUID of this request.
+        :rtype: Standard Python :class:`uuid.UUID` object.
+        """
+        return unique_id.fromMsg(self.msg.id)
+
     def grant(self, resource):
-        """ Grant the requested resource.
+        """ Grant a specific requested resource.
 
         :param resource: Exact resource granted.
         :type resource: rocon_std_msgs/PlatformInfo
-        :raises: TransitionError
+        :raises: :class:`TransitionError`
+
+        :todo: check that resource matches the original request
+
         """
-        # :todo: implement a proper state transition function
         if (self.msg.status != Request.NEW and
             self.msg.status != Request.WAITING):
             raise TransitionError('invalid resource grant, status = '
                                   + str(self.msg.status))
-            
         self.msg.status = Request.GRANTED
         self.msg.resource = resource
 
     def release(self):
         """ Release a requested and currently granted resource. 
 
-        :raises: TransitionError
+        :raises: :class:`TransitionError`
+
         """
-        # :todo: implement a proper state transition function
         if self.msg.status != Request.GRANTED:
             raise TransitionError('invalid resource release, status = '
                                   + str(self.msg.status))
