@@ -169,3 +169,61 @@ class ResourceRequest:
 
         """
         pass                    # scaffolding
+
+
+class RequestSet:
+    """
+    This class is a container for all resource requests from a single
+    requester.
+
+    :class:`RequestSet` supports these standard container operations:
+
+    .. describe:: len(rset)
+
+       :returns: The number of requesters in the set.
+
+    .. describe:: rset[uuid]
+
+       :returns: The entry key *uuid*.  Raises a :exc:`KeyError`
+                 if *uuid* is not in the set.
+
+    .. describe:: uuid in rset
+
+       :returns: ``True`` if *rset* has a key *uuid*, else ``False``.
+
+    .. describe:: uuid not in rset
+
+       Equivalent to ``not uuid in rset``.
+
+    .. describe:: iter(rset)
+
+       :returns: An iterator over the points in the set.
+
+    These methods are also provided:
+
+    """
+
+    def __init__(self):
+        """ Constructor. """
+        self.requests = {}
+
+    def __contains__(self, uuid):
+        """ Request set membership. """
+        return uuid in self.requests
+
+    def __getitem__(self, uuid):
+        """
+        :param uuid: UUID_ of desired point.
+        :returns: Named :class:`ResourceRequest`.
+        :raises: :exc:`KeyError` if no such request
+        """
+        return self.requests[uuid]
+
+    def __iter__(self):
+        """ Resource Requests iterator. """
+        self.iter_index = 0
+        return self
+
+    def __len__(self):
+        """ Number of requests. """
+        return len(self.requests)

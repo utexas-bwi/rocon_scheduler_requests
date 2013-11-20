@@ -29,6 +29,7 @@ TEST_WILDCARD = PlatformInfo(os='linux',
 TEST_NEW_MSG = Request(id=unique_id.toMsg(TEST_UUID),
                        resource=TEST_RESOURCE)
 
+
 class TestTransitions(unittest.TestCase):
     """Unit tests for scheduler request state transitions.
 
@@ -82,7 +83,11 @@ class TestTransitions(unittest.TestCase):
                                platform='kobuki',
                                name='roberto'))
         self.assertFalse(rq.matches(kobuki))
-        
+
+    def test_empty_request_set(self):
+        rset = RequestSet()
+        self.assertIsNotNone(rset)
+        self.assertEqual(len(rset), 0)
 
     #def test_update(self):
     #    rq = transitions.Request(TEST_NEW_MSG)
