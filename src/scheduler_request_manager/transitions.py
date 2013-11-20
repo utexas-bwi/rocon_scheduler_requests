@@ -57,9 +57,8 @@ class TransitionError(Exception):
     pass
 
 
-class ResourceRequest:
-    """
-    This class tracks the status of a single resource request.
+def to_Request(resource, uuid=None):
+    """ Create a new rocon scheduler request ROS message.
 
     :param resource: Rocon resource requested, may contain wild cards.
     :type resource: rocon_std_msgs/PlatformInfo
@@ -67,15 +66,30 @@ class ResourceRequest:
                  uuid will be assigned.
     :type uuid: Standard Python :class:`uuid.UUID` object.
 
+    :returns: a new scheduler request ROS message
+    :rtype: scheduler_msgs/Request
+
+    """
+    if uuid is None:
+        uuid = unique_id.fromRandom()
+    return Request(id=unique_id.toMsg(uuid),
+                   resource=resource,
+                   status=Request.NEW)
+
+
+class ResourceRequest:
+    """
+    This class tracks the status of a single resource request.
+
+    :param msg: Rocon scheduler request message.
+    :type msg: scheduler_msgs/Request
+
     :todo: implement a proper state transition function
 
     """
-
-    def __init__(self, resource, uuid=None):
+    def __init__(self, msg):
         """ Constructor. """
-        if uuid is None:
-            uuid = unique_id.fromRandom()
-        self.msg = Request(id=unique_id.toMsg(uuid), resource=resource)
+        self.msg = msg
 
     def free(self):
         """ Free up previously-assigned resource that was released.
@@ -101,7 +115,7 @@ class ResourceRequest:
 
     def get_uuid(self):
         """ :returns: UUID of this request.
-        :rtype: Standard Python :class:`uuid.UUID` object.
+        :rtype: :class:`uuid.UUID`
         """
         return unique_id.fromMsg(self.msg.id)
 
@@ -151,7 +165,7 @@ class ResourceRequest:
         return True
 
     def release(self):
-        """ Release a requested and currently granted resource.
+        """ Release a previously granted resource.
 
         :raises: :class:`TransitionError`
 
@@ -173,10 +187,11 @@ class ResourceRequest:
 
 class RequestSet:
     """
-    This class is a container for all resource requests from a single
-    requester.
+    This class is a container for all the resource requests from a
+    single requester or message.  It acts like a dictionary.
 
-    :param requests: ``requests`` component of ``AllocateResources``
+    :param requests: list of ``Request`` messages, typically from the
+                     ``requests`` component of an ``AllocateResources``
                      or ``SchedulerFeedback`` message.
 
     :class:`RequestSet` supports these standard container operations:
@@ -200,17 +215,18 @@ class RequestSet:
 
     .. describe:: iter(rset)
 
-       :returns: An iterator over the points in the set.
+       :returns: An iterator over the requests in the set.
 
     These methods are also provided:
 
     """
 
-    def __init__(self, requests=None):
+    def __init__(self, requests=[]):
         """ Constructor. """
         self.requests = {}
-        if requests is not None:
-            self.from_requests(requests)
+        for msg in requests:
+            rq = ResourceRequest(msg)
+            self.requests[rq.get_uuid()] = rq
 
     def __contains__(self, uuid):
         """ Request set membership. """
@@ -218,7 +234,9 @@ class RequestSet:
 
     def __getitem__(self, uuid):
         """
-        :param uuid: UUID_ of desired point.
+        :param uuid: UUID_ of desired request.
+        :type uuid: :class:`uuid.UUID`
+
         :returns: Named :class:`ResourceRequest`.
         :raises: :exc:`KeyError` if no such request
         """
@@ -233,21 +251,15 @@ class RequestSet:
         """ Number of requests. """
         return len(self.requests)
 
-    def from_requests(self, reqs):
-        """ Set :class:`RequestSet` from ``requests`` component of
+    def list_requests(self):
+        """
+        Return a list suitable for the ``requests`` component of an
         ``AllocateResources`` or ``SchedulerFeedback`` message.
 
-        :param reqs: array of``scheduler_msgs/Requests`` component of
-        the message.
+        :returns: list of ``scheduler_msgs/Request`` messages.
 
         """
-        pass                    # skeleton
-
-    def to_requests(self):
-        """ Return array of``scheduler_msgs/Requests`` component for
-        ``AllocateResources`` or ``SchedulerFeedback`` messages.
-
-        :returns: array of ``scheduler_msgs/Requests``.
-
-        """
-        return Requests()       # skeleton
+        msgs = []
+        for rq in requests:
+            msgs.append(rq.msg)
+        return msgs

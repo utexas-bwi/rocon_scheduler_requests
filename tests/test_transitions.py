@@ -26,8 +26,12 @@ TEST_WILDCARD = PlatformInfo(os='linux',
                              system='ros',
                              platform='segbot',
                              name=PlatformInfo.NAME_ANY)
-TEST_NEW_MSG = Request(id=unique_id.toMsg(TEST_UUID),
-                       resource=TEST_RESOURCE)
+REQ_MSG1 = Request(id=unique_id.toMsg(TEST_UUID),
+                   resource=TEST_WILDCARD,
+                   status=Request.NEW)
+REQ_MSG2 = Request(id=unique_id.toMsg(TEST_UUID),
+                   resource=TEST_RESOURCE,
+                   status=Request.NEW)
 
 
 class TestTransitions(unittest.TestCase):
@@ -36,28 +40,46 @@ class TestTransitions(unittest.TestCase):
     These tests do not require a running ROS core.
     """
 
-    def test_constructor(self):
-        rq = ResourceRequest(TEST_WILDCARD)
-        self.assertIsNotNone(rq)
-        self.assertEqual(rq.get_status(), Request.NEW)
-        self.assertEqual(rq.get_resource(), TEST_WILDCARD)
-        self.assertNotEqual(rq.get_uuid, TEST_UUID)
+    def test_to_Request(self):
+        msg1 = to_Request(TEST_WILDCARD, uuid=TEST_UUID)
+        self.assertEqual(msg1, 
+                         Request(id=unique_id.toMsg(TEST_UUID),
+                                 resource=TEST_WILDCARD,
+                                 status=Request.NEW))
+        msg2 = to_Request(TEST_RESOURCE, uuid=TEST_UUID)
+        self.assertEqual(msg2, 
+                         Request(id=unique_id.toMsg(TEST_UUID),
+                                 resource=TEST_RESOURCE,
+                                 status=Request.NEW))
 
-    def test_constructor_with_uuid(self):
-        rq = ResourceRequest(TEST_RESOURCE, uuid=TEST_UUID)
-        self.assertEqual(rq.get_status(), Request.NEW)
-        self.assertEqual(rq.get_resource(), TEST_RESOURCE)
-        self.assertEqual(rq.get_uuid(), TEST_UUID)
+    def test_constructor(self):
+        rq1 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resource=TEST_WILDCARD,
+                                      status=Request.NEW))
+        self.assertIsNotNone(rq1)
+        self.assertEqual(rq1.get_status(), Request.NEW)
+        self.assertEqual(rq1.get_resource(), TEST_WILDCARD)
+        self.assertNotEqual(rq1.get_uuid, TEST_UUID)
+        rq2 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resource=TEST_RESOURCE,
+                                      status=Request.NEW))
+        self.assertEqual(rq2.get_status(), Request.NEW)
+        self.assertEqual(rq2.get_resource(), TEST_RESOURCE)
+        self.assertEqual(rq2.get_uuid(), TEST_UUID)
 
     def test_grant(self):
-        rq = ResourceRequest(TEST_WILDCARD, uuid=TEST_UUID)
+        rq = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                     resource=TEST_WILDCARD,
+                                     status=Request.NEW))
         self.assertEqual(rq.get_status(), Request.NEW)
         rq.grant(TEST_RESOURCE)
         self.assertEqual(rq.get_status(), Request.GRANTED)
         self.assertEqual(rq.get_resource(), TEST_RESOURCE)
 
     def test_release(self):
-        rq = ResourceRequest(TEST_RESOURCE, uuid=TEST_UUID)
+        rq = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                     resource=TEST_WILDCARD,
+                                     status=Request.NEW))
         self.assertEqual(rq.get_status(), Request.NEW)
         rq.grant(TEST_RESOURCE)
         self.assertEqual(rq.get_status(), Request.GRANTED)
@@ -65,7 +87,9 @@ class TestTransitions(unittest.TestCase):
         self.assertEqual(rq.get_status(), Request.RELEASING)
 
     def test_free(self):
-        rq = ResourceRequest(TEST_RESOURCE, uuid=TEST_UUID)
+        rq = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                     resource=TEST_RESOURCE,
+                                     status=Request.NEW))
         self.assertEqual(rq.get_status(), Request.NEW)
         rq.grant(TEST_RESOURCE)
         self.assertEqual(rq.get_status(), Request.GRANTED)
@@ -75,7 +99,9 @@ class TestTransitions(unittest.TestCase):
         self.assertEqual(rq.get_status(), Request.RELEASED)
 
     def test_matches(self):
-        rq = ResourceRequest(TEST_WILDCARD)
+        rq = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                     resource=TEST_WILDCARD,
+                                     status=Request.NEW))
         self.assertTrue(rq.matches(TEST_RESOURCE))
         kobuki = (PlatformInfo(os='linux',
                                version='precise',
@@ -84,14 +110,21 @@ class TestTransitions(unittest.TestCase):
                                name='roberto'))
         self.assertFalse(rq.matches(kobuki))
 
-    def test_empty_requestset(self):
+    def test_empty_request_set(self):
         rset = RequestSet()
         self.assertIsNotNone(rset)
         self.assertEqual(len(rset), 0)
+        self.assertTrue(TEST_UUID not in rset)
 
-    #def test_update(self):
-    #    rq = transitions.Request(TEST_NEW_MSG)
-    #    rq.update()
+    def test_one_request_set(self):
+        msg1 = Request(id=unique_id.toMsg(TEST_UUID),
+                       resource=TEST_WILDCARD,
+                       status=Request.NEW)
+        rset = RequestSet(requests=[msg1])
+        self.assertEqual(len(rset), 1)
+        self.assertTrue(TEST_UUID in rset)
+        self.assertEqual(rset[TEST_UUID].msg, msg1)
+
 
 if __name__ == '__main__':
     import rosunit
