@@ -16,6 +16,7 @@ from scheduler_msgs.msg import Request
 from scheduler_request_manager.transitions import *
 
 TEST_UUID = uuid.UUID('01234567-89ab-cdef-fedc-ba9876543210')
+DIFF_UUID = uuid.UUID('01234567-cdef-fedc-89ab-ba9876543210')
 TEST_RESOURCE = PlatformInfo(os='linux',
                              version='precise',
                              system='ros',
@@ -124,6 +125,10 @@ class TestTransitions(unittest.TestCase):
         self.assertEqual(len(rset), 1)
         self.assertTrue(TEST_UUID in rset)
         self.assertEqual(rset[TEST_UUID].msg, msg1)
+        self.assertEqual(rset.get(TEST_UUID), rset[TEST_UUID])
+        self.assertFalse(DIFF_UUID in rset)
+        self.assertIsNone(rset.get(DIFF_UUID))
+        self.assertEqual(rset.get(DIFF_UUID, 10), 10)
 
 
 if __name__ == '__main__':

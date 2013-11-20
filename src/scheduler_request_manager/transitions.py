@@ -36,6 +36,8 @@
 This module tracks resource request state transtions as messages flow
 between schedulers and requesters.
 
+.. _UUID: http://en.wikipedia.org/wiki/Uuid
+
 """
 
 # (unicode_literals not compatible with python2 uuid module)
@@ -250,6 +252,19 @@ class RequestSet:
     def __len__(self):
         """ Number of requests. """
         return len(self.requests)
+
+    def get(self, uuid, default=None):
+        """ Get request, if known.
+
+        :param uuid: UUID_ of desired request.
+        :type uuid: :class:`uuid.UUID`
+        :param default: value to return if no such request.
+
+        :returns: Named :class:`ResourceRequest`, if successful;
+                  otherwise default.
+
+        """
+        return self.requests.get(uuid, default)
 
     def list_requests(self):
         """
