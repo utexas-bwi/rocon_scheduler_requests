@@ -176,6 +176,9 @@ class RequestSet:
     This class is a container for all resource requests from a single
     requester.
 
+    :param requests: ``requests`` component of ``AllocateResources``
+                     or ``SchedulerFeedback`` message.
+
     :class:`RequestSet` supports these standard container operations:
 
     .. describe:: len(rset)
@@ -203,9 +206,11 @@ class RequestSet:
 
     """
 
-    def __init__(self):
+    def __init__(self, requests=None):
         """ Constructor. """
         self.requests = {}
+        if requests is not None:
+            self.from_requests(requests)
 
     def __contains__(self, uuid):
         """ Request set membership. """
@@ -228,39 +233,21 @@ class RequestSet:
         """ Number of requests. """
         return len(self.requests)
 
-    def from_alloc(self, alloc_msg):
-        """ Set `:class: RequestSet` from ``AllocateResources`` message.
+    def from_requests(self, reqs):
+        """ Set :class:`RequestSet` from ``requests`` component of
+        ``AllocateResources`` or ``SchedulerFeedback`` message.
 
-        :param alloc_msg: message to use.
-        :type alloc_msg: scheduler_msgs/AllocateResources
-
-        """
-        pass                    # skeleton
-
-    def from_feedback(self, feedback_msg):
-        """ Set `:class: RequestSet` from ``SchedulerFeedback`` message.
-
-        :param feedback_msg: message to use.
-        :type alloc_msg:
-        scheduler_msgs/SchedulerFeedback
+        :param reqs: array of``scheduler_msgs/Requests`` component of
+        the message.
 
         """
         pass                    # skeleton
 
-    def to_alloc(self):
-        """ Set `:class: RequestSet` from ``AllocateResources`` message.
+    def to_requests(self):
+        """ Return array of``scheduler_msgs/Requests`` component for
+        ``AllocateResources`` or ``SchedulerFeedback`` messages.
 
-        :return: message.
-        :rtype: scheduler_msgs/AllocateResources
-
-        """
-        pass                    # skeleton
-
-    def to_feedback(self):
-        """ Set `:class: RequestSet` from ``SchedulerFeedback`` message.
-
-        :returns: message.
-        :type alloc_msg: scheduler_msgs/SchedulerFeedback
+        :returns: array of ``scheduler_msgs/Requests``.
 
         """
-        pass                    # skeleton
+        return Requests()       # skeleton
