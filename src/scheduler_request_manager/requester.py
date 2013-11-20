@@ -38,7 +38,8 @@ Python interface for rocon services making scheduler requests.
 This module provides a relatively simple API, not requiring detailed
 knowledge of scheduler request state transitions.
 
-.. _`uuid_msgs/UniqueID`: http://ros.org/doc/api/uuid_msgs/html/msg/UniqueID.html
+.. _`uuid_msgs/UniqueID`:
+     http://ros.org/doc/api/uuid_msgs/html/msg/UniqueID.html
 .. _UUID: http://en.wikipedia.org/wiki/Uuid
 
 """
@@ -52,6 +53,7 @@ from scheduler_msgs.msg import AllocateResources
 from scheduler_msgs.msg import Request
 from scheduler_msgs.msg import SchedulerFeedback
 from . import common
+
 
 class Requester:
     """

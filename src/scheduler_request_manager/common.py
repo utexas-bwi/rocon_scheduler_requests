@@ -50,6 +50,7 @@ HEARTBEAT_HZ = 1.0 / 4.0
 SCHEDULER_TOPIC = 'rocon_scheduler'
 """ Default rocon scheduler topic name. """
 
+
 def feedback_topic(uuid, scheduler_topic=SCHEDULER_TOPIC):
     """ Construct scheduler feedback topic name.
 
@@ -60,7 +61,6 @@ def feedback_topic(uuid, scheduler_topic=SCHEDULER_TOPIC):
                   missing, the usual scheduler topic name is assumed.
     :type topic: str
     :returns: Topic name string for replying to this requester.
-    
+
     """
     return scheduler_topic + '_' + uuid.hex
-

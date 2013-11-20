@@ -38,7 +38,8 @@ Python interface for rocon schedulers handling resource requests.
 This module provides a relatively simple API, not requiring detailed
 knowledge of scheduler request state transitions.
 
-.. _`uuid_msgs/UniqueID`: http://ros.org/doc/api/uuid_msgs/html/msg/UniqueID.html
+.. _`uuid_msgs/UniqueID`:
+     http://ros.org/doc/api/uuid_msgs/html/msg/UniqueID.html
 .. _UUID: http://en.wikipedia.org/wiki/Uuid
 
 """
@@ -57,6 +58,7 @@ from scheduler_msgs.msg import SchedulerFeedback
 # internal modules
 from . import common
 from . import transitions
+
 
 class Requests:
     """
@@ -102,7 +104,7 @@ class Requests:
         # Add any new requests to the dictionary.
         for res in msg.resources:
             rid = unique_id.fromMsg(res.id)
-            if rid not in self.resources: # new request?
+            if rid not in self.resources:  # new request?
                 self.resources[rid] = transitions.ResourceRequest(res)
 
         # Update status of all requests.  Must iterate over a copy of
@@ -122,6 +124,7 @@ class Requests:
 
         """
         return False            # test scaffolding
+
 
 class Scheduler:
     """

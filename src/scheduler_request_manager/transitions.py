@@ -46,13 +46,16 @@ from rocon_std_msgs.msg import PlatformInfo
 from scheduler_msgs.msg import Request
 import unique_id
 
+
 class ResourceNotRequestedError(Exception):
     """ Error exception: resource does not match the request. """
     pass
 
+
 class TransitionError(Exception):
     """ Error exception: invalid state transition. """
     pass
+
 
 class ResourceRequest:
     """
@@ -69,13 +72,13 @@ class ResourceRequest:
     """
 
     def __init__(self, resource, uuid=None):
-        """ Constructor. """ 
+        """ Constructor. """
         if uuid is None:
             uuid = unique_id.fromRandom()
         self.msg = Request(id=unique_id.toMsg(uuid), resource=resource)
 
     def free(self):
-        """ Free up previously-assigned resource that was released. 
+        """ Free up previously-assigned resource that was released.
 
         :raises: :class:`TransitionError`
         """
@@ -111,10 +114,10 @@ class ResourceRequest:
         :raises: :class:`ResourceNotRequestedError`
 
         """
-        if (self.msg.status != Request.NEW and
-            self.msg.status != Request.WAITING):
-            raise TransitionError('invalid resource grant, status = '
-                                  + str(self.msg.status))
+        if self.msg.status != Request.NEW \
+                and self.msg.status != Request.WAITING:
+            raise TransitionError('invalid resource grant, status = ' +
+                                  str(self.msg.status))
         self.msg.status = Request.GRANTED
         if not self.matches(resource):
             raise ResourceNotRequestedError(str(resource)
@@ -130,25 +133,25 @@ class ResourceRequest:
         :returns: true if this resource matches.
 
         """
-        if (resource.os != self.msg.resource.os and
-            self.msg.resource.os != PlatformInfo.OS_ANY):
+        if resource.os != self.msg.resource.os and \
+                self.msg.resource.os != PlatformInfo.OS_ANY:
             return False
-        if (resource.version != self.msg.resource.version and
-            self.msg.resource.version != PlatformInfo.VERSION_ANY):
+        if resource.version != self.msg.resource.version and \
+                self.msg.resource.version != PlatformInfo.VERSION_ANY:
             return False
-        if (resource.system != self.msg.resource.system and
-            self.msg.resource.system != PlatformInfo.SYSTEM_ANY):
+        if resource.system != self.msg.resource.system and \
+                self.msg.resource.system != PlatformInfo.SYSTEM_ANY:
             return False
-        if (resource.platform != self.msg.resource.platform and
-            self.msg.resource.platform != PlatformInfo.PLATFORM_ANY):
+        if resource.platform != self.msg.resource.platform and \
+                self.msg.resource.platform != PlatformInfo.PLATFORM_ANY:
             return False
-        if (resource.name != self.msg.resource.name and
-            self.msg.resource.name != PlatformInfo.NAME_ANY):
+        if resource.name != self.msg.resource.name and \
+                self.msg.resource.name != PlatformInfo.NAME_ANY:
             return False
         return True
 
     def release(self):
-        """ Release a requested and currently granted resource. 
+        """ Release a requested and currently granted resource.
 
         :raises: :class:`TransitionError`
 
