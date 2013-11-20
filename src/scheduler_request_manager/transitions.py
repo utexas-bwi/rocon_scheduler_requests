@@ -227,3 +227,40 @@ class RequestSet:
     def __len__(self):
         """ Number of requests. """
         return len(self.requests)
+
+    def from_alloc(self, alloc_msg):
+        """ Set `:class: RequestSet` from ``AllocateResources`` message.
+
+        :param alloc_msg: message to use.
+        :type alloc_msg: scheduler_msgs/AllocateResources
+
+        """
+        pass                    # skeleton
+
+    def from_feedback(self, feedback_msg):
+        """ Set `:class: RequestSet` from ``SchedulerFeedback`` message.
+
+        :param feedback_msg: message to use.
+        :type alloc_msg:
+        scheduler_msgs/SchedulerFeedback
+
+        """
+        pass                    # skeleton
+
+    def to_alloc(self):
+        """ Set `:class: RequestSet` from ``AllocateResources`` message.
+
+        :return: message.
+        :rtype: scheduler_msgs/AllocateResources
+
+        """
+        pass                    # skeleton
+
+    def to_feedback(self):
+        """ Set `:class: RequestSet` from ``SchedulerFeedback`` message.
+
+        :returns: message.
+        :type alloc_msg: scheduler_msgs/SchedulerFeedback
+
+        """
+        pass                    # skeleton

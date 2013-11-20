@@ -84,7 +84,7 @@ class TestTransitions(unittest.TestCase):
                                name='roberto'))
         self.assertFalse(rq.matches(kobuki))
 
-    def test_empty_request_set(self):
+    def test_empty_requestset(self):
         rset = RequestSet()
         self.assertIsNotNone(rset)
         self.assertEqual(len(rset), 0)
