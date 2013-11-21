@@ -274,10 +274,7 @@ class RequestSet:
         :returns: list of ``scheduler_msgs/Request`` messages.
 
         """
-        msgs = []
-        for rq in self.requests.itervalues():
-            msgs.append(rq.msg)
-        return msgs
+        return [rq.msg for rq in self.requests.itervalues()]
 
     def merge(self, updates):
         """
