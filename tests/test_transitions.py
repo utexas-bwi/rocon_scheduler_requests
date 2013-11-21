@@ -130,6 +130,20 @@ class TestTransitions(unittest.TestCase):
         self.assertIsNone(rset.get(DIFF_UUID))
         self.assertEqual(rset.get(DIFF_UUID, 10), 10)
 
+    def test_empty_merge(self):
+        msg1 = Request(id=unique_id.toMsg(TEST_UUID),
+                       resource=TEST_WILDCARD,
+                       status=Request.NEW)
+        rset = RequestSet(requests=[msg1])
+        self.assertEqual(len(rset), 1)
+        self.assertTrue(TEST_UUID in rset)
+        self.assertEqual([msg1], rset.list_requests())
+
+        # merge an empty request set, should remain the same
+        rset.merge(RequestSet())
+        self.assertEqual(len(rset), 1)
+        self.assertTrue(TEST_UUID in rset)
+        self.assertEqual([msg1], rset.list_requests())
 
 if __name__ == '__main__':
     import rosunit

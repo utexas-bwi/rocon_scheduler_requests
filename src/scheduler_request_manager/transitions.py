@@ -268,13 +268,26 @@ class RequestSet:
 
     def list_requests(self):
         """
-        Return a list suitable for the ``requests`` component of an
-        ``AllocateResources`` or ``SchedulerFeedback`` message.
+        Return a list of resource requests suitable for inclusion in
+        an ``AllocateResources`` or ``SchedulerFeedback`` message.
 
         :returns: list of ``scheduler_msgs/Request`` messages.
 
         """
         msgs = []
-        for rq in requests:
+        for rq in self.requests.itervalues():
             msgs.append(rq.msg)
         return msgs
+
+    def merge(self, updates):
+        """
+        Merge new request information into this RequestSet.
+
+        :param updates: Request set containing updated information.
+        :type updates: :class:`RequestSet`
+
+        :todo: Pay attention to timing as messages and updates
+               interleave.
+
+        """             
+        pass                    # test scaffolding

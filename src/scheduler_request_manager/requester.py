@@ -47,18 +47,23 @@ knowledge of scheduler request state transitions.
 # enable some python3 compatibility options:
 from __future__ import absolute_import, print_function, unicode_literals
 
+# ROS dependencies
 import rospy
 import unique_id
 from scheduler_msgs.msg import AllocateResources
 from scheduler_msgs.msg import Request
 from scheduler_msgs.msg import SchedulerFeedback
+
+# internal modules
 from . import common
+from . import transitions
 
 
 class Requester:
     """
     This class is used by a rocon service to handle its resource
-    requests.
+    requests.  It subscribes to its own scheduler feedback topic and
+    advertises the rocon scheduler topic.
 
     :param uuid: UUID_ of this requester. If None provided, a random
                  uuid will be assigned.
@@ -73,15 +78,10 @@ class Requester:
     def __init__(self, uuid=None,
                  frequency=common.HEARTBEAT_HZ,
                  topic=common.SCHEDULER_TOPIC):
-        """Constructor.
-
-        Initializes the :class:`Requester`, subscribes to its own
-        scheduler feedback topic and advertises the rocon scheduler
-        topic.
-        """
         if uuid is None:
             uuid = unique_id.fromRandom()
         self.requester_id = uuid
+        self.rset = transitions.RequestSet()
         self.pub_topic = topic
         self.sub_topic = common.feedback_topic(uuid, topic)
         rospy.loginfo('Rocon resource requester topic: ' + self.sub_topic)
@@ -101,7 +101,10 @@ class Requester:
     def _heartbeat(self, event):
         """ Scheduler request heartbeat timer handler.
 
-        Publishes all current allocation requests to the scheduler.
+        Publishes all active allocation requests to the scheduler at
+        appropriate time intervals.
+
         """
         self.alloc.header.stamp = event.current_real
+        self.alloc.resources = self.rset.list_requests()
         self.pub.publish(self.alloc)

@@ -82,16 +82,15 @@ class Requests:
         self.feedback_topic = common.feedback_topic(requester_id, topic)
         rospy.loginfo('Rocon scheduler feedback topic: ' + self.feedback_topic)
         self.pub = rospy.Publisher(self.feedback_topic, SchedulerFeedback)
-
-        # set initial status using this message
         self.feedback_msg = SchedulerFeedback(requester=msg.requester,
                                               priority=msg.priority)
-        self.resources = {}
-        self.update(msg)
+        self.rset = transitions.RequestSet()
+        self.update(msg)        # set initial status
 
     def _send_feedback(self):
         """ Build feedback message and send it to the requester. """
         self.feedback_msg.header.stamp = rospy.Time.now()
+        self.feedback_msg.requests = self.rset.list_requests()
         self.pub.publish(self.feedback_msg)
 
     def update(self, msg):
@@ -100,22 +99,15 @@ class Requests:
         :param msg: Latest resource allocation request.
         :type msg: scheduler_msgs/AllocateResources
 
+        :note: Pay attention to timing as messages and updates
+               interleave.
+
         """
-        # Add any new requests to the dictionary.
-        for res in msg.resources:
-            rid = unique_id.fromMsg(res.id)
-            if rid not in self.resources:  # new request?
-                self.resources[rid] = transitions.ResourceRequest(res)
-
-        # Update status of all requests.  Must iterate over a copy of
-        # the dictionary items, because some may be deleted inside the
-        # loop.
-        for rid, rq in self.resources.items():
-            rq.update(msg)
-            #if rq.status = ZOMBIE:
-            #    del self.resources[rid]
-
-        self._send_feedback()
+        # Make a new RequestSet from this message
+        new_rset = transitions.RequestSet(msg.resources)
+        self.rset.merge(new_rset)
+        # :todo: invoke scheduler callback?
+        self._send_feedback()   # notify the requester
 
     def timeout(self, limit, event):
         """ Check for requester timeout.
@@ -159,7 +151,7 @@ class Scheduler:
     def _allocate_resources(self, msg):
         """ Scheduler resource allocation message handler. """
         # test scaffolding
-        rospy.loginfo('Rocon scheduler request: \n' + str(msg))
+        #rospy.loginfo('Rocon scheduler request: \n' + str(msg))
         requester_id = unique_id.fromMsg(msg.requester)
         rqr = self.requests.get(requester_id)
         if rqr:                 # known requester?
