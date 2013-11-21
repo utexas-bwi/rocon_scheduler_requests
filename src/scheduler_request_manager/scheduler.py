@@ -150,7 +150,6 @@ class Scheduler:
 
     def _allocate_resources(self, msg):
         """ Scheduler resource allocation message handler. """
-        # test scaffolding
         #rospy.loginfo('Rocon scheduler request: \n' + str(msg))
         requester_id = unique_id.fromMsg(msg.requester)
         rqr = self.requests.get(requester_id)

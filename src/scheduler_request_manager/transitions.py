@@ -286,5 +286,5 @@ class RequestSet:
         :todo: Pay attention to timing as messages and updates
                interleave.
 
-        """             
+        """
         pass                    # test scaffolding

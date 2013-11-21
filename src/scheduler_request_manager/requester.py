@@ -96,7 +96,9 @@ class Requester:
 
     def _feedback(self, msg):
         """ Scheduler feedback message handler."""
-        pass                    # test scaffolding
+        new_rset = transitions.RequestSet(msg.requests)
+        self.rset.merge(new_rset)
+        # :todo: invoke requester callback?
 
     def _heartbeat(self, event):
         """ Scheduler request heartbeat timer handler.
