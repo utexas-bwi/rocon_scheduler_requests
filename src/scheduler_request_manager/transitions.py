@@ -43,7 +43,10 @@ between schedulers and requesters.
 # (unicode_literals not compatible with python2 uuid module)
 from __future__ import absolute_import, print_function
 
+import copy
+
 # Ros dependencies
+import rospy
 from rocon_std_msgs.msg import PlatformInfo
 from scheduler_msgs.msg import Request
 import unique_id
@@ -56,6 +59,11 @@ class ResourceNotRequestedError(Exception):
 
 class TransitionError(Exception):
     """ Error exception: invalid state transition. """
+    pass
+
+
+class WrongRequestError(Exception):
+    """ Error exception: request update for the wrong UUID. """
     pass
 
 
@@ -112,7 +120,7 @@ class ResourceRequest:
         return self.msg.resource
 
     def get_status(self):
-        """ :returns: current status of this request. """
+        """ :returns: the current status of this request. """
         return self.msg.status
 
     def get_uuid(self):
@@ -146,7 +154,7 @@ class ResourceRequest:
 
         :param resource: Exact resource to match.
         :type resource: rocon_std_msgs/PlatformInfo
-        :returns: true if this resource matches.
+        :returns: ``True`` if this resource matches.
 
         """
         if resource.os != self.msg.resource.os and \
@@ -165,6 +173,28 @@ class ResourceRequest:
                 self.msg.resource.name != PlatformInfo.NAME_ANY:
             return False
         return True
+
+    def reconcile(self, update):
+        """
+        Merge updated status with this ResourceRequest.
+
+        :param update: Latest message pertaining to this request,
+                       might be ``None`` if not present in the message.
+        :type update: :class:`ResourceRequest`
+
+        :raises: :class:`WrongRequestError`
+
+        """
+        if update is None:      # this request not mentioned in updates
+            update = copy.deepcopy(self)
+            update.msg.status = Request.RELEASED
+        elif update.msg.id != self.msg.id:
+            raise WrongRequestError('UUID does not match')
+        if self.valid_change(update.msg.status):
+            self.msg.status = update.msg.status
+            self.msg.resource = update.msg.resource
+            if update.msg.availability != rospy.Time():
+                self.msg.availability = update.msg.availability
 
     def release(self):
         """ Release a previously granted resource.
@@ -186,6 +216,18 @@ class ResourceRequest:
         """
         pass                    # scaffolding
 
+    def valid_change(self, update):
+        """
+        Validate status update for this ResourceRequest.
+
+        :param update: Latest message pertaining to this request.
+        :type update: :class:`RequestSet`
+
+        :returns ``True`` if update represents a valid state transition.
+
+        """
+        return True             # test stub
+
 
 class RequestSet:
     """
@@ -200,11 +242,11 @@ class RequestSet:
 
     .. describe:: len(rset)
 
-       :returns: The number of requesters in the set.
+       :returns: the number of requesters in the set.
 
     .. describe:: rset[uuid]
 
-       :returns: The entry key *uuid*.  Raises a :exc:`KeyError`
+       :returns: the entry key *uuid*.  Raises a :exc:`KeyError`
                  if *uuid* is not in the set.
 
     .. describe:: uuid in rset
@@ -217,7 +259,7 @@ class RequestSet:
 
     .. describe:: iter(rset)
 
-       :returns: An iterator over the requests in the set.
+       :returns: an iterator over the requests in the set.
 
     These methods are also provided:
 
@@ -239,15 +281,15 @@ class RequestSet:
         :param uuid: UUID_ of desired request.
         :type uuid: :class:`uuid.UUID`
 
-        :returns: Named :class:`ResourceRequest`.
+        :returns: named :class:`ResourceRequest`.
         :raises: :exc:`KeyError` if no such request
         """
         return self.requests[uuid]
 
-    def __iter__(self):
-        """ Resource Requests iterator. """
-        self.iter_index = 0
-        return self
+    #def __iter__(self):
+    #    """ Resource Requests iterator. """
+    #    self.iter_index = 0
+    #    return self
 
     def __len__(self):
         """ Number of requests. """
@@ -260,11 +302,19 @@ class RequestSet:
         :type uuid: :class:`uuid.UUID`
         :param default: value to return if no such request.
 
-        :returns: Named :class:`ResourceRequest`, if successful;
+        :returns: named :class:`ResourceRequest`, if successful;
                   otherwise default.
 
         """
         return self.requests.get(uuid, default)
+
+    def items(self):
+        """
+        :returns: a list (Python2) or dictionary view (Python3)
+                  containing (key, value) pairs for this
+                  :class:`RequestSet`.
+        """
+        return self.requests.items()
 
     def list_requests(self):
         """
@@ -287,4 +337,25 @@ class RequestSet:
                interleave.
 
         """
-        pass                    # test scaffolding
+        # Reconcile each existing request with the updates.  Make a
+        # copy of the dictionary items, so it can be altered in the loop.
+        print('len: ' + str(len(self.requests)))
+        for rid, rq in self.requests.items():
+            new_rq = updates.get(rid)
+            print('NEW_RQ: ' + str(new_rq))
+            if new_rq is None and rq.msg.status == Request.RELEASED:
+                del self.requests[rid]  # no longer needed
+            else:
+                rq.reconcile(new_rq)
+
+        # Add any new requests not previously known.
+        for rid, new_rq in updates.items():
+            if rid not in self.requests:
+                self.requests[rid] = new_rq
+
+    #def next(self):
+    #    """ 
+    #    :returns: next request of iteration.
+    #    :rtype: :class:`ResourceRequest`
+    #    :raises: :class:`StopIteration` when finished.
+    #    """

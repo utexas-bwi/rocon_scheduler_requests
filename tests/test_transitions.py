@@ -121,7 +121,7 @@ class TestTransitions(unittest.TestCase):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
                        resource=TEST_WILDCARD,
                        status=Request.NEW)
-        rset = RequestSet(requests=[msg1])
+        rset = RequestSet([msg1])
         self.assertEqual(len(rset), 1)
         self.assertTrue(TEST_UUID in rset)
         self.assertEqual(rset[TEST_UUID].msg, msg1)
@@ -134,12 +134,12 @@ class TestTransitions(unittest.TestCase):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
                        resource=TEST_WILDCARD,
                        status=Request.NEW)
-        rset = RequestSet(requests=[msg1])
+        rset = RequestSet([msg1])
         self.assertEqual(len(rset), 1)
         self.assertTrue(TEST_UUID in rset)
         self.assertEqual([msg1], rset.list_requests())
 
-        # merge an empty request set, should remain the same
+        # merge an empty request set: rset should remain the same
         rset.merge(RequestSet())
         self.assertEqual(len(rset), 1)
         self.assertTrue(TEST_UUID in rset)

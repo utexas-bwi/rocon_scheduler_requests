@@ -14,7 +14,8 @@
   <node pkg="scheduler_request_manager" type="dummy_req.py"
         name="dummy_requester" />
 
-  <!-- check that /rocon_scheduler requests are sent -->
+  <!-- Check that /rocon_scheduler requests are sent regularly.
+       Normally 0.25 Hz, the rate is set at 1 Hz to speed up the test. -->
   <test test-name="request_hz_test"
         pkg="rostest" type="hztest" name="empty_request_test" >
     <param name="hz" value="1.0" />
