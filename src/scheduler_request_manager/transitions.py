@@ -190,7 +190,7 @@ class ResourceRequest:
             update.msg.status = Request.RELEASED
         elif update.msg.id != self.msg.id:
             raise WrongRequestError('UUID does not match')
-        if self.valid_change(update.msg.status):
+        if self.validate(update.msg.status):
             self.msg.status = update.msg.status
             self.msg.resource = update.msg.resource
             if update.msg.availability != rospy.Time():
@@ -216,7 +216,7 @@ class ResourceRequest:
         """
         pass                    # scaffolding
 
-    def valid_change(self, update):
+    def validate(self, update):
         """
         Validate status update for this ResourceRequest.
 
@@ -310,9 +310,9 @@ class RequestSet:
 
     def items(self):
         """
-        :returns: a list (Python2) or dictionary view (Python3)
-                  containing (key, value) pairs for this
-                  :class:`RequestSet`.
+        :returns: all (key, value) pairs for this :class:`RequestSet`.
+        :rtype: list (Python2) or dictionary view (Python3)
+
         """
         return self.requests.items()
 
@@ -354,7 +354,7 @@ class RequestSet:
                 self.requests[rid] = new_rq
 
     #def next(self):
-    #    """ 
+    #    """
     #    :returns: next request of iteration.
     #    :rtype: :class:`ResourceRequest`
     #    :raises: :class:`StopIteration` when finished.
