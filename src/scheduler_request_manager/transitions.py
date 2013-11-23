@@ -188,7 +188,7 @@ class ResourceRequest:
         if update is None:      # this request not mentioned in updates
             update = copy.deepcopy(self)
             update.msg.status = Request.RELEASED
-        elif update.msg.id != self.msg.id:
+        elif update.get_uuid() != self.get_uuid():
             raise WrongRequestError('UUID does not match')
         if self.validate(update.msg.status):
             self.msg.status = update.msg.status

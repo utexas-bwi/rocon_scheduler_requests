@@ -162,17 +162,18 @@ class TestTransitions(unittest.TestCase):
         rset = RequestSet([msg1])
         self.assertEqual(rset[TEST_UUID].msg.status, Request.NEW)
         self.assertEqual(rset[TEST_UUID].msg.resource, TEST_WILDCARD)
+        self.assertEqual(rset[TEST_UUID].msg.id, unique_id.toMsg(TEST_UUID))
 
         # merge an empty request set: rset should remain the same
         msg2 = Request(id=unique_id.toMsg(TEST_UUID),
                        resource=TEST_RESOURCE,
                        status=Request.GRANTED)
-        #rset.merge(RequestSet([msg2]))
+        rset.merge(RequestSet([msg2]))
         self.assertEqual(len(rset), 1)
         self.assertTrue(TEST_UUID in rset)
         self.assertEqual([msg1], rset.list_requests())
-        #self.assertEqual(rset[TEST_UUID].msg.status, Request.GRANTED)
-        #self.assertEqual(rset[TEST_UUID].msg.resource, TEST_RESOURCE)
+        self.assertEqual(rset[TEST_UUID].msg.status, Request.GRANTED)
+        self.assertEqual(rset[TEST_UUID].msg.resource, TEST_RESOURCE)
 
 if __name__ == '__main__':
     import rosunit
