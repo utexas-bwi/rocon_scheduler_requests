@@ -349,10 +349,8 @@ class RequestSet:
         """
         # Reconcile each existing request with the updates.  Make a
         # copy of the dictionary items, so it can be altered in the loop.
-        print('len: ' + str(len(self.requests)))
         for rid, rq in self.requests.items():
             new_rq = updates.get(rid)
-            print('NEW_RQ: ' + str(new_rq))
             if new_rq is None and rq.msg.status == Request.RELEASED:
                 del self.requests[rid]  # no longer needed
             else:

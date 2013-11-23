@@ -65,7 +65,9 @@ class Requester:
     requests.  It subscribes to its own scheduler feedback topic and
     advertises the rocon scheduler topic.
 
-    :param uuid: UUID_ of this requester. If None provided, a random
+    :param callback: Callback function, invoked with the current
+                     :class:`RequestsSet`, when its status changes.
+    :param uuid: UUID_ of this requester. If ``None`` provided, a random
                  uuid will be assigned.
     :type uuid: Standard Python :class:`uuid.UUID` object.
     :param frequency: requester heartbeat frequency in Hz.
@@ -75,9 +77,10 @@ class Requester:
 
     """
 
-    def __init__(self, uuid=None,
+    def __init__(self, callback, uuid=None,
                  frequency=common.HEARTBEAT_HZ,
                  topic=common.SCHEDULER_TOPIC):
+        self.callback = callback        # requester callback
         if uuid is None:
             uuid = unique_id.fromRandom()
         self.requester_id = uuid
@@ -98,7 +101,7 @@ class Requester:
         """ Scheduler feedback message handler."""
         new_rset = transitions.RequestSet(msg.requests)
         self.rset.merge(new_rset)
-        # :todo: invoke requester callback?
+        self.callback(self.rset)
 
     def _heartbeat(self, event):
         """ Scheduler request heartbeat timer handler.
