@@ -52,14 +52,14 @@ class TestTransitions(unittest.TestCase):
                                       resource=TEST_WILDCARD,
                                       status=Request.NEW))
         self.assertIsNotNone(rq1)
-        self.assertEqual(rq1.get_status(), Request.NEW)
-        self.assertEqual(rq1.get_resource(), TEST_WILDCARD)
+        self.assertEqual(rq1.msg.status, Request.NEW)
+        self.assertEqual(rq1.msg.resource, TEST_WILDCARD)
         self.assertNotEqual(rq1.get_uuid, TEST_UUID)
         rq2 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
                                       resource=TEST_RESOURCE,
                                       status=Request.NEW))
-        self.assertEqual(rq2.get_status(), Request.NEW)
-        self.assertEqual(rq2.get_resource(), TEST_RESOURCE)
+        self.assertEqual(rq2.msg.status, Request.NEW)
+        self.assertEqual(rq2.msg.resource, TEST_RESOURCE)
         self.assertEqual(rq2.get_uuid(), TEST_UUID)
 
     def test_grant(self):
@@ -67,15 +67,15 @@ class TestTransitions(unittest.TestCase):
                                       resource=TEST_WILDCARD,
                                       status=Request.NEW))
         rq1.grant(TEST_RESOURCE)
-        self.assertEqual(rq1.get_status(), Request.GRANTED)
-        self.assertEqual(rq1.get_resource(), TEST_RESOURCE)
+        self.assertEqual(rq1.msg.status, Request.GRANTED)
+        self.assertEqual(rq1.msg.resource, TEST_RESOURCE)
 
         rq2 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
                                       resource=TEST_WILDCARD,
                                       status=Request.WAITING))
         rq2.grant(TEST_RESOURCE)
-        self.assertEqual(rq2.get_status(), Request.GRANTED)
-        self.assertEqual(rq2.get_resource(), TEST_RESOURCE)
+        self.assertEqual(rq2.msg.status, Request.GRANTED)
+        self.assertEqual(rq2.msg.resource, TEST_RESOURCE)
 
         rq3 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
                                       resource=TEST_WILDCARD,

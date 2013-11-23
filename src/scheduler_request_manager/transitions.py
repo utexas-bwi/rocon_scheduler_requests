@@ -135,18 +135,6 @@ class ResourceRequest:
                                   + str(self.msg.status))
         self.msg.status = Request.RELEASED
 
-    def get_resource(self):
-        """
-        :returns: resource requested.
-        :rtype: rocon_std_msgs/PlatformInfo
-
-        """
-        return self.msg.resource
-
-    def get_status(self):
-        """ :returns: the current status of this request. """
-        return self.msg.status
-
     def get_uuid(self):
         """ :returns: UUID of this request.
         :rtype: :class:`uuid.UUID`
