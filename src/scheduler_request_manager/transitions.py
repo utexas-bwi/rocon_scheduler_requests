@@ -257,10 +257,6 @@ class RequestSet:
 
        Equivalent to ``not uuid in rset``.
 
-    .. describe:: iter(rset)
-
-       :returns: an iterator over the requests in the set.
-
     These methods are also provided:
 
     """
