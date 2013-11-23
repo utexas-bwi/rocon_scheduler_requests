@@ -124,6 +124,7 @@ class ResourceRequest:
     def __init__(self, msg):
         """ Constructor. """
         self.msg = msg
+        """ Current ``scheduler_msgs/Request`` for this request. """
 
     def free(self):
         """ Free up previously-assigned resource that was released.
@@ -248,8 +249,8 @@ class RequestSet:
 
     .. describe:: rset[uuid]
 
-       :returns: the entry key *uuid*.  Raises a :exc:`KeyError`
-                 if *uuid* is not in the set.
+       :returns: the resource request corresponding to *uuid*.
+       :raises: :exc:`KeyError` if no such request.
 
     .. describe:: uuid in rset
 
