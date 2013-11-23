@@ -66,41 +66,44 @@ class Requester:
     creates its own scheduler feedback topic and connects to the rocon
     scheduler topic.
 
-    :param callback: Callback function, invoked with the current
-                     :class:`transitions.RequestsSet`, when its status
-                     changes.
+    :param feedback: Callback function invoked with the current
+                     :class:`RequestSet` when feedback arrives.
+
     :param uuid: UUID_ of this requester. If ``None`` provided, a random
                  UUID will be assigned.
     :type uuid: :class:`uuid.UUID`
+
     :param topic: Topic name for allocating resources.
     :type topic: str
+
     :param frequency: requester heartbeat frequency in Hz.  Use the
                       default, except in exceptional situations or for
                       testing.
     :type frequency: float
 
-    As long as the :class:`Requester` remains, it will periodically
-    send request messages to the scheduler, which will provide
-    feedback for them.  The caller-provided callback function will be
-    invoked each time a feedback message arrives, like this:
+    As long as the :class:`Requester` object remains, it will
+    periodically send request messages to the scheduler, which will
+    provide feedback for them.  Those messages may be empty if no
+    requests are outstanding.  The caller-provided ``feedback`` function
+    will be invoked each time a feedback message arrives, like this:
 
-    .. describe:: callback(rset)
+    .. describe:: feedback(rset)
 
        :param rset: The current set of requests including possible
-                    updates from the scheduler.  May be empty, if no
-                    requests are outstanding.
-       :type rset: :class:`transtions.RequestSet`
+                    updates from the scheduler.
+       :type rset: :class:`scheduler_request_manager.transitions.RequestSet`
 
-    The callback is expected to iterate over the :class:`RequestSet`,
-    checking the status of each :class:`transtions.ResourceRequest` it
-    contains, modifying them appropriately.
+    The ``feedback`` function is expected to iterate over its
+    :class:`RequestSet`, checking the status of every
+    :class:`scheduler_request_manager.transitions.ResourceRequest` it
+    contains, and modifying them appropriately.
 
     """
 
-    def __init__(self, callback, uuid=None,
+    def __init__(self, feedback, uuid=None,
                  topic=common.SCHEDULER_TOPIC,
                  frequency=common.HEARTBEAT_HZ):
-        self.callback = callback        # requester callback
+        self.feedback = feedback        # requester feedback
         if uuid is None:
             uuid = unique_id.fromRandom()
         self.requester_id = uuid
@@ -118,10 +121,10 @@ class Requester:
                                  self._heartbeat)
 
     def _feedback(self, msg):
-        """ Scheduler feedback message handler."""
+        """ Scheduler feedback message handler. """
         new_rset = transitions.RequestSet(msg.requests)
         self.rset.merge(new_rset)
-        self.callback(self.rset)
+        self.feedback(self.rset)  # invoke user callback function
 
     def _heartbeat(self, event):
         """ Scheduler request heartbeat timer handler.
