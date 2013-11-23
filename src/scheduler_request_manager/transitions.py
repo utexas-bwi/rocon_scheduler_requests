@@ -44,6 +44,7 @@ between schedulers and requesters.
 from __future__ import absolute_import, print_function
 
 import copy
+import sets
 
 # Ros dependencies
 import rospy
@@ -87,14 +88,37 @@ def to_Request(resource, uuid=None):
                    status=Request.NEW)
 
 
+# State transition table.
+#
+# An immutable set of (old, new) status pairs.  All pairs in the table
+# are considered valid state transitions.  Any others are not.
+#
+TRANS_TABLE = sets.ImmutableSet([(Request.NEW, Request.WAITING),
+                                 (Request.NEW, Request.GRANTED),
+                                 (Request.NEW, Request.PREEMPTING),
+                                 (Request.NEW, Request.ABORTED),
+                                 (Request.WAITING, Request.GRANTED),
+                                 (Request.WAITING, Request.PREEMPTING),
+                                 (Request.WAITING, Request.RELEASING),
+                                 (Request.WAITING, Request.ABORTED),
+                                 (Request.GRANTED, Request.PREEMPTING),
+                                 (Request.GRANTED, Request.RELEASING),
+                                 (Request.GRANTED, Request.ABORTED),
+                                 (Request.PREEMPTING, Request.PREEMPTED),
+                                 (Request.PREEMPTING, Request.RELEASING),
+                                 (Request.PREEMPTING, Request.ABORTED),
+                                 (Request.PREEMPTED, Request.NEW),
+                                 (Request.PREEMPTED, Request.ABORTED),
+                                 (Request.RELEASING, Request.RELEASED),
+                                 (Request.RELEASING, Request.ABORTED)])
+
+
 class ResourceRequest:
     """
     This class tracks the status of a single resource request.
 
     :param msg: Rocon scheduler request message.
     :type msg: scheduler_msgs/Request
-
-    :todo: implement a proper state transition function
 
     """
     def __init__(self, msg):
@@ -106,7 +130,7 @@ class ResourceRequest:
 
         :raises: :class:`TransitionError`
         """
-        if self.msg.status != Request.RELEASING:
+        if not self.validate(Request.RELEASED):
             raise TransitionError('invalid resource release, status = '
                                   + str(self.msg.status))
         self.msg.status = Request.RELEASED
@@ -138,15 +162,14 @@ class ResourceRequest:
         :raises: :class:`ResourceNotRequestedError`
 
         """
-        if self.msg.status != Request.NEW \
-                and self.msg.status != Request.WAITING:
-            raise TransitionError('invalid resource grant, status = ' +
-                                  str(self.msg.status))
-        self.msg.status = Request.GRANTED
+        if not self.validate(Request.GRANTED):
+            raise TransitionError('invalid resource grant, status = '
+                                  + str(self.msg.status))
         if not self.matches(resource):
             raise ResourceNotRequestedError(str(resource)
                                             + ' does not match '
                                             + str(self.msg.resource))
+        self.msg.status = Request.GRANTED
         self.msg.resource = resource
 
     def matches(self, resource):
@@ -202,31 +225,22 @@ class ResourceRequest:
         :raises: :class:`TransitionError`
 
         """
-        if self.msg.status != Request.GRANTED:
+        if not self.validate(Request.RELEASING):
             raise TransitionError('invalid resource release, status = '
                                   + str(self.msg.status))
         self.msg.status = Request.RELEASING
 
-    def update(self, msg):
-        """ Update status based on message contents.
-
-        :param msg: Latest message received.
-        :type msg: scheduler_msgs/Request
-
-        """
-        pass                    # scaffolding
-
-    def validate(self, update):
+    def validate(self, new_status):
         """
         Validate status update for this ResourceRequest.
 
-        :param update: Latest message pertaining to this request.
-        :type update: :class:`RequestSet`
+        :param new_status: Latest status provided for this request.
+        :type new_status: :class:`RequestSet`
 
         :returns ``True`` if update represents a valid state transition.
 
         """
-        return True             # test stub
+        return (self.msg.status, new_status) in TRANS_TABLE
 
 
 class RequestSet:

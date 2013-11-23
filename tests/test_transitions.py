@@ -63,35 +63,64 @@ class TestTransitions(unittest.TestCase):
         self.assertEqual(rq2.get_uuid(), TEST_UUID)
 
     def test_grant(self):
-        rq = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
-                                     resource=TEST_WILDCARD,
-                                     status=Request.NEW))
-        self.assertEqual(rq.get_status(), Request.NEW)
-        rq.grant(TEST_RESOURCE)
-        self.assertEqual(rq.get_status(), Request.GRANTED)
-        self.assertEqual(rq.get_resource(), TEST_RESOURCE)
+        rq1 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resource=TEST_WILDCARD,
+                                      status=Request.NEW))
+        rq1.grant(TEST_RESOURCE)
+        self.assertEqual(rq1.get_status(), Request.GRANTED)
+        self.assertEqual(rq1.get_resource(), TEST_RESOURCE)
+
+        rq2 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resource=TEST_WILDCARD,
+                                      status=Request.WAITING))
+        rq2.grant(TEST_RESOURCE)
+        self.assertEqual(rq2.get_status(), Request.GRANTED)
+        self.assertEqual(rq2.get_resource(), TEST_RESOURCE)
+
+        rq3 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resource=TEST_WILDCARD,
+                                      status=Request.PREEMPTING))
+        self.assertRaises(TransitionError, rq3.grant, TEST_RESOURCE)
+
+        rq4 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resource=TEST_WILDCARD,
+                                      status=Request.ABORTED))
+        self.assertRaises(TransitionError, rq4.grant, TEST_RESOURCE)
 
     def test_release(self):
-        rq = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
-                                     resource=TEST_WILDCARD,
-                                     status=Request.NEW))
-        self.assertEqual(rq.get_status(), Request.NEW)
-        rq.grant(TEST_RESOURCE)
-        self.assertEqual(rq.get_status(), Request.GRANTED)
-        rq.release()
-        self.assertEqual(rq.get_status(), Request.RELEASING)
+        rq1 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resource=TEST_RESOURCE,
+                                      status=Request.GRANTED))
+        rq1.release()
+        self.assertEqual(rq1.msg.status, Request.RELEASING)
+
+        rq2 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resource=TEST_RESOURCE,
+                                      status=Request.WAITING))
+        rq2.release()
+        self.assertEqual(rq2.msg.status, Request.RELEASING)
+
+        rq3 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resource=TEST_RESOURCE,
+                                      status=Request.PREEMPTING))
+        rq3.release()
+        self.assertEqual(rq3.msg.status, Request.RELEASING)
+
+        rq4 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resource=TEST_RESOURCE,
+                                      status=Request.ABORTED))
+        self.assertRaises(TransitionError, rq4.release)
 
     def test_free(self):
         rq = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
                                      resource=TEST_RESOURCE,
                                      status=Request.NEW))
-        self.assertEqual(rq.get_status(), Request.NEW)
         rq.grant(TEST_RESOURCE)
-        self.assertEqual(rq.get_status(), Request.GRANTED)
+        self.assertEqual(rq.msg.status, Request.GRANTED)
         rq.release()
-        self.assertEqual(rq.get_status(), Request.RELEASING)
+        self.assertEqual(rq.msg.status, Request.RELEASING)
         rq.free()
-        self.assertEqual(rq.get_status(), Request.RELEASED)
+        self.assertEqual(rq.msg.status, Request.RELEASED)
 
     def test_matches(self):
         rq = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
