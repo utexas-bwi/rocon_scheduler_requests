@@ -84,7 +84,7 @@ class Requests:
         self.pub = rospy.Publisher(self.feedback_topic, SchedulerFeedback)
         self.feedback_msg = SchedulerFeedback(requester=msg.requester,
                                               priority=msg.priority)
-        self.rset = transitions.RequestSet()
+        self.rset = transitions.RequestSet([])
         self.update(msg)        # set initial status
 
     def _send_feedback(self):

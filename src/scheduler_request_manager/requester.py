@@ -81,7 +81,7 @@ class Requester:
         if uuid is None:
             uuid = unique_id.fromRandom()
         self.requester_id = uuid
-        self.rset = transitions.RequestSet()
+        self.rset = transitions.RequestSet([])
         self.pub_topic = topic
         self.sub_topic = common.feedback_topic(uuid, topic)
         rospy.loginfo('Rocon resource requester topic: ' + self.sub_topic)

@@ -261,7 +261,7 @@ class RequestSet:
 
     """
 
-    def __init__(self, requests=[]):
+    def __init__(self, requests):
         """ Constructor. """
         self.requests = {}
         for msg in requests:

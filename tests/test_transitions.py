@@ -27,12 +27,6 @@ TEST_WILDCARD = PlatformInfo(os='linux',
                              system='ros',
                              platform='segbot',
                              name=PlatformInfo.NAME_ANY)
-REQ_MSG1 = Request(id=unique_id.toMsg(TEST_UUID),
-                   resource=TEST_WILDCARD,
-                   status=Request.NEW)
-REQ_MSG2 = Request(id=unique_id.toMsg(TEST_UUID),
-                   resource=TEST_RESOURCE,
-                   status=Request.NEW)
 
 
 class TestTransitions(unittest.TestCase):
@@ -112,10 +106,11 @@ class TestTransitions(unittest.TestCase):
         self.assertFalse(rq.matches(kobuki))
 
     def test_empty_request_set(self):
-        rset = RequestSet()
+        rset = RequestSet([])
         self.assertIsNotNone(rset)
         self.assertEqual(len(rset), 0)
         self.assertTrue(TEST_UUID not in rset)
+        self.assertEqual([], rset.list_requests())
 
     def test_one_request_set(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
@@ -129,6 +124,21 @@ class TestTransitions(unittest.TestCase):
         self.assertFalse(DIFF_UUID in rset)
         self.assertIsNone(rset.get(DIFF_UUID))
         self.assertEqual(rset.get(DIFF_UUID, 10), 10)
+        self.assertEqual([msg1], rset.list_requests())
+
+    def test_two_request_set(self):
+        msg1 = Request(id=unique_id.toMsg(TEST_UUID),
+                       resource=TEST_WILDCARD)
+        msg2 = Request(id=unique_id.toMsg(DIFF_UUID),
+                       resource=TEST_RESOURCE)
+        rset = RequestSet([msg1, msg2])
+        self.assertEqual(len(rset), 2)
+        self.assertTrue(TEST_UUID in rset)
+        self.assertTrue(DIFF_UUID in rset)
+        self.assertEqual(rset[TEST_UUID].msg, msg1)
+        self.assertEqual(rset[DIFF_UUID].msg, msg2)
+        self.assertEqual(rset.get(TEST_UUID), rset[TEST_UUID])
+        self.assertEqual(rset.get(DIFF_UUID), rset[DIFF_UUID])
 
     def test_empty_merge(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
@@ -140,10 +150,29 @@ class TestTransitions(unittest.TestCase):
         self.assertEqual([msg1], rset.list_requests())
 
         # merge an empty request set: rset should remain the same
-        rset.merge(RequestSet())
+        rset.merge(RequestSet([]))
         self.assertEqual(len(rset), 1)
         self.assertTrue(TEST_UUID in rset)
         self.assertEqual([msg1], rset.list_requests())
+
+    def test_single_merge(self):
+        msg1 = Request(id=unique_id.toMsg(TEST_UUID),
+                       resource=TEST_WILDCARD,
+                       status=Request.NEW)
+        rset = RequestSet([msg1])
+        self.assertEqual(rset[TEST_UUID].msg.status, Request.NEW)
+        self.assertEqual(rset[TEST_UUID].msg.resource, TEST_WILDCARD)
+
+        # merge an empty request set: rset should remain the same
+        msg2 = Request(id=unique_id.toMsg(TEST_UUID),
+                       resource=TEST_RESOURCE,
+                       status=Request.GRANTED)
+        #rset.merge(RequestSet([msg2]))
+        self.assertEqual(len(rset), 1)
+        self.assertTrue(TEST_UUID in rset)
+        self.assertEqual([msg1], rset.list_requests())
+        #self.assertEqual(rset[TEST_UUID].msg.status, Request.GRANTED)
+        #self.assertEqual(rset[TEST_UUID].msg.resource, TEST_RESOURCE)
 
 if __name__ == '__main__':
     import rosunit
