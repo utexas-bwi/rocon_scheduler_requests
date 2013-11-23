@@ -36,7 +36,7 @@
 Python interface for rocon services making scheduler requests.
 
 This module provides a relatively simple API, not requiring detailed
-knowledge of scheduler request state transitions.
+knowledge of scheduler request messages or state transitions.
 
 .. _`uuid_msgs/UniqueID`:
      http://ros.org/doc/api/uuid_msgs/html/msg/UniqueID.html
@@ -62,24 +62,44 @@ from . import transitions
 class Requester:
     """
     This class is used by a rocon service to handle its resource
-    requests.  It subscribes to its own scheduler feedback topic and
-    advertises the rocon scheduler topic.
+    requests.  When an instance of :class:`Requester` is created, it
+    creates its own scheduler feedback topic and connects to the rocon
+    scheduler topic.
 
     :param callback: Callback function, invoked with the current
-                     :class:`RequestsSet`, when its status changes.
+                     :class:`transitions.RequestsSet`, when its status
+                     changes.
     :param uuid: UUID_ of this requester. If ``None`` provided, a random
-                 uuid will be assigned.
-    :type uuid: Standard Python :class:`uuid.UUID` object.
-    :param frequency: requester heartbeat frequency in Hz.
-    :type frequency: float
+                 UUID will be assigned.
+    :type uuid: :class:`uuid.UUID`
     :param topic: Topic name for allocating resources.
     :type topic: str
+    :param frequency: requester heartbeat frequency in Hz.  Use the
+                      default, except in exceptional situations or for
+                      testing.
+    :type frequency: float
+
+    As long as the :class:`Requester` remains, it will periodically
+    send request messages to the scheduler, which will provide
+    feedback for them.  The caller-provided callback function will be
+    invoked each time a feedback message arrives, like this:
+
+    .. describe:: callback(rset)
+
+       :param rset: The current set of requests including possible
+                    updates from the scheduler.  May be empty, if no
+                    requests are outstanding.
+       :type rset: :class:`transtions.RequestSet`
+
+    The callback is expected to iterate over the :class:`RequestSet`,
+    checking the status of each :class:`transtions.ResourceRequest` it
+    contains, modifying them appropriately.
 
     """
 
     def __init__(self, callback, uuid=None,
-                 frequency=common.HEARTBEAT_HZ,
-                 topic=common.SCHEDULER_TOPIC):
+                 topic=common.SCHEDULER_TOPIC,
+                 frequency=common.HEARTBEAT_HZ):
         self.callback = callback        # requester callback
         if uuid is None:
             uuid = unique_id.fromRandom()
