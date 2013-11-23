@@ -1,5 +1,5 @@
-Rocon scheduler resource request manager
-========================================
+scheduler resource request manager
+==================================
 
 Contents:
 

@@ -73,9 +73,9 @@ def to_Request(resource, uuid=None):
 
     :param resource: Rocon resource requested, may contain wild cards.
     :type resource: rocon_std_msgs/PlatformInfo
-    :param uuid: UUID_ of this request. If None provided, a random
+    :param uuid: UUID_ of this request. If ``None`` provided, a random
                  uuid will be assigned.
-    :type uuid: Standard Python :class:`uuid.UUID` object.
+    :type uuid: :class:`uuid.UUID` or ``None``
 
     :returns: a new scheduler request ROS message
     :rtype: scheduler_msgs/Request
@@ -188,11 +188,11 @@ class ResourceRequest:
 
     def reconcile(self, update):
         """
-        Merge updated status with this ResourceRequest.
+        Merge updated status with this :class:`ResourceRequest`.
 
-        :param update: Latest message pertaining to this request,
-                       might be ``None`` if not present in the message.
-        :type update: :class:`ResourceRequest`
+        :param update: Latest information for this request, or
+                       ``None`` if no longer present.
+        :type update: :class:`ResourceRequest` or ``None``
 
         :raises: :class:`WrongRequestError`
 
@@ -221,7 +221,7 @@ class ResourceRequest:
 
     def validate(self, new_status):
         """
-        Validate status update for this ResourceRequest.
+        Validate status update for this :class:`ResourceRequest`.
 
         :param new_status: Latest status provided for this request.
         :type new_status: :class:`RequestSet`
