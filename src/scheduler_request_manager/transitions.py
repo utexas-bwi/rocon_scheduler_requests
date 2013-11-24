@@ -129,7 +129,7 @@ class ResourceRequest:
     def free(self):
         """ Free up previously-assigned resource that was released.
 
-        :raises: :class:`TransitionError`
+        :raises: :exc:`.TransitionError`
         """
         if not self.validate(Request.RELEASED):
             raise TransitionError('invalid resource release, status = '
@@ -147,8 +147,8 @@ class ResourceRequest:
 
         :param resource: Exact resource granted.
         :type resource: rocon_std_msgs/PlatformInfo
-        :raises: :class:`TransitionError`
-        :raises: :class:`ResourceNotRequestedError`
+        :raises: :exc:`.TransitionError`
+        :raises: :exc:`.ResourceNotRequestedError`
 
         """
         if not self.validate(Request.GRANTED):
@@ -188,13 +188,13 @@ class ResourceRequest:
 
     def reconcile(self, update):
         """
-        Merge updated status with this :class:`ResourceRequest`.
+        Merge updated status with this :class:`.ResourceRequest`.
 
         :param update: Latest information for this request, or
                        ``None`` if no longer present.
-        :type update: :class:`ResourceRequest` or ``None``
+        :type update: :class:`.ResourceRequest` or ``None``
 
-        :raises: :class:`WrongRequestError`
+        :raises: :exc:`.WrongRequestError`
 
         """
         if update is None:      # this request not mentioned in updates
@@ -211,7 +211,7 @@ class ResourceRequest:
     def release(self):
         """ Release a previously granted resource.
 
-        :raises: :class:`TransitionError`
+        :raises: :exc:`.TransitionError`
 
         """
         if not self.validate(Request.RELEASING):
@@ -221,10 +221,10 @@ class ResourceRequest:
 
     def validate(self, new_status):
         """
-        Validate status update for this :class:`ResourceRequest`.
+        Validate status update for this :class:`.ResourceRequest`.
 
         :param new_status: Latest status provided for this request.
-        :type new_status: :class:`RequestSet`
+        :type new_status: :class:`.RequestSet`
 
         :returns ``True`` if update represents a valid state transition.
 
@@ -241,7 +241,7 @@ class RequestSet:
                      ``requests`` component of an ``AllocateResources``
                      or ``SchedulerFeedback`` message.
 
-    :class:`RequestSet` supports these standard container operations:
+    :class:`.RequestSet` supports these standard container operations:
 
     .. describe:: len(rset)
 
@@ -280,7 +280,7 @@ class RequestSet:
         :param uuid: UUID_ of desired request.
         :type uuid: :class:`uuid.UUID`
 
-        :returns: named :class:`ResourceRequest`.
+        :returns: named :class:`.ResourceRequest`.
         :raises: :exc:`KeyError` if no such request
         """
         return self.requests[uuid]
@@ -301,7 +301,7 @@ class RequestSet:
         :type uuid: :class:`uuid.UUID`
         :param default: value to return if no such request.
 
-        :returns: named :class:`ResourceRequest`, if successful;
+        :returns: named :class:`.ResourceRequest`, if successful;
                   otherwise default.
 
         """
@@ -309,7 +309,7 @@ class RequestSet:
 
     def items(self):
         """
-        :returns: all (key, value) pairs for this :class:`RequestSet`.
+        :returns: all (key, value) pairs for this :class:`.RequestSet`.
         :rtype: list (Python2) or dictionary view (Python3)
 
         """
@@ -330,7 +330,7 @@ class RequestSet:
         Merge new request information into this RequestSet.
 
         :param updates: Request set containing updated information.
-        :type updates: :class:`RequestSet`
+        :type updates: :class:`.RequestSet`
 
         :todo: Pay attention to timing as messages and updates
                interleave.
@@ -353,6 +353,6 @@ class RequestSet:
     #def next(self):
     #    """
     #    :returns: next request of iteration.
-    #    :rtype: :class:`ResourceRequest`
-    #    :raises: :class:`StopIteration` when finished.
+    #    :rtype: :class:`.ResourceRequest`
+    #    :raises: :exc:`StopIteration` when finished.
     #    """

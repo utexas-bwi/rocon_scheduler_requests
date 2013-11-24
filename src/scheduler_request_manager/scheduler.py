@@ -63,7 +63,8 @@ from . import transitions
 class Requests:
     """
     This class tracks the status of all resource requests made by a
-    single requester.
+    single requester.  It subscribes to the requester feedback topic,
+    and provides updated information when appropriate.
 
     :param msg: Initial resource allocation request.
     :type msg: scheduler_msgs/AllocateResources
@@ -73,11 +74,7 @@ class Requests:
     """
 
     def __init__(self, msg, topic):
-        """ Constructor.
-
-        Initializes the :class:`Requests` and subscribes to the
-        requester feedback topic.
-        """
+        """ Constructor. """
         requester_id = unique_id.fromMsg(msg.requester)
         self.feedback_topic = common.feedback_topic(requester_id, topic)
         rospy.loginfo('Rocon scheduler feedback topic: ' + self.feedback_topic)
@@ -121,7 +118,10 @@ class Requests:
 class Scheduler:
     """
     This class is used by a rocon scheduler to manage all the resource
-    requests sent by various rocon services.
+    requests sent by various rocon services.  It subscribes to the
+    rocon scheduler topic, handling resource requests as they are
+    received.
+
 
     :param frequency: requester heartbeat frequency in Hz.
     :type frequency: float
@@ -133,11 +133,7 @@ class Scheduler:
     def __init__(self,
                  frequency=common.HEARTBEAT_HZ,
                  topic=common.SCHEDULER_TOPIC):
-        """Constructor.
-
-        Initializes the :class:`Scheduler` and subscribes to the rocon
-        scheduler topic.
-        """
+        """ Constructor. """
         self.requests = {}      # dict of requesters and their requests
         self.topic = topic
         rospy.loginfo('Rocon scheduler request topic: ' + self.topic)

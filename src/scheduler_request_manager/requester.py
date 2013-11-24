@@ -62,12 +62,12 @@ from . import transitions
 class Requester:
     """
     This class is used by a rocon service to handle its resource
-    requests.  When an instance of :class:`Requester` is created, it
+    requests.  When an instance of :class:`.Requester` is created, it
     creates its own scheduler feedback topic and connects to the rocon
     scheduler topic.
 
     :param feedback: Callback function invoked with the current
-                     :class:`RequestSet` when feedback arrives.
+                     :class:`.RequestSet` when feedback arrives.
 
     :param uuid: UUID_ of this requester. If ``None`` provided, a random
                  UUID will be assigned.
@@ -81,7 +81,7 @@ class Requester:
                       testing.
     :type frequency: float
 
-    As long as the :class:`Requester` object remains, it will
+    As long as the :class:`.Requester` object remains, it will
     periodically send request messages to the scheduler, which will
     provide feedback for them.  Those messages may be empty if no
     requests are outstanding.  The caller-provided ``feedback`` function
@@ -91,11 +91,11 @@ class Requester:
 
        :param rset: The current set of requests including possible
                     updates from the scheduler.
-       :type rset: :class:`scheduler_request_manager.transitions.RequestSet`
+       :type rset: :class:`.RequestSet`
 
     The ``feedback`` function is expected to iterate over its
-    :class:`RequestSet`, checking the status of every
-    :class:`scheduler_request_manager.transitions.ResourceRequest` it
+    :class:`.RequestSet`, checking the status of every
+    :class:`.ResourceRequest` it
     contains, and modifying them appropriately.
 
     .. note::
@@ -106,7 +106,7 @@ class Requester:
     .. note::
 
        Investigate whether it helps to also provide the previous
-       :class:`RequestSet`.
+       :class:`.RequestSet`.
 
     """
 

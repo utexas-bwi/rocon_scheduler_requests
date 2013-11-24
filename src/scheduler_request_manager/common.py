@@ -55,7 +55,7 @@ def feedback_topic(uuid, scheduler_topic=SCHEDULER_TOPIC):
     """ Construct scheduler feedback topic name.
 
     :param uuid: UUID_ of the requester.
-    :type uuid: Standard Python :class:`uuid.UUID` object.
+    :type uuid: :class:`uuid.UUID`
 
     :param topic: Topic name for the corresponding scheduler. If
                   missing, the usual scheduler topic name is assumed.
