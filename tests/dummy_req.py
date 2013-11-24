@@ -27,12 +27,6 @@ TEST_WILDCARD = PlatformInfo(os='linux',
                              platform='segbot',
                              name=PlatformInfo.NAME_ANY)
 
-# Global variables
-msg1 = Request(id=unique_id.toMsg(TEST_UUID),
-               resource=TEST_WILDCARD,
-               status=Request.NEW)
-rset1 = transitions.RequestSet([msg1])
-
 def feedback(rset):
     #print(str(rset))
     pass                        # test scaffolding
@@ -45,8 +39,7 @@ if __name__ == '__main__':
     rqr = requester.Requester(feedback, uuid=TEST_UUID, frequency=1.0)
 
     # Make a new request using a wildcard resource.
-    # :todo: come up with a better way to make new requests
-    rqr.rset.merge(rset1)
+    rqr.new_request(TEST_WILDCARD)
 
     # Spin in the main thread: required for message callbacks.
     rospy.spin()

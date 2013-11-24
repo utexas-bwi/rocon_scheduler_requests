@@ -252,6 +252,15 @@ class RequestSet:
        :returns: the resource request corresponding to *uuid*.
        :raises: :exc:`KeyError` if no such request.
 
+    .. describe:: rset[uuid] = rq
+
+       Define a new :class:`.ResourceRequest` for this UUID.
+
+       :param uuid: UUID_ of the request.
+       :type uuid: :class:`uuid.UUID`
+       :param rq: request.
+       :type rq: :class:`.ResourceRequest`
+
     .. describe:: uuid in rset
 
        :returns: ``True`` if *rset* has a key *uuid*, else ``False``.
@@ -293,6 +302,10 @@ class RequestSet:
     def __len__(self):
         """ Number of requests. """
         return len(self.requests)
+
+    def __setitem__(self, uuid, rq):
+        """ Add a resource request to the set. """
+        self.requests[uuid] = rq
 
     def get(self, uuid, default=None):
         """ Get request, if known.
