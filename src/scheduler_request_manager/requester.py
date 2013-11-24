@@ -155,7 +155,7 @@ class Requester:
 
     def new_request(self, resource, uuid=None):
         """ Add a new scheduler request.
-    
+
         :param resource: Rocon resource requested, may contain wild cards.
         :type resource: rocon_std_msgs/PlatformInfo
         :param uuid: UUID_ of this request. If ``None`` provided, a random
@@ -163,7 +163,7 @@ class Requester:
         :type uuid: :class:`uuid.UUID` or ``None``
 
         :raises: :exc:`.WrongRequestError` if replacing an existing request.
-    
+
         """
         if uuid is None:
             uuid = unique_id.fromRandom()
@@ -172,7 +172,7 @@ class Requester:
         msg = Request(id=unique_id.toMsg(uuid),
                       resource=resource,
                       status=Request.NEW)
-        self.rset[uuid] = transitions.ResourceRequest(msg) 
+        self.rset[uuid] = transitions.ResourceRequest(msg)
 
     #def reset_all(self, updates):
     #    """ Reset all requests.
