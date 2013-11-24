@@ -95,8 +95,8 @@ class Requester:
 
     The ``feedback`` function is expected to iterate over its
     :class:`.RequestSet`, checking the status of every
-    :class:`.ResourceRequest` it
-    contains, and modifying them appropriately.
+    :class:`.ResourceRequest` it contains, and modify them
+    appropriately.
 
     .. note::
 
@@ -113,11 +113,17 @@ class Requester:
     def __init__(self, feedback, uuid=None,
                  topic=common.SCHEDULER_TOPIC,
                  frequency=common.HEARTBEAT_HZ):
+        self.rset = transitions.RequestSet([])
+        """
+        :class:`.RequestSet` containing the current status of every
+        :class:`.ResourceRequest` made by this requester.  All
+        requester operations are done using this object and its
+        contents.
+        """
         self.feedback = feedback        # requester feedback
         if uuid is None:
             uuid = unique_id.fromRandom()
         self.requester_id = uuid
-        self.rset = transitions.RequestSet([])
         self.pub_topic = topic
         self.sub_topic = common.feedback_topic(uuid, topic)
         rospy.loginfo('Rocon resource requester topic: ' + self.sub_topic)
@@ -146,3 +152,21 @@ class Requester:
         self.alloc.header.stamp = event.current_real
         self.alloc.resources = self.rset.list_requests()
         self.pub.publish(self.alloc)
+
+    #def reset_all(self, updates):
+    #    """ Reset all requests.
+    #
+    #    :param updates: Request set containing updated information.
+    #    :type updates: :class:`.RequestSet`
+    #
+    #    Merges these updates with all previously-made requests:
+    #
+    #    * New ones are added.
+    #    * Existing ones are updated.
+    #    * Omitted ones are released.
+    #
+    #    :raises: :exc:`.WrongRequestError` if replacing an existing
+    #        request would cause an invalid state transition.
+    #
+    #    """
+    #    self.rset.merge(updates)
