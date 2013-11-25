@@ -27,9 +27,21 @@ TEST_WILDCARD = PlatformInfo(os='linux',
                              platform='segbot',
                              name=PlatformInfo.NAME_ANY)
 
+rid = None                      # UUID for Resource Request
+
 def feedback(rset):
-    #print(str(rset))
-    pass                        # test scaffolding
+    if rid:
+        rq = rset[rid]
+        if rq:
+            if rq.msg.status == Request.WAITING:
+                print('Request queued')
+            elif rq.msg.status == Request.GRANTED:
+                print('Request granted')
+                rset[rid].release()
+            elif rq.msg.status == Request.RELEASING:
+                print('Request released')
+        else:
+            print('Request freed.')
 
 if __name__ == '__main__':
 
@@ -39,7 +51,7 @@ if __name__ == '__main__':
     rqr = requester.Requester(feedback, uuid=TEST_UUID, frequency=1.0)
 
     # Make a new request using a wildcard resource.
-    rqr.new_request(TEST_WILDCARD)
+    rid = rqr.new_request(TEST_WILDCARD)
 
     # Spin in the main thread: required for message callbacks.
     rospy.spin()

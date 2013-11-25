@@ -161,8 +161,8 @@ class Requester:
         :param uuid: UUID_ of this request. If ``None`` provided, a random
                      UUID will be assigned.
         :type uuid: :class:`uuid.UUID` or ``None``
-
-        :raises: :exc:`.WrongRequestError` if replacing an existing request.
+        :returns: UUID (:class:`uuid.UUID`) assigned.
+        :raises: :exc:`.WrongRequestError` if request already exists.
 
         """
         if uuid is None:
@@ -173,6 +173,7 @@ class Requester:
                       resource=resource,
                       status=Request.NEW)
         self.rset[uuid] = transitions.ResourceRequest(msg)
+        return uuid
 
     #def reset_all(self, updates):
     #    """ Reset all requests.
