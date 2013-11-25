@@ -36,7 +36,13 @@ def feedback(rset):
             if rq.msg.status == Request.WAITING:
                 print('Request queued')
             elif rq.msg.status == Request.GRANTED:
-                print('Request granted')
+                res = rq.msg.resource
+                print('Request granted, resource: '
+                      + res.os + '.'
+                      + res.version + '.'
+                      + res.system + '.'
+                      + res.platform + '.'
+                      + res.name + '.')
                 rset[rid].release()
             elif rq.msg.status == Request.RELEASING:
                 print('Request released')
