@@ -66,21 +66,20 @@ class _RequesterStatus:
     single requester.  It subscribes to the requester feedback topic,
     and provides updated information when appropriate.
 
-    :param callback: Callback function invoked with the updated
-        :class:`.RequestSet` when requests arrive.
+    :param sched: (:class:`.Scheduler`) Scheduler object with which
+        this requester is connected.
 
     :param msg: (scheduler_msgs/AllocateResources) Initial resource
         allocation request.
 
-    :param topic: Topic name for resource allocation requests.
-
     """
 
-    def __init__(self, callback, msg, topic):
+    def __init__(self, sched, msg):
         """ Constructor. """
-        self.callback = callback
+        self.sched = sched
         requester_id = unique_id.fromMsg(msg.requester)
-        self.feedback_topic = common.feedback_topic(requester_id, topic)
+        self.feedback_topic = common.feedback_topic(requester_id,
+                                                    self.sched.topic)
         rospy.loginfo('requester feedback topic: ' + self.feedback_topic)
         self.pub = rospy.Publisher(self.feedback_topic, SchedulerFeedback)
         self.feedback_msg = SchedulerFeedback(requester=msg.requester,
@@ -107,7 +106,7 @@ class _RequesterStatus:
         # Make a new RequestSet from this message
         new_rset = transitions.RequestSet(msg.resources)
         self.rset.merge(new_rset)
-        self.callback(self.rset)
+        self.sched.callback(self.rset)
         self._send_feedback()   # notify the requester
 
     def timeout(self, limit, event):
@@ -151,9 +150,11 @@ class Scheduler:
                  topic=common.SCHEDULER_TOPIC):
         """ Constructor. """
         self.callback = callback
+        """ Callback function for request updates. """
         self.requesters = {}
         """ Dictionary of active requesters and their requests. """
         self.topic = topic
+        """ Scheduler request topic name. """
         rospy.loginfo('scheduler request topic: ' + self.topic)
         self.sub = rospy.Subscriber(self.topic,
                                     AllocateResources,
@@ -169,8 +170,7 @@ class Scheduler:
         if rqr:                 # known requester?
             rqr.update(msg)
         else:                   # new requester
-            self.requesters[rqr_id] = _RequesterStatus(self.callback,
-                                                       msg, self.topic)
+            self.requesters[rqr_id] = _RequesterStatus(self, msg)
 
     def _watchdog(self, event):
         """ Scheduler request watchdog timer handler. """
