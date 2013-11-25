@@ -60,7 +60,7 @@ from . import common
 from . import transitions
 
 
-class Requests:
+class _RequesterStatus:
     """
     This class tracks the status of all resource requests made by a
     single requester.  It subscribes to the requester feedback topic,
@@ -77,7 +77,7 @@ class Requests:
         """ Constructor. """
         requester_id = unique_id.fromMsg(msg.requester)
         self.feedback_topic = common.feedback_topic(requester_id, topic)
-        rospy.loginfo('Rocon scheduler feedback topic: ' + self.feedback_topic)
+        rospy.loginfo('requester feedback topic: ' + self.feedback_topic)
         self.pub = rospy.Publisher(self.feedback_topic, SchedulerFeedback)
         self.feedback_msg = SchedulerFeedback(requester=msg.requester,
                                               priority=msg.priority)
@@ -134,9 +134,10 @@ class Scheduler:
                  frequency=common.HEARTBEAT_HZ,
                  topic=common.SCHEDULER_TOPIC):
         """ Constructor. """
-        self.requests = {}      # dict of requesters and their requests
+        self.requesters = {}
+        """ Dictionary of active requesters and their requests. """
         self.topic = topic
-        rospy.loginfo('Rocon scheduler request topic: ' + self.topic)
+        rospy.loginfo('scheduler request topic: ' + self.topic)
         self.sub = rospy.Subscriber(self.topic,
                                     AllocateResources,
                                     self._allocate_resources)
@@ -146,18 +147,17 @@ class Scheduler:
 
     def _allocate_resources(self, msg):
         """ Scheduler resource allocation message handler. """
-        #rospy.loginfo('Rocon scheduler request: \n' + str(msg))
-        requester_id = unique_id.fromMsg(msg.requester)
-        rqr = self.requests.get(requester_id)
+        rqr_id = unique_id.fromMsg(msg.requester)
+        rqr = self.requesters.get(rqr_id)
         if rqr:                 # known requester?
             rqr.update(msg)
         else:                   # new requester
-            self.requests[requester_id] = Requests(msg, self.topic)
+            self.requesters[rqr_id] = _RequesterStatus(msg, self.topic)
 
     def _watchdog(self, event):
         """ Scheduler request watchdog timer handler. """
         # Must iterate over a copy of the dictionary items, because
         # some may be deleted inside the loop.
-        for requester, rq in self.requests.items():
-            if rq.timeout(self.time_limit, event):
-                del self.requests[requester]
+        for rqr_id, rqr in self.requesters.items():
+            if rqr.timeout(self.time_limit, event):
+                del self.requesters[rqr_id]
