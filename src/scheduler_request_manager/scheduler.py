@@ -76,15 +76,21 @@ class _RequesterStatus:
 
     def __init__(self, sched, msg):
         """ Constructor. """
+
         self.sched = sched
-        requester_id = unique_id.fromMsg(msg.requester)
-        self.feedback_topic = common.feedback_topic(requester_id,
+        """ Scheduler for this requester. """
+        self.requester_id = unique_id.fromMsg(msg.requester)
+        """ :class:`uuid.UUID` of this requester. """
+        self.rset = transitions.RequestSet([], self.requester_id,
+                                           priority=msg.priority)
+        """ All current resource requests for this requester. """
+
+        self.feedback_topic = common.feedback_topic(self.requester_id,
                                                     self.sched.topic)
         rospy.loginfo('requester feedback topic: ' + self.feedback_topic)
         self.pub = rospy.Publisher(self.feedback_topic, SchedulerFeedback)
         self.feedback_msg = SchedulerFeedback(requester=msg.requester,
                                               priority=msg.priority)
-        self.rset = transitions.RequestSet([])
         self.update(msg)        # set initial status
 
     def _send_feedback(self):
@@ -104,7 +110,9 @@ class _RequesterStatus:
 
         """
         # Make a new RequestSet from this message
-        new_rset = transitions.RequestSet(msg.resources)
+        new_rset = transitions.RequestSet(msg.resources,
+                                          self.requester_id,
+                                          priority=msg.priority)
         self.rset.merge(new_rset)
         self.sched.callback(self.rset)
         self._send_feedback()   # notify the requester

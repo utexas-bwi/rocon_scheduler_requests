@@ -15,6 +15,7 @@ from scheduler_msgs.msg import Request
 # module being tested:
 from scheduler_request_manager.transitions import *
 
+RQR_UUID = uuid.UUID('01234567-89ab-cdef-0123-456789abcdef')
 TEST_UUID = uuid.UUID('01234567-89ab-cdef-fedc-ba9876543210')
 DIFF_UUID = uuid.UUID('01234567-cdef-fedc-89ab-ba9876543210')
 TEST_RESOURCE = PlatformInfo(os='linux',
@@ -135,7 +136,7 @@ class TestTransitions(unittest.TestCase):
         self.assertFalse(rq.matches(kobuki))
 
     def test_empty_request_set(self):
-        rset = RequestSet([])
+        rset = RequestSet([], RQR_UUID)
         self.assertIsNotNone(rset)
         self.assertEqual(len(rset), 0)
         self.assertTrue(TEST_UUID not in rset)
@@ -145,7 +146,7 @@ class TestTransitions(unittest.TestCase):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
                        resource=TEST_WILDCARD,
                        status=Request.NEW)
-        rset = RequestSet([msg1])
+        rset = RequestSet([msg1], RQR_UUID)
         self.assertEqual(len(rset), 1)
         self.assertTrue(TEST_UUID in rset)
         self.assertEqual(rset[TEST_UUID].msg, msg1)
@@ -160,7 +161,7 @@ class TestTransitions(unittest.TestCase):
                        resource=TEST_WILDCARD)
         msg2 = Request(id=unique_id.toMsg(DIFF_UUID),
                        resource=TEST_RESOURCE)
-        rset = RequestSet([msg1, msg2])
+        rset = RequestSet([msg1, msg2], RQR_UUID)
         self.assertEqual(len(rset), 2)
         self.assertTrue(TEST_UUID in rset)
         self.assertTrue(DIFF_UUID in rset)
@@ -173,13 +174,13 @@ class TestTransitions(unittest.TestCase):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
                        resource=TEST_WILDCARD,
                        status=Request.NEW)
-        rset = RequestSet([msg1])
+        rset = RequestSet([msg1], RQR_UUID)
         self.assertEqual(len(rset), 1)
         self.assertTrue(TEST_UUID in rset)
         self.assertEqual([msg1], rset.list_requests())
 
         # merge an empty request set: rset should remain the same
-        rset.merge(RequestSet([]))
+        rset.merge(RequestSet([], RQR_UUID))
         self.assertEqual(len(rset), 1)
         self.assertTrue(TEST_UUID in rset)
         self.assertEqual([msg1], rset.list_requests())
@@ -188,7 +189,7 @@ class TestTransitions(unittest.TestCase):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
                        resource=TEST_WILDCARD,
                        status=Request.NEW)
-        rset = RequestSet([msg1])
+        rset = RequestSet([msg1], RQR_UUID)
         self.assertEqual(rset[TEST_UUID].msg.status, Request.NEW)
         self.assertEqual(rset[TEST_UUID].msg.resource, TEST_WILDCARD)
         self.assertEqual(rset[TEST_UUID].msg.id, unique_id.toMsg(TEST_UUID))
@@ -197,7 +198,7 @@ class TestTransitions(unittest.TestCase):
         msg2 = Request(id=unique_id.toMsg(TEST_UUID),
                        resource=TEST_RESOURCE,
                        status=Request.GRANTED)
-        rset.merge(RequestSet([msg2]))
+        rset.merge(RequestSet([msg2], RQR_UUID))
         self.assertEqual(len(rset), 1)
         self.assertTrue(TEST_UUID in rset)
         self.assertEqual([msg1], rset.list_requests())

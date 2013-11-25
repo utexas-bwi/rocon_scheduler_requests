@@ -230,6 +230,7 @@ class ResourceRequest:
         Validate status update for this :class:`.ResourceRequest`.
 
         :param new_status: Proposed new status for this request.
+
         :returns ``True`` if this is a valid state transition.
 
         """
@@ -252,6 +253,8 @@ class RequestSet:
     :param requests: list of ``Request`` messages, typically from the
                      ``requests`` component of an ``AllocateResources``
                      or ``SchedulerFeedback`` message.
+    :param requester_id: (:class:`uuid.UUID`) Unique ID this requester.
+    :param priority: Scheduling priority of this requester.
 
     :class:`.RequestSet` supports these standard container operations:
 
@@ -285,8 +288,12 @@ class RequestSet:
 
     """
 
-    def __init__(self, requests):
+    def __init__(self, requests, requester_id, priority=0):
         """ Constructor. """
+        self.requester_id = requester_id
+        """ :class:`uuid.UUID` of this requester. """
+        self.priority = priority
+        """ Current requester priority. """
         self.requests = {}
         for msg in requests:
             rq = ResourceRequest(msg)
@@ -356,7 +363,7 @@ class RequestSet:
         :returns: list of ``scheduler_msgs/Request`` messages.
 
         """
-        return [rq.msg for rq in self.requests.itervalues()]
+        return [rq.msg for rq in self.requests.values()]
 
     def merge(self, updates):
         """

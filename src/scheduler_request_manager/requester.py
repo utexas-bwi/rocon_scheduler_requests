@@ -73,6 +73,8 @@ class Requester:
                  UUID will be assigned.
     :type uuid: :class:`uuid.UUID`
 
+    :param priority: Scheduling priority of this requester.
+
     :param topic: Topic name for allocating resources.
     :type topic: str
 
@@ -111,19 +113,25 @@ class Requester:
     """
 
     def __init__(self, feedback, uuid=None,
+                 priority=0,
                  topic=common.SCHEDULER_TOPIC,
                  frequency=common.HEARTBEAT_HZ):
-        self.rset = transitions.RequestSet([])
+        """ Constructor. """
+
+        if uuid is None:
+            uuid = unique_id.fromRandom()
+        self.requester_id = uuid
+        """ :class:`uuid.UUID` of this requester. """
+        self.rset = transitions.RequestSet([], self.requester_id,
+                                           priority=priority)
         """
         :class:`.RequestSet` containing the current status of every
         :class:`.ResourceRequest` made by this requester.  All
         requester operations are done using this object and its
         contents.
         """
+
         self.feedback = feedback        # requester feedback
-        if uuid is None:
-            uuid = unique_id.fromRandom()
-        self.requester_id = uuid
         self.pub_topic = topic
         self.sub_topic = common.feedback_topic(uuid, topic)
         rospy.loginfo('Rocon resource requester topic: ' + self.sub_topic)
@@ -138,7 +146,10 @@ class Requester:
 
     def _feedback(self, msg):
         """ Scheduler feedback message handler. """
-        new_rset = transitions.RequestSet(msg.requests)
+        # Make a new RequestSet from this message
+        new_rset = transitions.RequestSet(msg.requests,
+                                          self.requester_id,
+                                          priority=msg.priority)
         self.rset.merge(new_rset)
         self.feedback(self.rset)  # invoke user callback function
 
@@ -150,6 +161,7 @@ class Requester:
 
         """
         self.alloc.header.stamp = event.current_real
+        self.alloc.priority = self.rset.priority
         self.alloc.resources = self.rset.list_requests()
         self.pub.publish(self.alloc)
 
