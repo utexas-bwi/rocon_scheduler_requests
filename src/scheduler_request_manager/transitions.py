@@ -127,14 +127,11 @@ class ResourceRequest:
         """ Current ``scheduler_msgs/Request`` for this request. """
 
     def free(self):
-        """ Free up previously-assigned resource that was released.
+        """ Free up a previously-assigned resource that was released.
 
         :raises: :exc:`.TransitionError`
         """
-        if not self.validate(Request.RELEASED):
-            raise TransitionError('invalid resource release, status = '
-                                  + str(self.msg.status))
-        self.msg.status = Request.RELEASED
+        self.update_status(Request.RELEASED)
 
     def get_uuid(self):
         """ :returns: UUID of this request.
@@ -151,14 +148,11 @@ class ResourceRequest:
         :raises: :exc:`.ResourceNotRequestedError`
 
         """
-        if not self.validate(Request.GRANTED):
-            raise TransitionError('invalid resource grant, status = '
-                                  + str(self.msg.status))
+        self.update_status(Request.GRANTED)
         if not self.matches(resource):
             raise ResourceNotRequestedError(str(resource)
                                             + ' does not match '
                                             + str(self.msg.resource))
-        self.msg.status = Request.GRANTED
         self.msg.resource = resource
 
     def matches(self, resource):
@@ -214,19 +208,29 @@ class ResourceRequest:
         :raises: :exc:`.TransitionError`
 
         """
-        if not self.validate(Request.RELEASING):
-            raise TransitionError('invalid resource release, status = '
-                                  + str(self.msg.status))
-        self.msg.status = Request.RELEASING
+        self.update_status(Request.RELEASING)
+
+    def update_status(self, new_status):
+        """
+        Update status for this :class:`.ResourceRequest`.
+
+        :param new_status: Desired status.
+
+        :raises: :exc:`.TransitionError` if not a valid transition.
+
+        """
+        if not self.validate(new_status):
+            raise TransitionError('invalid status transition from '
+                                  + str(self.msg.status)
+                                  + ' to ' + str(new_status))
+        self.msg.status = new_status
 
     def validate(self, new_status):
         """
         Validate status update for this :class:`.ResourceRequest`.
 
-        :param new_status: Latest status provided for this request.
-        :type new_status: :class:`.RequestSet`
-
-        :returns ``True`` if update represents a valid state transition.
+        :param new_status: Proposed new status for this request.
+        :returns ``True`` if this is a valid state transition.
 
         """
         return (self.msg.status, new_status) in TRANS_TABLE
@@ -237,10 +241,7 @@ class ResourceRequest:
 
         :raises: :exc:`.TransitionError`
         """
-        if not self.validate(Request.WAITING):
-            raise TransitionError('invalid resource transition, status = '
-                                  + str(self.msg.status))
-        self.msg.status = Request.WAITING
+        self.update_status(Request.WAITING)
 
 
 class RequestSet:
