@@ -66,15 +66,19 @@ class _RequesterStatus:
     single requester.  It subscribes to the requester feedback topic,
     and provides updated information when appropriate.
 
-    :param msg: Initial resource allocation request.
-    :type msg: scheduler_msgs/AllocateResources
+    :param callback: Callback function invoked with the updated
+        :class:`.RequestSet` when requests arrive.
+
+    :param msg: (scheduler_msgs/AllocateResources) Initial resource
+        allocation request.
+
     :param topic: Topic name for resource allocation requests.
-    :type topic: str
 
     """
 
-    def __init__(self, msg, topic):
+    def __init__(self, callback, msg, topic):
         """ Constructor. """
+        self.callback = callback
         requester_id = unique_id.fromMsg(msg.requester)
         self.feedback_topic = common.feedback_topic(requester_id, topic)
         rospy.loginfo('requester feedback topic: ' + self.feedback_topic)
@@ -103,7 +107,7 @@ class _RequesterStatus:
         # Make a new RequestSet from this message
         new_rset = transitions.RequestSet(msg.resources)
         self.rset.merge(new_rset)
-        # :todo: invoke scheduler callback?
+        self.callback(self.rset)
         self._send_feedback()   # notify the requester
 
     def timeout(self, limit, event):
@@ -122,18 +126,31 @@ class Scheduler:
     rocon scheduler topic, handling resource requests as they are
     received.
 
+    :param callback: Callback function invoked with the updated
+        :class:`.RequestSet` when requests arrive.
 
     :param frequency: requester heartbeat frequency in Hz.
     :type frequency: float
     :param topic: Topic name for resource allocation requests.
     :type topic: str
 
+    .. describe:: callback(rset)
+
+       :param rset: (:class:`.RequestSet`) The current status of all
+           requests for some active requester.
+
+    The *callback* function is expected to iterate over its
+    :class:`.RequestSet`, checking the status of every
+    :class:`.ResourceRequest` it contains, and modify them
+    appropriately.
+
     """
 
-    def __init__(self,
+    def __init__(self, callback,
                  frequency=common.HEARTBEAT_HZ,
                  topic=common.SCHEDULER_TOPIC):
         """ Constructor. """
+        self.callback = callback
         self.requesters = {}
         """ Dictionary of active requesters and their requests. """
         self.topic = topic
@@ -152,7 +169,8 @@ class Scheduler:
         if rqr:                 # known requester?
             rqr.update(msg)
         else:                   # new requester
-            self.requesters[rqr_id] = _RequesterStatus(msg, self.topic)
+            self.requesters[rqr_id] = _RequesterStatus(self.callback,
+                                                       msg, self.topic)
 
     def _watchdog(self, event):
         """ Scheduler request watchdog timer handler. """

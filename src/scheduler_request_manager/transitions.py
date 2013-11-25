@@ -231,6 +231,17 @@ class ResourceRequest:
         """
         return (self.msg.status, new_status) in TRANS_TABLE
 
+    def wait(self):
+        """
+        Put request in wait status until a suitable resource is available.
+
+        :raises: :exc:`.TransitionError`
+        """
+        if not self.validate(Request.WAITING):
+            raise TransitionError('invalid resource transition, status = '
+                                  + str(self.msg.status))
+        self.msg.status = Request.WAITING
+
 
 class RequestSet:
     """
@@ -328,6 +339,14 @@ class RequestSet:
         """
         return self.requests.items()
 
+    def keys(self):
+        """
+        :returns: all UUIDs for this :class:`.RequestSet`.
+        :rtype: list (Python2) or dictionary view (Python3)
+
+        """
+        return self.requests.keys()
+
     def list_requests(self):
         """
         Return a list of resource requests suitable for inclusion in
@@ -369,3 +388,11 @@ class RequestSet:
     #    :rtype: :class:`.ResourceRequest`
     #    :raises: :exc:`StopIteration` when finished.
     #    """
+
+    def values(self):
+        """
+        :returns: all requests for this :class:`.RequestSet`.
+        :rtype: list (Python2) or dictionary view (Python3)
+
+        """
+        return self.requests.values()
