@@ -44,7 +44,6 @@ between schedulers and requesters.
 from __future__ import absolute_import, print_function
 
 import copy
-import sets
 
 # Ros dependencies
 import rospy
@@ -93,24 +92,24 @@ def to_Request(resource, uuid=None):
 # An immutable set of (old, new) status pairs.  All pairs in the table
 # are considered valid state transitions.  Any others are not.
 #
-TRANS_TABLE = sets.ImmutableSet([(Request.NEW, Request.WAITING),
-                                 (Request.NEW, Request.GRANTED),
-                                 (Request.NEW, Request.PREEMPTING),
-                                 (Request.NEW, Request.ABORTED),
-                                 (Request.WAITING, Request.GRANTED),
-                                 (Request.WAITING, Request.PREEMPTING),
-                                 (Request.WAITING, Request.RELEASING),
-                                 (Request.WAITING, Request.ABORTED),
-                                 (Request.GRANTED, Request.PREEMPTING),
-                                 (Request.GRANTED, Request.RELEASING),
-                                 (Request.GRANTED, Request.ABORTED),
-                                 (Request.PREEMPTING, Request.PREEMPTED),
-                                 (Request.PREEMPTING, Request.RELEASING),
-                                 (Request.PREEMPTING, Request.ABORTED),
-                                 (Request.PREEMPTED, Request.NEW),
-                                 (Request.PREEMPTED, Request.ABORTED),
-                                 (Request.RELEASING, Request.RELEASED),
-                                 (Request.RELEASING, Request.ABORTED)])
+TRANS_TABLE = frozenset([(Request.NEW, Request.WAITING),
+                         (Request.NEW, Request.GRANTED),
+                         (Request.NEW, Request.PREEMPTING),
+                         (Request.NEW, Request.ABORTED),
+                         (Request.WAITING, Request.GRANTED),
+                         (Request.WAITING, Request.PREEMPTING),
+                         (Request.WAITING, Request.RELEASING),
+                         (Request.WAITING, Request.ABORTED),
+                         (Request.GRANTED, Request.PREEMPTING),
+                         (Request.GRANTED, Request.RELEASING),
+                         (Request.GRANTED, Request.ABORTED),
+                         (Request.PREEMPTING, Request.PREEMPTED),
+                         (Request.PREEMPTING, Request.RELEASING),
+                         (Request.PREEMPTING, Request.ABORTED),
+                         (Request.PREEMPTED, Request.NEW),
+                         (Request.PREEMPTED, Request.ABORTED),
+                         (Request.RELEASING, Request.RELEASED),
+                         (Request.RELEASING, Request.ABORTED)])
 
 
 class ResourceRequest:
