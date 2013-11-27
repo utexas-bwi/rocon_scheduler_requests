@@ -117,6 +117,7 @@ TRANS_TABLE = frozenset([(Request.NEW, Request.ABORTED),
                          (Request.PREEMPTED, Request.NEW),
                          (Request.PREEMPTED, Request.REJECTED),
 
+                         (Request.RELEASING, Request.ABORTED),
                          (Request.RELEASING, Request.REJECTED),
                          (Request.RELEASING, Request.RELEASED)])
 
@@ -143,6 +144,10 @@ class ResourceRequest:
         return 'id: ' + str(unique_id.fromMsg(self.msg.id)) \
             + '\n    resource: ' + self.str_resource() \
             + '\n    status: ' + str(self.msg.status)
+
+    def abort(self):
+        """ Abort a request due to internal failure (always valid). """
+        self.update_status(Request.ABORTED)
 
     def free(self):
         """ Free up a previously-assigned resource that was released.

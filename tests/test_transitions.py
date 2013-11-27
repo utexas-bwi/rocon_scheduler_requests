@@ -48,6 +48,37 @@ class TestTransitions(unittest.TestCase):
                                  resource=TEST_RESOURCE,
                                  status=Request.NEW))
 
+    def test_abort(self):
+        rq1 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resource=TEST_RESOURCE,
+                                      status=Request.NEW))
+        rq1.abort()
+        self.assertEqual(rq1.msg.status, Request.ABORTED)
+
+        rq2 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resource=TEST_RESOURCE,
+                                      status=Request.WAITING))
+        rq2.abort()
+        self.assertEqual(rq2.msg.status, Request.ABORTED)
+
+        rq3 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resource=TEST_RESOURCE,
+                                      status=Request.PREEMPTING))
+        rq3.abort()
+        self.assertEqual(rq3.msg.status, Request.ABORTED)
+
+        rq4 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resource=TEST_RESOURCE,
+                                      status=Request.PREEMPTED))
+        rq4.abort()
+        self.assertEqual(rq4.msg.status, Request.ABORTED)
+
+        rq5 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resource=TEST_WILDCARD,
+                                      status=Request.GRANTED))
+        rq5.abort()
+        self.assertEqual(rq5.msg.status, Request.ABORTED)
+
     def test_constructor(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
                        resource=TEST_WILDCARD,
