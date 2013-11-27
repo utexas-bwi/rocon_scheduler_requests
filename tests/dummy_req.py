@@ -30,6 +30,7 @@ TEST_WILDCARD = PlatformInfo(os='linux',
 rid = None                      # UUID for Resource Request
 
 def feedback(rset):
+    print(str(rset))
     if rid:
         rq = rset[rid]
         if rq:
@@ -37,12 +38,7 @@ def feedback(rset):
                 print('Request queued')
             elif rq.msg.status == Request.GRANTED:
                 res = rq.msg.resource
-                print('Request granted, resource: '
-                      + res.os + '.'
-                      + res.version + '.'
-                      + res.system + '.'
-                      + res.platform + '.'
-                      + res.name + '.')
+                print('Request granted, resource: ' + rq.str_resource())
                 rset[rid].release()
             elif rq.msg.status == Request.RELEASING:
                 print('Request released')

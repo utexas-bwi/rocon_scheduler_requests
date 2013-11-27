@@ -49,19 +49,35 @@ class TestTransitions(unittest.TestCase):
                                  status=Request.NEW))
 
     def test_constructor(self):
-        rq1 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
-                                      resource=TEST_WILDCARD,
-                                      status=Request.NEW))
+        msg1 = Request(id=unique_id.toMsg(TEST_UUID),
+                       resource=TEST_WILDCARD,
+                       status=Request.NEW)
+        rq1 = ResourceRequest(msg1)
         self.assertIsNotNone(rq1)
+        self.assertNotEqual(str(rq1), str(msg1))
+        self.assertEqual(str(rq1),
+                         'id: 01234567-89ab-cdef-fedc-ba9876543210\n'
+                         '    resource: linux.precise.ros.segbot.*\n'
+                         '    status: 0')
         self.assertEqual(rq1.msg.status, Request.NEW)
         self.assertEqual(rq1.msg.resource, TEST_WILDCARD)
-        self.assertNotEqual(rq1.get_uuid, TEST_UUID)
-        rq2 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+        self.assertEqual(rq1.str_resource(), 'linux.precise.ros.segbot.*')
+
+        # why is this broken???
+        #self.assertEqual(rq1.get_uuid, TEST_UUID)
+
+        rq2 = ResourceRequest(Request(id=unique_id.toMsg(DIFF_UUID),
                                       resource=TEST_RESOURCE,
                                       status=Request.NEW))
         self.assertEqual(rq2.msg.status, Request.NEW)
         self.assertEqual(rq2.msg.resource, TEST_RESOURCE)
-        self.assertEqual(rq2.get_uuid(), TEST_UUID)
+        self.assertEqual(rq2.get_uuid(), DIFF_UUID)
+        self.assertEqual(rq2.str_resource(),
+                         'linux.precise.ros.segbot.roberto')
+        self.assertEqual(str(rq2),
+                         'id: 01234567-cdef-fedc-89ab-ba9876543210\n'
+                         '    resource: linux.precise.ros.segbot.roberto\n'
+                         '    status: 0')
 
     def test_grant(self):
         rq1 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
@@ -141,6 +157,10 @@ class TestTransitions(unittest.TestCase):
         self.assertEqual(len(rset), 0)
         self.assertTrue(TEST_UUID not in rset)
         self.assertEqual([], rset.list_requests())
+        rset_str = """requester_id: 01234567-89ab-cdef-0123-456789abcdef
+priority: 0
+requests:"""
+        self.assertEqual(str(rset), rset_str)
 
     def test_one_request_set(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
@@ -155,6 +175,13 @@ class TestTransitions(unittest.TestCase):
         self.assertIsNone(rset.get(DIFF_UUID))
         self.assertEqual(rset.get(DIFF_UUID, 10), 10)
         self.assertEqual([msg1], rset.list_requests())
+        rset_str = """requester_id: 01234567-89ab-cdef-0123-456789abcdef
+priority: 0
+requests:
+  id: 01234567-89ab-cdef-fedc-ba9876543210
+    resource: linux.precise.ros.segbot.*
+    status: 0"""
+        self.assertEqual(str(rset), rset_str)
 
     def test_two_request_set(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),

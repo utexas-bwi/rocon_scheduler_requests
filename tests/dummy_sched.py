@@ -19,7 +19,9 @@ TEST_RESOURCE = PlatformInfo(os='linux',
 
 def callback(rset):
     """ Scheduler request callback. """
+    print(str(rset))
     for rq in rset.values():
+        #print(str(rq))
         if rq.msg.status == Request.NEW:
             rq.wait()
             print('Request queued')

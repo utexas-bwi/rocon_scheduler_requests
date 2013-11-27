@@ -119,11 +119,21 @@ class ResourceRequest:
     :param msg: Rocon scheduler request message.
     :type msg: scheduler_msgs/Request
 
+    .. describe:: str(rq)
+
+       :returns: String representation of :class:`ResourceRequest`.
+
     """
     def __init__(self, msg):
         """ Constructor. """
         self.msg = msg
         """ Current ``scheduler_msgs/Request`` for this request. """
+
+    def __str__(self):
+        """ :todo: add availability """
+        return 'id: ' + str(unique_id.fromMsg(self.msg.id)) \
+            + '\n    resource: ' + self.str_resource() \
+            + '\n    status: ' + str(self.msg.status)
 
     def free(self):
         """ Free up a previously-assigned resource that was released.
@@ -209,6 +219,14 @@ class ResourceRequest:
         """
         self.update_status(Request.RELEASING)
 
+    def str_resource(self):
+        """ Convert resource to a human-readable string. """
+        return self.msg.resource.os + '.' \
+            + self.msg.resource.version + '.' \
+            + self.msg.resource.system + '.' \
+            + self.msg.resource.platform + '.' \
+            + self.msg.resource.name
+
     def update_status(self, new_status):
         """
         Update status for this :class:`.ResourceRequest`.
@@ -275,6 +293,10 @@ class RequestSet:
        :param rq: request.
        :type rq: :class:`.ResourceRequest`
 
+    .. describe:: str(rset)
+
+       :returns: String representation of :class:`RequestSet`.
+
     .. describe:: uuid in rset
 
        :returns: ``True`` if *rset* has a key *uuid*, else ``False``.
@@ -324,6 +346,14 @@ class RequestSet:
     def __setitem__(self, uuid, rq):
         """ Add a resource request to the set. """
         self.requests[uuid] = rq
+
+    def __str__(self):
+        rval = 'requester_id: ' + str(self.requester_id) \
+            + '\npriority: ' + str(self.priority) \
+            + '\nrequests:'
+        for rq in self.requests.values():
+            rval += '\n  ' + str(rq)
+        return rval
 
     def get(self, uuid, default=None):
         """ Get request, if known.
