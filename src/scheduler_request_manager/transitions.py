@@ -242,7 +242,7 @@ class ResourceRequest:
         self.update_status(Request.RELEASING)
 
     def str_resource(self):
-        """ Convert resource to a human-readable string. """
+        """ Format requested resource into a human-readable string. """
         return self.msg.resource.os + '.' \
             + self.msg.resource.version + '.' \
             + self.msg.resource.system + '.' \
@@ -270,7 +270,7 @@ class ResourceRequest:
 
         :param new_status: Proposed new status for this request.
 
-        :returns ``True`` if this is a valid state transition.
+        :returns: ``True`` if this is a valid state transition.
 
         """
         return (self.msg.status, new_status) in TRANS_TABLE
