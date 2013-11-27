@@ -290,8 +290,7 @@ class RequestSet:
     single requester or message.  It acts like a dictionary.
 
     :param requests: list of ``Request`` messages, typically from the
-                     ``requests`` component of an ``AllocateResources``
-                     or ``SchedulerFeedback`` message.
+        ``requests`` component of a ``SchedulerRequests`` message.
     :param requester_id: (:class:`uuid.UUID`) Unique ID this requester.
     :param priority: Scheduling priority of this requester.
 
@@ -409,7 +408,7 @@ class RequestSet:
     def list_requests(self):
         """
         Return a list of resource requests suitable for inclusion in
-        an ``AllocateResources`` or ``SchedulerFeedback`` message.
+        a ``SchedulerRequests`` message.
 
         :returns: list of ``scheduler_msgs/Request`` messages.
 

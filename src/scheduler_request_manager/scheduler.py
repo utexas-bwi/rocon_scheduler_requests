@@ -51,9 +51,14 @@ import rospy
 import unique_id
 
 # ROS messages
-from scheduler_msgs.msg import AllocateResources
 from scheduler_msgs.msg import Request
-from scheduler_msgs.msg import SchedulerFeedback
+DEPRECATED_MSGS = False         # do not use deprecated messages
+try:
+    from scheduler_msgs.msg import SchedulerRequests
+except ImportError:
+    from scheduler_msgs.msg import AllocateResources
+    from scheduler_msgs.msg import SchedulerFeedback
+    DEPRECATED_MSGS = True      # use deprecated messages
 
 # internal modules
 from . import common
@@ -69,8 +74,8 @@ class _RequesterStatus:
     :param sched: (:class:`.Scheduler`) Scheduler object with which
         this requester is connected.
 
-    :param msg: (scheduler_msgs/AllocateResources) Initial resource
-        allocation request.
+    :param msg: (scheduler_msgs/SchedulerRequests) Initial resource
+        allocation requests.
 
     """
 
@@ -88,9 +93,18 @@ class _RequesterStatus:
         self.feedback_topic = common.feedback_topic(self.requester_id,
                                                     self.sched.topic)
         rospy.loginfo('requester feedback topic: ' + self.feedback_topic)
-        self.pub = rospy.Publisher(self.feedback_topic, SchedulerFeedback)
-        self.feedback_msg = SchedulerFeedback(requester=msg.requester,
-                                              priority=msg.priority)
+
+        if DEPRECATED_MSGS:             # using old message formats?
+            self.pub = rospy.Publisher(self.feedback_topic,
+                                       SchedulerFeedback)
+            self.feedback_msg = SchedulerFeedback(requester=msg.requester,
+                                                  priority=msg.priority)
+        else:                           # new message definition
+            self.pub = rospy.Publisher(self.feedback_topic,
+                                       SchedulerRequests)
+            self.feedback_msg = SchedulerRequests(requester=msg.requester,
+                                                  priority=msg.priority)
+
         self.update(msg)        # set initial status
 
     def _send_feedback(self):
@@ -103,14 +117,19 @@ class _RequesterStatus:
         """ Update requester status.
 
         :param msg: Latest resource allocation request.
-        :type msg: scheduler_msgs/AllocateResources
+        :type msg: scheduler_msgs/SchedulerRequests
 
         :note: Pay attention to timing as messages and updates
                interleave.
 
         """
         # Make a new RequestSet from this message
-        new_rset = transitions.RequestSet(msg.resources,
+        requests = None
+        if DEPRECATED_MSGS:             # using old message formats?
+            requests = msg.resources
+        else:                           # new message definition
+            requests = msg.requests
+        new_rset = transitions.RequestSet(requests,
                                           self.requester_id,
                                           priority=msg.priority)
         self.rset.merge(new_rset)
@@ -164,9 +183,16 @@ class Scheduler:
         self.topic = topic
         """ Scheduler request topic name. """
         rospy.loginfo('scheduler request topic: ' + self.topic)
-        self.sub = rospy.Subscriber(self.topic,
-                                    AllocateResources,
-                                    self._allocate_resources)
+
+        if DEPRECATED_MSGS:             # using old message formats?
+            self.sub = rospy.Subscriber(self.topic,
+                                        AllocateResources,
+                                        self._allocate_resources)
+        else:                           # new message definition
+            self.sub = rospy.Subscriber(self.topic,
+                                        SchedulerRequests,
+                                        self._allocate_resources)
+
         self.duration = rospy.Duration(1.0 / frequency)
         self.time_limit = self.duration * 4.0
         self.timer = rospy.Timer(self.duration, self._watchdog)

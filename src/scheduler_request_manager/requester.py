@@ -50,9 +50,16 @@ from __future__ import absolute_import, print_function, unicode_literals
 # ROS dependencies
 import rospy
 import unique_id
-from scheduler_msgs.msg import AllocateResources
+
+# ROS messages
 from scheduler_msgs.msg import Request
-from scheduler_msgs.msg import SchedulerFeedback
+DEPRECATED_MSGS = False         # do not use deprecated messages
+try:
+    from scheduler_msgs.msg import SchedulerRequests
+except ImportError:
+    from scheduler_msgs.msg import AllocateResources
+    from scheduler_msgs.msg import SchedulerFeedback
+    DEPRECATED_MSGS = True      # use deprecated messages
 
 # internal modules
 from . import common
@@ -135,12 +142,22 @@ class Requester:
         self.pub_topic = topic
         self.sub_topic = common.feedback_topic(uuid, topic)
         rospy.loginfo('Rocon resource requester topic: ' + self.sub_topic)
-        self.sub = rospy.Subscriber(self.sub_topic,
-                                    SchedulerFeedback,
-                                    self._feedback)
-        self.alloc = AllocateResources()
-        self.alloc.requester = unique_id.toMsg(self.requester_id)
-        self.pub = rospy.Publisher(self.pub_topic, AllocateResources)
+
+        if DEPRECATED_MSGS:             # using old message formats?
+            self.sub = rospy.Subscriber(self.sub_topic,
+                                        SchedulerFeedback,
+                                        self._feedback)
+            self.alloc = AllocateResources()
+            self.alloc.requester = unique_id.toMsg(self.requester_id)
+            self.pub = rospy.Publisher(self.pub_topic, AllocateResources)
+        else:                           # new message definition
+            self.sub = rospy.Subscriber(self.sub_topic,
+                                        SchedulerRequests,
+                                        self._feedback)
+            self.alloc = SchedulerRequests()
+            self.alloc.requester = unique_id.toMsg(self.requester_id)
+            self.pub = rospy.Publisher(self.pub_topic, SchedulerRequests)
+
         self.timer = rospy.Timer(rospy.Duration(1.0 / frequency),
                                  self._heartbeat)
 
@@ -162,7 +179,10 @@ class Requester:
         """
         self.alloc.header.stamp = event.current_real
         self.alloc.priority = self.rset.priority
-        self.alloc.resources = self.rset.list_requests()
+        if DEPRECATED_MSGS:             # using old message formats?
+            self.alloc.resources = self.rset.list_requests()
+        else:                           # new message definition
+            self.alloc.requests = self.rset.list_requests()
         self.pub.publish(self.alloc)
 
     def new_request(self, resource, uuid=None):

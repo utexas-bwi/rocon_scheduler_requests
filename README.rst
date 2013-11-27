@@ -14,19 +14,19 @@ Scheduler Topics
 The rocon scheduler runs as a ROS node on same master as the rocon
 conductor, the rocon services and other Solution components.  It
 subscribes to an allocation topic named **/rocon_scheduler** of type
-`scheduler_msgs/AllocateResources`_.  Any rocon service or application
+`scheduler_msgs/SchedulerRequests`_.  Any rocon service or application
 sending messages to that topic is called a **requester**.  Each
 requester assigns itself a `Universally Unique Identifier`_ and
-subscribes to a feedback topic using the string representation of its
-unique ID, in the form
-**/rocon_scheduler_0123456789abcdef0123456789abcdef**. The
-scheduler will provide status feedback on that topic via
-`scheduler_msgs/SchedulerFeedback`_ messages.
+subscribes to a feedback topic using the hexadecimal string
+representation of its unique ID, in the form
+**/rocon_scheduler_0123456789abcdef0123456789abcdef**. The scheduler
+will provide status feedback on that topic via
+`scheduler_msgs/SchedulerRequests`_ messages.
 
 Scheduler Resource Requests
 ---------------------------
 
-Each `scheduler_msgs/AllocateResources`_ message describes all
+Each `scheduler_msgs/SchedulerRequests`_ message describes all
 resources currently desired by that requester.  The status each
 resource request is passed back and forth between the requester and
 the scheduler via `scheduler_msgs/Request`_ elements contained in the
@@ -42,7 +42,6 @@ This package provides Python and C++ interface implementations for
 schedulers and requesters to perform those transitions correctly.
 
 .. _`Robotics in Concert`: http://www.robotconcert.org/wiki/Main_Page
-.. _`scheduler_msgs/AllocateResources`: https://github.com/robotics-in-concert/rocon_msgs/blob/hydro-devel/scheduler_msgs/msg/AllocateResources.msg
-.. _`scheduler_msgs/Request`: https://github.com/robotics-in-concert/rocon_msgs/blob/hydro-devel/scheduler_msgs/msg/Request.msg
-.. _`scheduler_msgs/SchedulerFeedback`: https://github.com/robotics-in-concert/rocon_msgs/blob/hydro-devel/scheduler_msgs/msg/SchedulerFeedback.msg
+.. _`scheduler_msgs/Request`: https://github.com/jack-oquin/rocon_msgs/blob/hydro-devel/scheduler_msgs/msg/Request.msg
+.. _`scheduler_msgs/SchedulerRequests`: https://github.com/jack-oquin/rocon_msgs/blob/hydro-devel/scheduler_msgs/msg/SchedulerRequests.msg
 .. _`Universally Unique Identifier`: http://en.wikipedia.org/wiki/Universally_unique_identifier
