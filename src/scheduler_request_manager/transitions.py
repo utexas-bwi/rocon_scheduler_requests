@@ -92,24 +92,33 @@ def to_Request(resource, uuid=None):
 # An immutable set of (old, new) status pairs.  All pairs in the table
 # are considered valid state transitions.  Any others are not.
 #
-TRANS_TABLE = frozenset([(Request.NEW, Request.WAITING),
+TRANS_TABLE = frozenset([(Request.NEW, Request.ABORTED),
                          (Request.NEW, Request.GRANTED),
                          (Request.NEW, Request.PREEMPTING),
-                         (Request.NEW, Request.ABORTED),
+                         (Request.NEW, Request.REJECTED),
+                         (Request.NEW, Request.WAITING),
+
+                         (Request.WAITING, Request.ABORTED),
                          (Request.WAITING, Request.GRANTED),
                          (Request.WAITING, Request.PREEMPTING),
+                         (Request.WAITING, Request.REJECTED),
                          (Request.WAITING, Request.RELEASING),
-                         (Request.WAITING, Request.ABORTED),
+
+                         (Request.GRANTED, Request.ABORTED),
                          (Request.GRANTED, Request.PREEMPTING),
                          (Request.GRANTED, Request.RELEASING),
-                         (Request.GRANTED, Request.ABORTED),
-                         (Request.PREEMPTING, Request.PREEMPTED),
-                         (Request.PREEMPTING, Request.RELEASING),
+
                          (Request.PREEMPTING, Request.ABORTED),
-                         (Request.PREEMPTED, Request.NEW),
+                         (Request.PREEMPTING, Request.PREEMPTED),
+                         (Request.PREEMPTING, Request.REJECTED),
+                         (Request.PREEMPTING, Request.RELEASING),
+
                          (Request.PREEMPTED, Request.ABORTED),
-                         (Request.RELEASING, Request.RELEASED),
-                         (Request.RELEASING, Request.ABORTED)])
+                         (Request.PREEMPTED, Request.NEW),
+                         (Request.PREEMPTED, Request.REJECTED),
+
+                         (Request.RELEASING, Request.REJECTED),
+                         (Request.RELEASING, Request.RELEASED)])
 
 
 class ResourceRequest:
@@ -210,6 +219,14 @@ class ResourceRequest:
             self.msg.resource = update.msg.resource
             if update.msg.availability != rospy.Time():
                 self.msg.availability = update.msg.availability
+
+    def reject(self):
+        """ Reject an invalid request.
+
+        :raises: :exc:`.TransitionError`
+
+        """
+        self.update_status(Request.REJECTED)
 
     def release(self):
         """ Release a previously granted resource.

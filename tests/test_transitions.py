@@ -104,6 +104,36 @@ class TestTransitions(unittest.TestCase):
                                       status=Request.ABORTED))
         self.assertRaises(TransitionError, rq4.grant, TEST_RESOURCE)
 
+    def test_reject(self):
+        rq1 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resource=TEST_RESOURCE,
+                                      status=Request.NEW))
+        rq1.reject()
+        self.assertEqual(rq1.msg.status, Request.REJECTED)
+
+        rq2 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resource=TEST_RESOURCE,
+                                      status=Request.WAITING))
+        rq2.reject()
+        self.assertEqual(rq2.msg.status, Request.REJECTED)
+
+        rq3 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resource=TEST_RESOURCE,
+                                      status=Request.PREEMPTING))
+        rq3.reject()
+        self.assertEqual(rq3.msg.status, Request.REJECTED)
+
+        rq4 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resource=TEST_RESOURCE,
+                                      status=Request.PREEMPTED))
+        rq4.reject()
+        self.assertEqual(rq4.msg.status, Request.REJECTED)
+
+        rq5 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resource=TEST_WILDCARD,
+                                      status=Request.GRANTED))
+        self.assertRaises(TransitionError, rq5.reject)
+
     def test_release(self):
         rq1 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
                                       resource=TEST_RESOURCE,
