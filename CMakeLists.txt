@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(scheduler_request_manager)
+project(rocon_scheduler_requests)
 
 ## Dependencies -- mostly needed for the eventual C++ interface.
 set(${PROJECT_NAME}_MSG_DEPENDENCIES

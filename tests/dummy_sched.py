@@ -8,7 +8,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import rospy
 from rocon_std_msgs.msg import PlatformInfo
 from scheduler_msgs.msg import Request
-import scheduler_request_manager.scheduler as scheduler
+import rocon_scheduler_requests.scheduler as scheduler
 
 # Constants
 TEST_RESOURCE = PlatformInfo(os='linux',

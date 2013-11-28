@@ -13,7 +13,7 @@ from rocon_std_msgs.msg import PlatformInfo
 from scheduler_msgs.msg import Request
 
 # module being tested:
-from scheduler_request_manager.transitions import *
+from rocon_scheduler_requests.transitions import *
 
 RQR_UUID = uuid.UUID('01234567-89ab-cdef-0123-456789abcdef')
 TEST_UUID = uuid.UUID('01234567-89ab-cdef-fedc-ba9876543210')

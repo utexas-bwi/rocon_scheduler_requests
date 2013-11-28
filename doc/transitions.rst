@@ -1,5 +1,5 @@
 transitions
 -----------
 
-.. automodule:: scheduler_request_manager.transitions
+.. automodule:: rocon_scheduler_requests.transitions
    :members:

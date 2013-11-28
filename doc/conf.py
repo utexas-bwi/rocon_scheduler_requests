@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# scheduler_request_manager documentation build configuration file
+# rocon_scheduler_requests documentation build configuration file
 #
 # This file is execfile()d with the current directory set to its containing dir.
 #
@@ -17,7 +17,7 @@
 ## not needed for catkin packages:
 #import sys, os
 #sys.path.insert(0, os.path.abspath('../src'))
-#sys.path.insert(0, os.path.abspath('../src/scheduler_request_manager'))
+#sys.path.insert(0, os.path.abspath('../src/rocon_scheduler_requests'))
 
 # -- General configuration -----------------------------------------------------
 
@@ -44,7 +44,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'scheduler_request_manager'
+project = u'rocon_scheduler_requests'
 copyright = u'2013, Jack O\'Quin'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -168,7 +168,7 @@ html_theme = 'default'
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'scheduler_request_manager_pydoc'
+htmlhelp_basename = 'rocon_scheduler_requests_pydoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -187,7 +187,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'scheduler_request_manager.tex', u'ROS Python scheduler_request_manager support.',
+  ('index', 'rocon_scheduler_requests.tex', u'ROS Python rocon_scheduler_requests support.',
    u'Jack O\'Quin', 'manual'),
 ]
 
@@ -217,7 +217,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'scheduler_request_manager', u'Rocon Python scheduler_request_manager support.',
+    ('index', 'rocon_scheduler_requests', u'Rocon Python rocon_scheduler_requests support.',
      [u'Jack O\'Quin'], 1)
 ]
 
@@ -231,8 +231,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'scheduler_request_manager', u'scheduler_request_manager Documentation',
-   u'Jack O\'Quin', 'scheduler_request_manager', 'Rocon scheduler_request_manager.',
+  ('index', 'rocon_scheduler_requests', u'rocon_scheduler_requests Documentation',
+   u'Jack O\'Quin', 'rocon_scheduler_requests', 'rocon_scheduler_requests.',
    'Miscellaneous'),
 ]
 

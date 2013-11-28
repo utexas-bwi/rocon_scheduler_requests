@@ -1,9 +1,9 @@
 Overview
 ========
 
-The scheduler_request_manager is a ROS package providing Python and
-C++ interfaces for managing scheduler requests for the `Robotics in
-Concert`_ project.
+The `rocon_scheduler_requests`_ ROS_ package provides Python and C++
+interfaces for managing scheduler requests within the `Robotics in
+Concert`_ framework.
 
 *There is initially only an experimental Python module.*  
 *A similar C++ interface will be provided following that proof of concept.*
@@ -16,9 +16,9 @@ conductor, the rocon services and other Solution components.  It
 subscribes to an allocation topic named **/rocon_scheduler** of type
 `scheduler_msgs/SchedulerRequests`_.  Any rocon service or application
 sending messages to that topic is called a **requester**.  Each
-requester assigns itself a `Universally Unique Identifier`_ and
+requester assigns itself a `universally unique identifier`_ and
 subscribes to a feedback topic using the hexadecimal string
-representation of its unique ID, in the form
+representation of its UUID, in the form
 **/rocon_scheduler_0123456789abcdef0123456789abcdef**. The scheduler
 will provide status feedback on that topic via
 `scheduler_msgs/SchedulerRequests`_ messages.
@@ -42,6 +42,8 @@ This package provides Python and C++ interface implementations for
 schedulers and requesters to perform those transitions correctly.
 
 .. _`Robotics in Concert`: http://www.robotconcert.org/wiki/Main_Page
+.. _`rocon_scheduler_requests`: http://wiki.ros.org/rocon_scheduler_requests
+.. _ROS: http://wiki.ros.org
 .. _`scheduler_msgs/Request`: https://github.com/jack-oquin/rocon_msgs/blob/hydro-devel/scheduler_msgs/msg/Request.msg
 .. _`scheduler_msgs/SchedulerRequests`: https://github.com/jack-oquin/rocon_msgs/blob/hydro-devel/scheduler_msgs/msg/SchedulerRequests.msg
-.. _`Universally Unique Identifier`: http://en.wikipedia.org/wiki/Universally_unique_identifier
+.. _`universally unique identifier`: http://en.wikipedia.org/wiki/Universally_unique_identifier

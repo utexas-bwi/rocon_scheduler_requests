@@ -1,5 +1,5 @@
 common
 ------
 
-.. automodule:: scheduler_request_manager.common
+.. automodule:: rocon_scheduler_requests.common
    :members:

@@ -7,11 +7,11 @@
 <launch>
 
   <!-- start scheduler Python node  -->
-  <node pkg="scheduler_request_manager" type="dummy_sched.py"
+  <node pkg="rocon_scheduler_requests" type="dummy_sched.py"
         name="dummy_scheduler" />
 
   <!-- start requester Python node -->
-  <node pkg="scheduler_request_manager" type="dummy_req.py"
+  <node pkg="rocon_scheduler_requests" type="dummy_req.py"
         name="dummy_requester" />
 
   <!-- Check that /rocon_scheduler requests are sent regularly.

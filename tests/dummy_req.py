@@ -6,8 +6,8 @@ from __future__ import absolute_import, print_function
 import rospy
 import uuid
 import unique_id
-import scheduler_request_manager.requester as requester
-import scheduler_request_manager.transitions as transitions
+import rocon_scheduler_requests.requester as requester
+import rocon_scheduler_requests.transitions as transitions
 
 # ROS messages
 from rocon_std_msgs.msg import PlatformInfo

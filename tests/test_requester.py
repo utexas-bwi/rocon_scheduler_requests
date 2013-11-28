@@ -12,8 +12,8 @@ from uuid_msgs.msg import UniqueID
 import unique_id
 
 # module being tested:
-import scheduler_request_manager.scheduler as scheduler
-import scheduler_request_manager.requester as requester
+import rocon_scheduler_requests.scheduler as scheduler
+import rocon_scheduler_requests.requester as requester
 
 class TestSchedulerRequestManager(unittest.TestCase):
     """Unit tests for rocon scheduler request manager.
@@ -28,8 +28,8 @@ def run_tests():
     # run the tests in this thread
     import rosunit
     try:
-        rosunit.unitrun('scheduler_request_manager',
-                        'test_scheduler_request_manager_py',
+        rosunit.unitrun('rocon_scheduler_requests',
+                        'test_rocon_scheduler_requests_py',
                         TestSchedulerRequestManager)
     finally:
         rospy.signal_shutdown('test complete') # terminate the test node

@@ -1,5 +1,5 @@
 scheduler
 ---------
 
-.. automodule:: scheduler_request_manager.scheduler
+.. automodule:: rocon_scheduler_requests.scheduler
    :members:
