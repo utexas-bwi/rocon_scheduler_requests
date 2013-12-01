@@ -36,18 +36,6 @@ class TestTransitions(unittest.TestCase):
     These tests do not require a running ROS core.
     """
 
-    def test_to_Request(self):
-        msg1 = to_Request(TEST_WILDCARD, uuid=TEST_UUID)
-        self.assertEqual(msg1, 
-                         Request(id=unique_id.toMsg(TEST_UUID),
-                                 resource=TEST_WILDCARD,
-                                 status=Request.NEW))
-        msg2 = to_Request(TEST_RESOURCE, uuid=TEST_UUID)
-        self.assertEqual(msg2, 
-                         Request(id=unique_id.toMsg(TEST_UUID),
-                                 resource=TEST_RESOURCE,
-                                 status=Request.NEW))
-
     def test_abort(self):
         rq1 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
                                       resource=TEST_RESOURCE,

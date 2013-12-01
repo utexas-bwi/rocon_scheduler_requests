@@ -67,26 +67,6 @@ class WrongRequestError(Exception):
     pass
 
 
-def to_Request(resource, uuid=None):
-    """ Create a new rocon scheduler request ROS message.
-
-    :param resource: Rocon resource requested, may contain wild cards.
-    :type resource: rocon_std_msgs/PlatformInfo
-    :param uuid: UUID_ of this request. If ``None`` provided, a random
-                 uuid will be assigned.
-    :type uuid: :class:`uuid.UUID` or ``None``
-
-    :returns: a new scheduler request ROS message
-    :rtype: scheduler_msgs/Request
-
-    """
-    if uuid is None:
-        uuid = unique_id.fromRandom()
-    return Request(id=unique_id.toMsg(uuid),
-                   resource=resource,
-                   status=Request.NEW)
-
-
 # State transition table.
 #
 # An immutable set of (old, new) status pairs.  All pairs in the table
