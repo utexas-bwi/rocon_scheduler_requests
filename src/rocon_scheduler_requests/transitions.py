@@ -111,7 +111,7 @@ class _RequestBase:
 
     .. describe:: str(rq)
 
-       :returns: String representation of :class:`ResourceRequest`.
+       :returns: String representation of this resource request.
 
     """
     def __init__(self, msg):
@@ -166,7 +166,7 @@ class _RequestBase:
 
     def update_status(self, new_status):
         """
-        Update status for this :class:`.ResourceRequest`.
+        Update status for this resource request.
 
         :param new_status: Desired status.
 
@@ -181,7 +181,7 @@ class _RequestBase:
 
     def validate(self, new_status):
         """
-        Validate status update for this :class:`.ResourceRequest`.
+        Validate status update for this resource request.
 
         :param new_status: Proposed new status for this request.
 
@@ -193,7 +193,7 @@ class _RequestBase:
 
 class ResourceRequest(_RequestBase):
     """
-    This class tracks the status of a single resource request.
+    This class represents a single request from this requester.
 
     :param msg: Rocon scheduler request message.
     :type msg: scheduler_msgs/Request
@@ -206,7 +206,7 @@ class ResourceRequest(_RequestBase):
 
     .. describe:: str(rq)
 
-       :returns: String representation of :class:`ResourceRequest`.
+       :returns: String representation of this resource request.
 
     """
     def abort(self):
@@ -238,7 +238,7 @@ class ResourceRequest(_RequestBase):
 
     def reconcile(self, update):
         """
-        Merge updated status with this :class:`.ResourceRequest`.
+        Merge updated status with this resource request.
 
         :param update: Latest information for this request, or
                        ``None`` if no longer present.
@@ -285,8 +285,8 @@ class ResourceRequest(_RequestBase):
 
 class RequestSet:
     """
-    This class is a container for all the resource requests from a
-    single requester or message.  It acts like a dictionary.
+    This class is a container for all the resource requests or replies
+    for a single requester.  It acts like a dictionary.
 
     :param requests: list of ``Request`` messages, typically from the
         ``requests`` component of a ``SchedulerRequests`` message.
@@ -301,17 +301,16 @@ class RequestSet:
 
     .. describe:: rset[uuid]
 
-       :returns: the resource request corresponding to *uuid*.
+       :returns: the item corresponding to *uuid*.
        :raises: :exc:`KeyError` if no such request.
 
     .. describe:: rset[uuid] = rq
 
-       Define a new :class:`.ResourceRequest` for this UUID.
+       Define a new item for this UUID.
 
        :param uuid: UUID_ of the request.
        :type uuid: :class:`uuid.UUID`
        :param rq: request.
-       :type rq: :class:`.ResourceRequest`
 
     .. describe:: str(rset)
 
@@ -349,15 +348,10 @@ class RequestSet:
         :param uuid: UUID_ of desired request.
         :type uuid: :class:`uuid.UUID`
 
-        :returns: named :class:`.ResourceRequest`.
+        :returns: named item.
         :raises: :exc:`KeyError` if no such request
         """
         return self.requests[uuid]
-
-    #def __iter__(self):
-    #    """ Resource Requests iterator. """
-    #    self.iter_index = 0
-    #    return self
 
     def __len__(self):
         """ Number of requests. """
@@ -382,8 +376,7 @@ class RequestSet:
         :type uuid: :class:`uuid.UUID`
         :param default: value to return if no such request.
 
-        :returns: named :class:`.ResourceRequest`, if successful;
-                  otherwise default.
+        :returns: named item, if successful; else *default*.
 
         """
         return self.requests.get(uuid, default)
@@ -438,13 +431,6 @@ class RequestSet:
         for rid, new_rq in updates.items():
             if rid not in self.requests:
                 self.requests[rid] = new_rq
-
-    #def next(self):
-    #    """
-    #    :returns: next request of iteration.
-    #    :rtype: :class:`.ResourceRequest`
-    #    :raises: :exc:`StopIteration` when finished.
-    #    """
 
     def values(self):
         """
