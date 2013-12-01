@@ -256,7 +256,7 @@ requests:
         self.assertEqual([msg1], rset.list_requests())
 
         # merge an empty request set: rset should remain the same
-        rset.merge(RequestSet([], RQR_UUID))
+        rset.merge(RequestSet([], RQR_UUID, replies=True))
         self.assertEqual(len(rset), 1)
         self.assertTrue(TEST_UUID in rset)
         self.assertEqual([msg1], rset.list_requests())
@@ -274,7 +274,7 @@ requests:
         msg2 = Request(id=unique_id.toMsg(TEST_UUID),
                        resource=TEST_RESOURCE,
                        status=Request.GRANTED)
-        rset.merge(RequestSet([msg2], RQR_UUID))
+        rset.merge(RequestSet([msg2], RQR_UUID, replies=True))
         self.assertEqual(len(rset), 1)
         self.assertTrue(TEST_UUID in rset)
         self.assertEqual([msg1], rset.list_requests())

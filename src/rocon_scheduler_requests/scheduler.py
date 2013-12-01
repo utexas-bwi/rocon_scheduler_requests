@@ -87,7 +87,8 @@ class _RequesterStatus:
         self.requester_id = unique_id.fromMsg(msg.requester)
         """ :class:`uuid.UUID` of this requester. """
         self.rset = transitions.RequestSet([], self.requester_id,
-                                           priority=msg.priority)
+                                           priority=msg.priority,
+                                           replies=True)
         """ All current resource requests for this requester. """
 
         self.feedback_topic = common.feedback_topic(self.requester_id,
@@ -131,7 +132,8 @@ class _RequesterStatus:
             requests = msg.requests
         new_rset = transitions.RequestSet(requests,
                                           self.requester_id,
-                                          priority=msg.priority)
+                                          priority=msg.priority,
+                                          replies=False)
         self.rset.merge(new_rset)
         self.sched.callback(self.rset)
         self._send_feedback()   # notify the requester

@@ -291,6 +291,7 @@ class RequestSet:
     :param requests: list of ``Request`` messages, typically from the
         ``requests`` component of a ``SchedulerRequests`` message.
     :param requester_id: (:class:`uuid.UUID`) Unique ID this requester.
+    :param replies: (bool) ``True`` if this RequestSet contains scheduler replies.
     :param priority: Scheduling priority of this requester.
 
     :class:`.RequestSet` supports these standard container operations:
@@ -324,16 +325,18 @@ class RequestSet:
 
        Equivalent to ``not uuid in rset``.
 
-    These methods are also provided:
+    These attributes are also provided:
 
     """
 
-    def __init__(self, requests, requester_id, priority=0):
+    def __init__(self, requests, requester_id, replies=False, priority=0):
         """ Constructor. """
         self.requester_id = requester_id
         """ :class:`uuid.UUID` of this requester. """
         self.priority = priority
         """ Current requester priority. """
+        self.replies = replies
+        """ True if this RequestSet contains scheduler replies. """
         self.requests = {}
         for msg in requests:
             rq = ResourceRequest(msg)

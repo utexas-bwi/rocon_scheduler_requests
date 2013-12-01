@@ -163,10 +163,11 @@ class Requester:
 
     def _feedback(self, msg):
         """ Scheduler feedback message handler. """
-        # Make a new RequestSet from this message
+        # Make a new RequestSet of the scheduler replies from this message
         new_rset = transitions.RequestSet(msg.requests,
                                           self.requester_id,
-                                          priority=msg.priority)
+                                          priority=msg.priority,
+                                          replies=True)
         self.rset.merge(new_rset)
         self.feedback(self.rset)  # invoke user callback function
 
@@ -206,21 +207,3 @@ class Requester:
                       status=Request.NEW)
         self.rset[uuid] = transitions.ResourceRequest(msg)
         return uuid
-
-    #def reset_all(self, updates):
-    #    """ Reset all requests.
-    #
-    #    :param updates: Request set containing updated information.
-    #    :type updates: :class:`.RequestSet`
-    #
-    #    Merges these updates with all previously-made requests:
-    #
-    #    * New ones are added.
-    #    * Existing ones are updated.
-    #    * Omitted ones are released.
-    #
-    #    :raises: :exc:`.WrongRequestError` if replacing an existing
-    #        request would cause an invalid state transition.
-    #
-    #    """
-    #    self.rset.merge(updates)
