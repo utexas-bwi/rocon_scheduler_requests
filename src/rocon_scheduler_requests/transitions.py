@@ -102,9 +102,9 @@ TRANS_TABLE = frozenset([(Request.NEW, Request.ABORTED),
                          (Request.RELEASING, Request.RELEASED)])
 
 
-class ResourceRequest:
+class _RequestBase:
     """
-    This class tracks the status of a single resource request.
+    Base class for tracking the status of a single resource request.
 
     :param msg: Rocon scheduler request message.
     :type msg: scheduler_msgs/Request
@@ -125,38 +125,11 @@ class ResourceRequest:
             + '\n    resource: ' + self.str_resource() \
             + '\n    status: ' + str(self.msg.status)
 
-    def abort(self):
-        """ Abort a request due to internal failure (always valid). """
-        self.update_status(Request.ABORTED)
-
-    def free(self):
-        """ Free up a previously-assigned resource that was released.
-
-        :raises: :exc:`.TransitionError`
-        """
-        self.update_status(Request.RELEASED)
-
     def get_uuid(self):
         """ :returns: UUID of this request.
         :rtype: :class:`uuid.UUID`
         """
         return unique_id.fromMsg(self.msg.id)
-
-    def grant(self, resource):
-        """ Grant a specific requested resource.
-
-        :param resource: Exact resource granted.
-        :type resource: rocon_std_msgs/PlatformInfo
-        :raises: :exc:`.TransitionError`
-        :raises: :exc:`.ResourceNotRequestedError`
-
-        """
-        self.update_status(Request.GRANTED)
-        if not self.matches(resource):
-            raise ResourceNotRequestedError(str(resource)
-                                            + ' does not match '
-                                            + str(self.msg.resource))
-        self.msg.resource = resource
 
     def matches(self, resource):
         """ Check whether a specific resource matches this request.
@@ -182,6 +155,86 @@ class ResourceRequest:
                 self.msg.resource.name != PlatformInfo.NAME_ANY:
             return False
         return True
+
+    def str_resource(self):
+        """ Format requested resource into a human-readable string. """
+        return self.msg.resource.os + '.' \
+            + self.msg.resource.version + '.' \
+            + self.msg.resource.system + '.' \
+            + self.msg.resource.platform + '.' \
+            + self.msg.resource.name
+
+    def update_status(self, new_status):
+        """
+        Update status for this :class:`.ResourceRequest`.
+
+        :param new_status: Desired status.
+
+        :raises: :exc:`.TransitionError` if not a valid transition.
+
+        """
+        if not self.validate(new_status):
+            raise TransitionError('invalid status transition from '
+                                  + str(self.msg.status)
+                                  + ' to ' + str(new_status))
+        self.msg.status = new_status
+
+    def validate(self, new_status):
+        """
+        Validate status update for this :class:`.ResourceRequest`.
+
+        :param new_status: Proposed new status for this request.
+
+        :returns: ``True`` if this is a valid state transition.
+
+        """
+        return (self.msg.status, new_status) in TRANS_TABLE
+
+
+class ResourceRequest(_RequestBase):
+    """
+    This class tracks the status of a single resource request.
+
+    :param msg: Rocon scheduler request message.
+    :type msg: scheduler_msgs/Request
+
+    Attributes:
+
+    .. describe:: msg
+
+       Current ``scheduler_msgs/Request`` for this request.
+
+    .. describe:: str(rq)
+
+       :returns: String representation of :class:`ResourceRequest`.
+
+    """
+    def abort(self):
+        """ Abort a request due to internal failure (always valid). """
+        self.update_status(Request.ABORTED)
+
+    def free(self):
+        """ Free up a previously-assigned resource that was released.
+
+        :raises: :exc:`.TransitionError`
+        """
+        self.update_status(Request.RELEASED)
+
+    def grant(self, resource):
+        """ Grant a specific requested resource.
+
+        :param resource: Exact resource granted.
+        :type resource: rocon_std_msgs/PlatformInfo
+        :raises: :exc:`.TransitionError`
+        :raises: :exc:`.ResourceNotRequestedError`
+
+        """
+        self.update_status(Request.GRANTED)
+        if not self.matches(resource):
+            raise ResourceNotRequestedError(str(resource)
+                                            + ' does not match '
+                                            + str(self.msg.resource))
+        self.msg.resource = resource
 
     def reconcile(self, update):
         """
@@ -220,40 +273,6 @@ class ResourceRequest:
 
         """
         self.update_status(Request.RELEASING)
-
-    def str_resource(self):
-        """ Format requested resource into a human-readable string. """
-        return self.msg.resource.os + '.' \
-            + self.msg.resource.version + '.' \
-            + self.msg.resource.system + '.' \
-            + self.msg.resource.platform + '.' \
-            + self.msg.resource.name
-
-    def update_status(self, new_status):
-        """
-        Update status for this :class:`.ResourceRequest`.
-
-        :param new_status: Desired status.
-
-        :raises: :exc:`.TransitionError` if not a valid transition.
-
-        """
-        if not self.validate(new_status):
-            raise TransitionError('invalid status transition from '
-                                  + str(self.msg.status)
-                                  + ' to ' + str(new_status))
-        self.msg.status = new_status
-
-    def validate(self, new_status):
-        """
-        Validate status update for this :class:`.ResourceRequest`.
-
-        :param new_status: Proposed new status for this request.
-
-        :returns: ``True`` if this is a valid state transition.
-
-        """
-        return (self.msg.status, new_status) in TRANS_TABLE
 
     def wait(self):
         """
