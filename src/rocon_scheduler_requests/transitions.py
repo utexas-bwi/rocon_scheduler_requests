@@ -209,6 +209,58 @@ class ResourceRequest(_RequestBase):
        :returns: String representation of this resource request.
 
     """
+    def reconcile(self, update):
+        """
+        Merge scheduler updates with this request.
+
+        :param update: Latest information for this request, or
+                       ``None`` if no longer present.
+        :type update: :class:`.ResourceReply` or ``None``
+
+        :raises: :exc:`.WrongRequestError`
+
+        """
+        if update is None:      # this request not mentioned in updates
+            update = ResourceReply(self.msg)
+            update.msg.status = Request.RELEASED
+        elif update.get_uuid() != self.get_uuid():
+            raise WrongRequestError('UUID does not match')
+        if self.validate(update.msg.status):
+            self.msg.status = update.msg.status
+            self.msg.priority = update.msg.priority
+            self.msg.resource = update.msg.resource
+            self.msg.remappings = update.msg.remappings
+            self.msg.availability = update.msg.availability
+            if update.msg.availability != rospy.Time():
+                self.msg.availability = update.msg.availability
+
+    def release(self):
+        """ Release a previously granted resource.
+
+        :raises: :exc:`.TransitionError`
+
+        """
+        self.update_status(Request.RELEASING)
+
+
+class ResourceReply(_RequestBase):
+    """
+    This class represents the scheduler reply to a single request.
+
+    :param msg: Rocon scheduler request message.
+    :type msg: scheduler_msgs/Request
+
+    Attributes:
+
+    .. describe:: msg
+
+       Current ``scheduler_msgs/Request`` for this request.
+
+    .. describe:: str(rq)
+
+       :returns: String representation of this resource request.
+
+    """
     def abort(self):
         """ Abort a request due to internal failure (always valid). """
         self.update_status(Request.ABORTED)
@@ -238,7 +290,7 @@ class ResourceRequest(_RequestBase):
 
     def reconcile(self, update):
         """
-        Merge updated status with this resource request.
+        Merge updated resource request with current scheduler status.
 
         :param update: Latest information for this request, or
                        ``None`` if no longer present.
@@ -248,7 +300,7 @@ class ResourceRequest(_RequestBase):
 
         """
         if update is None:      # this request not mentioned in updates
-            update = copy.deepcopy(self)
+            update = ResourceRequest(self.msg)
             update.msg.status = Request.RELEASED
         elif update.get_uuid() != self.get_uuid():
             raise WrongRequestError('UUID does not match')
@@ -265,14 +317,6 @@ class ResourceRequest(_RequestBase):
 
         """
         self.update_status(Request.REJECTED)
-
-    def release(self):
-        """ Release a previously granted resource.
-
-        :raises: :exc:`.TransitionError`
-
-        """
-        self.update_status(Request.RELEASING)
 
     def wait(self):
         """
@@ -291,7 +335,7 @@ class RequestSet:
     :param requests: list of ``Request`` messages, typically from the
         ``requests`` component of a ``SchedulerRequests`` message.
     :param requester_id: (:class:`uuid.UUID`) Unique ID this requester.
-    :param replies: (bool) ``True`` if this RequestSet contains scheduler replies.
+    :param replies: (bool) ``True`` if this set contains scheduler replies.
     :param priority: Scheduling priority of this requester.
 
     :class:`.RequestSet` supports these standard container operations:
@@ -339,7 +383,10 @@ class RequestSet:
         """ True if this RequestSet contains scheduler replies. """
         self.requests = {}
         for msg in requests:
-            rq = ResourceRequest(msg)
+            if replies:
+                rq = ResourceReply(msg)
+            else:
+                rq = ResourceRequest(msg)
             self.requests[rq.get_uuid()] = rq
 
     def __contains__(self, uuid):
@@ -367,6 +414,7 @@ class RequestSet:
     def __str__(self):
         rval = 'requester_id: ' + str(self.requester_id) \
             + '\npriority: ' + str(self.priority) \
+            + '\nreplies: ' + str(self.replies) \
             + '\nrequests:'
         for rq in self.requests.values():
             rval += '\n  ' + str(rq)
@@ -433,7 +481,10 @@ class RequestSet:
         # Add any new requests not previously known.
         for rid, new_rq in updates.items():
             if rid not in self.requests:
-                self.requests[rid] = new_rq
+                if self.replies:
+                    self.requests[rid] = ResourceReply(new_rq.msg)
+                else:
+                    self.requests[rid] = ResourceRequest(new_rq.msg) 
 
     def values(self):
         """

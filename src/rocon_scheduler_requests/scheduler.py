@@ -89,7 +89,7 @@ class _RequesterStatus:
         self.rset = transitions.RequestSet([], self.requester_id,
                                            priority=msg.priority,
                                            replies=True)
-        """ All current resource requests for this requester. """
+        """ All current scheduler replies to this requester. """
 
         self.feedback_topic = common.feedback_topic(self.requester_id,
                                                     self.sched.topic)
@@ -119,9 +119,6 @@ class _RequesterStatus:
 
         :param msg: Latest resource allocation request.
         :type msg: scheduler_msgs/SchedulerRequests
-
-        :note: Pay attention to timing as messages and updates
-               interleave.
 
         """
         # Make a new RequestSet from this message
@@ -169,7 +166,7 @@ class Scheduler:
 
     The *callback* function is expected to iterate over its
     :class:`.RequestSet`, checking the status of every
-    :class:`.ResourceRequest` it contains, and modify them
+    :class:`.ResourceReply` it contains, and modify them
     appropriately.
 
     """
