@@ -207,7 +207,7 @@ class ResourceRequest(RequestBase):
     :param msg: Rocon scheduler request message.
     :type msg: scheduler_msgs/Request
 
-    Provides all attributes defined for :class:`RequestBase`:
+    Provides all attributes defined for :class:`.RequestBase`.
 
     """
     def reconcile(self, update):
@@ -252,7 +252,7 @@ class ResourceReply(RequestBase):
     :param msg: Rocon scheduler request message.
     :type msg: scheduler_msgs/Request
 
-    Provides all attributes defined for :class:`RequestBase`:
+    Provides all attributes defined for :class:`.RequestBase`.
 
     """
     def abort(self):
@@ -347,13 +347,14 @@ class RequestSet:
 
        Define a new item for this UUID.
 
-       :param uuid: UUID_ of the request.
-       :type uuid: :class:`uuid.UUID`
-       :param rq: request.
+       :param uuid: (:class:`uuid.UUID`) UUID_ of the request.
+
+       :param rq: (:class:`.ResourceRequest`) request or
+           (:class:`.ResourceReply`) reply.
 
     .. describe:: str(rset)
 
-       :returns: String representation of :class:`RequestSet`.
+       :returns: String representation of :class:`.RequestSet`.
 
     .. describe:: uuid in rset
 
