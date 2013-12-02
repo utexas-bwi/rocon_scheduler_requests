@@ -102,12 +102,20 @@ TRANS_TABLE = frozenset([(Request.NEW, Request.ABORTED),
                          (Request.RELEASING, Request.RELEASED)])
 
 
-class _RequestBase:
+class RequestBase:
     """
     Base class for tracking the status of a single resource request.
 
+    *Not for general use.*
+
     :param msg: Rocon scheduler request message.
     :type msg: scheduler_msgs/Request
+
+    Use one of these derived classes, depending on the direction of
+    message flow:
+
+    * :class:`.ResourceRequest` requester -> scheduler
+    * :class:`.ResourceReply` scheduler -> requester
 
     .. describe:: str(rq)
 
@@ -117,7 +125,7 @@ class _RequestBase:
     def __init__(self, msg):
         """ Constructor. """
         self.msg = msg
-        """ Current ``scheduler_msgs/Request`` for this request. """
+        """ Corresponding ``scheduler_msgs/Request``. """
 
     def __str__(self):
         """ :todo: add availability """
@@ -191,22 +199,15 @@ class _RequestBase:
         return (self.msg.status, new_status) in TRANS_TABLE
 
 
-class ResourceRequest(_RequestBase):
+class ResourceRequest(RequestBase):
     """
-    This class represents a single request from this requester.
+    This class represents a single resource request flowing from
+    requester to scheduler.
 
     :param msg: Rocon scheduler request message.
     :type msg: scheduler_msgs/Request
 
-    Attributes:
-
-    .. describe:: msg
-
-       Current ``scheduler_msgs/Request`` for this request.
-
-    .. describe:: str(rq)
-
-       :returns: String representation of this resource request.
+    Provides all attributes defined for :class:`RequestBase`:
 
     """
     def reconcile(self, update):
@@ -243,22 +244,15 @@ class ResourceRequest(_RequestBase):
         self.update_status(Request.RELEASING)
 
 
-class ResourceReply(_RequestBase):
+class ResourceReply(RequestBase):
     """
-    This class represents the scheduler reply to a single request.
+    This class represents a single resource reply flowing from
+    scheduler to requester.
 
     :param msg: Rocon scheduler request message.
     :type msg: scheduler_msgs/Request
 
-    Attributes:
-
-    .. describe:: msg
-
-       Current ``scheduler_msgs/Request`` for this request.
-
-    .. describe:: str(rq)
-
-       :returns: String representation of this resource request.
+    Provides all attributes defined for :class:`RequestBase`:
 
     """
     def abort(self):
@@ -484,7 +478,7 @@ class RequestSet:
                 if self.replies:
                     self.requests[rid] = ResourceReply(new_rq.msg)
                 else:
-                    self.requests[rid] = ResourceRequest(new_rq.msg) 
+                    self.requests[rid] = ResourceRequest(new_rq.msg)
 
     def values(self):
         """
