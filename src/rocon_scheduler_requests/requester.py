@@ -185,24 +185,23 @@ class Requester:
             self.alloc.requests = self.rset.list_requests()
         self.pub.publish(self.alloc)
 
-    def new_request(self, resource, uuid=None):
+    def new_request(self, resources, uuid=None):
         """ Add a new scheduler request.
 
-        :param resource: Rocon resource requested, may contain wild cards.
-        :type resource: rocon_std_msgs/PlatformInfo
+        :param resource: rocon resources requested
+        :type resource: scheduler_msgs/Resource[]
         :param uuid: UUID_ of this request. If ``None`` provided, a random
                      UUID will be assigned.
         :type uuid: :class:`uuid.UUID` or ``None``
         :returns: UUID (:class:`uuid.UUID`) assigned.
         :raises: :exc:`.WrongRequestError` if request already exists.
-
         """
         if uuid is None:
             uuid = unique_id.fromRandom()
         if uuid in self.rset:
             raise transitions.WrongRequestError('UUID already in use.')
         msg = Request(id=unique_id.toMsg(uuid),
-                      resource=resource,
+                      resources=resources,
                       status=Request.NEW)
         self.rset[uuid] = transitions.ResourceRequest(msg)
         return uuid

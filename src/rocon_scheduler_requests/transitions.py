@@ -33,7 +33,7 @@
 """
 .. module:: transitions
 
-This module tracks resource request state transtions as messages flow
+This module tracks resource request state transitions as messages flow
 between schedulers and requesters.
 
 .. _UUID: http://en.wikipedia.org/wiki/Uuid
