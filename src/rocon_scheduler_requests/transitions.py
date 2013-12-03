@@ -47,7 +47,6 @@ import copy
 
 # Ros dependencies
 import rospy
-from rocon_std_msgs.msg import PlatformInfo
 from scheduler_msgs.msg import Request
 import unique_id
 
@@ -130,7 +129,7 @@ class RequestBase:
     def __str__(self):
         """ :todo: add availability """
         return 'id: ' + str(unique_id.fromMsg(self.msg.id)) \
-            + '\n    resource: ' + self.str_resource() \
+            + '\n    resources: ' + self.str_resources() \
             + '\n    status: ' + str(self.msg.status)
 
     def get_uuid(self):
@@ -139,38 +138,24 @@ class RequestBase:
         """
         return unique_id.fromMsg(self.msg.id)
 
-    def matches(self, resource):
-        """ Check whether a specific resource matches this request.
+    def matches(self, resources):
+        """ Check whether a specific list of resources matches this request.
 
-        :param resource: Exact resource to match.
-        :type resource: rocon_std_msgs/PlatformInfo
-        :returns: ``True`` if this resource matches.
+        :param resources: List of exact resources to match.
+        :type resources: list of ``scheduler_msgs/Resource``
+        :returns: ``True`` if these resources match.
+
+        :todo: how is this done, now?
 
         """
-        if resource.os != self.msg.resource.os and \
-                self.msg.resource.os != PlatformInfo.OS_ANY:
-            return False
-        if resource.version != self.msg.resource.version and \
-                self.msg.resource.version != PlatformInfo.VERSION_ANY:
-            return False
-        if resource.system != self.msg.resource.system and \
-                self.msg.resource.system != PlatformInfo.SYSTEM_ANY:
-            return False
-        if resource.platform != self.msg.resource.platform and \
-                self.msg.resource.platform != PlatformInfo.PLATFORM_ANY:
-            return False
-        if resource.name != self.msg.resource.name and \
-                self.msg.resource.name != PlatformInfo.NAME_ANY:
-            return False
-        return True
+        return True             # scaffolding
 
-    def str_resource(self):
+    def str_resources(self):
         """ Format requested resource into a human-readable string. """
-        return self.msg.resource.os + '.' \
-            + self.msg.resource.version + '.' \
-            + self.msg.resource.system + '.' \
-            + self.msg.resource.platform + '.' \
-            + self.msg.resource.name
+        retval = ''
+        for res in self.msg.resources:
+            retval += '\n      ' + res.platform_info + '/' + res.name
+        return retval
 
     def update_status(self, new_status):
         """
@@ -229,8 +214,7 @@ class ResourceRequest(RequestBase):
         if self.validate(update.msg.status):
             self.msg.status = update.msg.status
             self.msg.priority = update.msg.priority
-            self.msg.resource = update.msg.resource
-            self.msg.remappings = update.msg.remappings
+            self.msg.resources = update.msg.resources
             self.msg.availability = update.msg.availability
             if update.msg.availability != rospy.Time():
                 self.msg.availability = update.msg.availability
@@ -266,21 +250,21 @@ class ResourceReply(RequestBase):
         """
         self.update_status(Request.RELEASED)
 
-    def grant(self, resource):
-        """ Grant a specific requested resource.
+    def grant(self, resources):
+        """ Grant some specific requested resources.
 
-        :param resource: Exact resource granted.
-        :type resource: rocon_std_msgs/PlatformInfo
+        :param resources: Exact resource granted.
+        :type resources: list of ``scheduler_msgs/Resource``
         :raises: :exc:`.TransitionError`
         :raises: :exc:`.ResourceNotRequestedError`
 
         """
         self.update_status(Request.GRANTED)
-        if not self.matches(resource):
+        if not self.matches(resources):
             raise ResourceNotRequestedError(str(resource)
                                             + ' does not match '
-                                            + str(self.msg.resource))
-        self.msg.resource = resource
+                                            + str(self.msg.resources))
+        self.msg.resources = resources
 
     def reconcile(self, update):
         """
@@ -300,7 +284,7 @@ class ResourceReply(RequestBase):
             raise WrongRequestError('UUID does not match')
         if self.validate(update.msg.status):
             self.msg.status = update.msg.status
-            self.msg.resource = update.msg.resource
+            self.msg.resources = update.msg.resources
             if update.msg.availability != rospy.Time():
                 self.msg.availability = update.msg.availability
 

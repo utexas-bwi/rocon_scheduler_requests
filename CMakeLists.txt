@@ -3,7 +3,6 @@ project(rocon_scheduler_requests)
 
 ## Dependencies -- mostly needed for the eventual C++ interface.
 set(${PROJECT_NAME}_MSG_DEPENDENCIES
-  rocon_std_msgs
   scheduler_msgs
   uuid_msgs)
 find_package(catkin REQUIRED

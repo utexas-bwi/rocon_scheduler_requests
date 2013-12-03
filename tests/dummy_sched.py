@@ -6,16 +6,13 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import rospy
-from rocon_std_msgs.msg import PlatformInfo
 from scheduler_msgs.msg import Request
+from scheduler_msgs.msg import Resource
 import rocon_scheduler_requests.scheduler as scheduler
 
 # Constants
-TEST_RESOURCE = PlatformInfo(os='linux',
-                             version='precise',
-                             system='ros',
-                             platform='segbot',
-                             name='roberto')
+TEST_RESOURCE = Resource(name='test_rapp',
+                         platform_info='linux.precise.ros.segbot.roberto')
 
 def callback(rset):
     """ Scheduler request callback. """
@@ -26,7 +23,7 @@ def callback(rset):
             rq.wait()
             print('Request queued')
         elif rq.msg.status == Request.WAITING:
-            rq.grant(TEST_RESOURCE)
+            rq.grant([TEST_RESOURCE])
             print('Request granted')
         elif rq.msg.status == Request.RELEASING:
             rq.free()

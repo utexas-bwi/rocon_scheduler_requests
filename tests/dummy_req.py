@@ -10,22 +10,17 @@ import rocon_scheduler_requests.requester as requester
 import rocon_scheduler_requests.transitions as transitions
 
 # ROS messages
-from rocon_std_msgs.msg import PlatformInfo
 from scheduler_msgs.msg import Request
+from scheduler_msgs.msg import Resource
 
 # Constants
 TEST_UUID_HEX = '0123456789abcdef0123456789abcdef'
 TEST_UUID = uuid.UUID(hex=TEST_UUID_HEX)
-TEST_RESOURCE = PlatformInfo(os='linux',
-                             version='precise',
-                             system='ros',
-                             platform='segbot',
-                             name='roberto')
-TEST_WILDCARD = PlatformInfo(os='linux',
-                             version='precise',
-                             system='ros',
-                             platform='segbot',
-                             name=PlatformInfo.NAME_ANY)
+TEST_RAPP = 'test_rapp'
+TEST_RESOURCE = Resource(name=TEST_RAPP,
+                         platform_info='linux.precise.ros.segbot.roberto')
+TEST_WILDCARD = Resource(name=TEST_RAPP,
+                         platform_info='linux.precise.ros.segbot.*')
 
 rid = None                      # UUID for Resource Request
 
@@ -53,7 +48,7 @@ if __name__ == '__main__':
     rqr = requester.Requester(feedback, uuid=TEST_UUID, frequency=1.0)
 
     # Make a new request using a wildcard resource.
-    rid = rqr.new_request(TEST_WILDCARD)
+    rid = rqr.new_request([TEST_WILDCARD])
 
     # Spin in the main thread: required for message callbacks.
     rospy.spin()
