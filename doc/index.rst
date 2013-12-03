@@ -1,4 +1,4 @@
-Rocon scheduler request manager
+ROCON scheduler request manager
 ===============================
 
 The `rocon_scheduler_requests`_ ROS_ package provides Python and C++

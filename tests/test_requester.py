@@ -16,7 +16,7 @@ import rocon_scheduler_requests.scheduler as scheduler
 import rocon_scheduler_requests.requester as requester
 
 class TestSchedulerRequestManager(unittest.TestCase):
-    """Unit tests for rocon scheduler request manager.
+    """Unit tests for ROCON scheduler request manager.
     """
 
     def test_empty_request(self):

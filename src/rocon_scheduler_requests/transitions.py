@@ -107,7 +107,7 @@ class RequestBase:
 
     *Not for general use.*
 
-    :param msg: Rocon scheduler request message.
+    :param msg: ROCON scheduler request message.
     :type msg: scheduler_msgs/Request
 
     Use one of these derived classes, depending on the direction of
@@ -189,7 +189,7 @@ class ResourceRequest(RequestBase):
     This class represents a single resource request flowing from
     requester to scheduler.
 
-    :param msg: Rocon scheduler request message.
+    :param msg: ROCON scheduler request message.
     :type msg: scheduler_msgs/Request
 
     Provides all attributes defined for :class:`.RequestBase`.
@@ -233,7 +233,7 @@ class ResourceReply(RequestBase):
     This class represents a single resource reply flowing from
     scheduler to requester.
 
-    :param msg: Rocon scheduler request message.
+    :param msg: ROCON scheduler request message.
     :type msg: scheduler_msgs/Request
 
     Provides all attributes defined for :class:`.RequestBase`.

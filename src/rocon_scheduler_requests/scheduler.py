@@ -33,7 +33,7 @@
 """
 .. module:: scheduler
 
-Python interface for rocon schedulers handling resource requests.
+Python interface for ROCON schedulers handling resource requests.
 
 This module provides a relatively simple API, not requiring detailed
 knowledge of scheduler request state transitions.
@@ -146,9 +146,9 @@ class _RequesterStatus:
 
 class Scheduler:
     """
-    This class is used by a rocon scheduler to manage all the resource
-    requests sent by various rocon services.  It subscribes to the
-    rocon scheduler topic, handling resource requests as they are
+    This class is used by a ROCON scheduler to manage all the resource
+    requests sent by various ROCON services.  It subscribes to the
+    ROCON scheduler topic, handling resource requests as they are
     received.
 
     :param callback: Callback function invoked with the updated

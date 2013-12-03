@@ -33,7 +33,7 @@
 """
 .. module:: requester
 
-Python interface for rocon services making scheduler requests.
+Python interface for ROCON services making scheduler requests.
 
 This module provides a relatively simple API, not requiring detailed
 knowledge of scheduler request messages or state transitions.
@@ -68,9 +68,9 @@ from . import transitions
 
 class Requester:
     """
-    This class is used by a rocon service to handle its resource
+    This class is used by a ROCON service to handle its resource
     requests.  When an instance of :class:`.Requester` is created, it
-    creates its own scheduler feedback topic and connects to the rocon
+    creates its own scheduler feedback topic and connects to the ROCON
     scheduler topic.
 
     :param feedback: Callback function invoked with the current
@@ -141,7 +141,7 @@ class Requester:
         self.feedback = feedback        # requester feedback
         self.pub_topic = topic
         self.sub_topic = common.feedback_topic(uuid, topic)
-        rospy.loginfo('Rocon resource requester topic: ' + self.sub_topic)
+        rospy.loginfo('ROCON resource requester topic: ' + self.sub_topic)
 
         if DEPRECATED_MSGS:             # using old message formats?
             self.sub = rospy.Subscriber(self.sub_topic,
@@ -189,7 +189,7 @@ class Requester:
     def new_request(self, resources, uuid=None):
         """ Add a new scheduler request.
 
-        :param resource: rocon resources requested
+        :param resource: ROCON resources requested
         :type resource: scheduler_msgs/Resource[]
         :param uuid: UUID_ of this request. If ``None`` provided, a random
                      UUID will be assigned.

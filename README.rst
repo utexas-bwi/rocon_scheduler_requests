@@ -11,10 +11,10 @@ Concert`_ framework.
 Scheduler Topics
 ----------------
 
-The rocon scheduler runs as a ROS node on same master as the rocon
+The ROCON scheduler runs as a ROS node on same master as the ROCON
 conductor, the rocon services and other Solution components.  It
 subscribes to an allocation topic named **/rocon_scheduler** of type
-`scheduler_msgs/SchedulerRequests`_.  Any rocon service or application
+`scheduler_msgs/SchedulerRequests`_.  Any ROCON service or application
 sending messages to that topic is called a **requester**.  Each
 requester assigns itself a `universally unique identifier`_ and
 subscribes to a feedback topic using the hexadecimal string

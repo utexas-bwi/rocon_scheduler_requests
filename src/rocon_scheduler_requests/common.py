@@ -33,7 +33,7 @@
 """
 .. module:: common
 
-This module provides some common definitions for the rocon resource
+This module provides some common definitions for the ROCON resource
 scheduler, part of the `Robotics in Concert`_ project.
 
 .. _`Robotics in Concert`: http://www.robotconcert.org/wiki/Main_Page
@@ -48,7 +48,7 @@ HEARTBEAT_HZ = 1.0 / 4.0
 """ Default requester heartbeat frequency (Hz)."""
 
 SCHEDULER_TOPIC = 'rocon_scheduler'
-""" Default rocon scheduler topic name. """
+""" Default ROCON scheduler topic name. """
 
 
 def feedback_topic(uuid, scheduler_topic=SCHEDULER_TOPIC):
