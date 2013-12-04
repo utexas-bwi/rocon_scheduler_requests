@@ -70,6 +70,7 @@ class TestTransitions(unittest.TestCase):
         self.assertIsNotNone(rq1)
         self.assertEqual(str(rq1),
                          'id: 01234567-89ab-cdef-fedc-ba9876543210\n'
+                         '    priority: 0\n'
                          '    resources: \n'
                          '      linux.precise.ros.segbot.*/test_rapp\n'
                          '    status: 0')
@@ -87,6 +88,7 @@ class TestTransitions(unittest.TestCase):
         self.assertEqual(rq2.get_uuid(), DIFF_UUID)
         self.assertEqual(str(rq2),
                          'id: 01234567-cdef-fedc-89ab-ba9876543210\n'
+                         '    priority: 0\n'
                          '    resources: \n'
                          '      linux.precise.ros.segbot.roberto/test_rapp\n'
                          '    status: 0')
@@ -201,11 +203,13 @@ requests:"""
         self.assertIsNone(rset.get(DIFF_UUID))
         self.assertEqual(rset.get(DIFF_UUID, 10), 10)
         self.assertEqual([msg1], rset.list_requests())
+
         rset_str = """requester_id: 01234567-89ab-cdef-0123-456789abcdef
 priority: 0
 replies: True
 requests:
   id: 01234567-89ab-cdef-fedc-ba9876543210
+    priority: 0
     resources: 
       linux.precise.ros.segbot.*/test_rapp
     status: 0"""

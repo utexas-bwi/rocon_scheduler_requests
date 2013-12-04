@@ -122,6 +122,7 @@ class RequestBase:
     def __str__(self):
         """ :todo: add availability """
         return 'id: ' + str(unique_id.fromMsg(self.msg.id)) \
+            + '\n    priority: ' + str(self.msg.priority) \
             + '\n    resources: ' + self._str_resources() \
             + '\n    status: ' + str(self.msg.status)
 
