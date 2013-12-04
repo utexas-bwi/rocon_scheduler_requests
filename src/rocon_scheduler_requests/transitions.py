@@ -43,8 +43,6 @@ between schedulers and requesters.
 # (unicode_literals not compatible with python2 uuid module)
 from __future__ import absolute_import, print_function
 
-import copy
-
 # Ros dependencies
 import rospy
 from scheduler_msgs.msg import Request
