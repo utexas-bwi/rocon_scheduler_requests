@@ -179,13 +179,15 @@ class TestTransitions(unittest.TestCase):
         self.assertEqual(rq.msg.status, Request.RELEASED)
 
     def test_empty_request_set(self):
-        rset = RequestSet([], RQR_UUID)
+        rset = RequestSet([], RQR_UUID, priority=1)
         self.assertIsNotNone(rset)
         self.assertEqual(len(rset), 0)
         self.assertTrue(TEST_UUID not in rset)
-        self.assertEqual([], rset.list_requests())
+        sch_msg = SchedulerRequests(requester=unique_id.toMsg(RQR_UUID),
+                                    priority=1, requests=[])
+        self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
         rset_str = """requester_id: 01234567-89ab-cdef-0123-456789abcdef
-priority: 0
+priority: 1
 replies: False
 requests:"""
         self.assertEqual(str(rset), rset_str)
@@ -202,7 +204,6 @@ requests:"""
         self.assertFalse(DIFF_UUID in rset)
         self.assertIsNone(rset.get(DIFF_UUID))
         self.assertEqual(rset.get(DIFF_UUID, 10), 10)
-        self.assertEqual([msg1], rset.list_requests())
 
         rset_str = """requester_id: 01234567-89ab-cdef-0123-456789abcdef
 priority: 0
@@ -214,6 +215,10 @@ requests:
       linux.precise.ros.segbot.*/test_rapp
     status: 0"""
         self.assertEqual(str(rset), rset_str)
+
+        sch_msg = SchedulerRequests(requester=unique_id.toMsg(RQR_UUID),
+                                    priority=0, requests=[msg1])
+        self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
 
     def test_two_request_set(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
@@ -236,13 +241,15 @@ requests:
         rset = RequestSet([msg1], RQR_UUID)
         self.assertEqual(len(rset), 1)
         self.assertTrue(TEST_UUID in rset)
-        self.assertEqual([msg1], rset.list_requests())
+        sch_msg = SchedulerRequests(requester=unique_id.toMsg(RQR_UUID),
+                                    priority=0, requests=[msg1])
+        self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
 
         # merge an empty request set: rset should remain the same
         rset.merge(RequestSet([], RQR_UUID, replies=True))
         self.assertEqual(len(rset), 1)
         self.assertTrue(TEST_UUID in rset)
-        self.assertEqual([msg1], rset.list_requests())
+        self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
 
     def test_single_merge(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
@@ -260,9 +267,11 @@ requests:
         rset.merge(RequestSet([msg2], RQR_UUID, replies=True))
         self.assertEqual(len(rset), 1)
         self.assertTrue(TEST_UUID in rset)
-        self.assertEqual([msg1], rset.list_requests())
         self.assertEqual(rset[TEST_UUID].msg.status, Request.GRANTED)
         self.assertEqual(rset[TEST_UUID].msg.resources, [TEST_RESOURCE])
+        sch_msg = SchedulerRequests(requester=unique_id.toMsg(RQR_UUID),
+                                    priority=0, requests=[msg2])
+        self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
 
 if __name__ == '__main__':
     import rosunit

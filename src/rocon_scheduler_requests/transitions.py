@@ -408,7 +408,7 @@ class RequestSet:
         """
         return self.requests.keys()
 
-    def list_requests(self):
+    def _list_requests(self):
         """
         Return a list of resource requests suitable for inclusion in
         a ``SchedulerRequests`` message.
@@ -455,7 +455,7 @@ class RequestSet:
         """
         msg = SchedulerRequests(requester=unique_id.toMsg(self.requester_id),
                                 priority=self.priority,
-                                requests=self.list_requests())
+                                requests=self._list_requests())
         if stamp is None:
             stamp = rospy.Time.now()
         msg.header.stamp = stamp
