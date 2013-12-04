@@ -75,8 +75,6 @@ class TestTransitions(unittest.TestCase):
                          '    status: 0')
         self.assertEqual(rq1.msg.status, Request.NEW)
         self.assertEqual(rq1.msg.resources, [TEST_WILDCARD])
-        self.assertEqual(rq1.str_resources(),
-                         '\n      linux.precise.ros.segbot.*/test_rapp')
 
         # why is this broken???
         #self.assertEqual(rq1.get_uuid, TEST_UUID)
@@ -87,8 +85,6 @@ class TestTransitions(unittest.TestCase):
         self.assertEqual(rq2.msg.status, Request.NEW)
         self.assertEqual(rq2.msg.resources, [TEST_RESOURCE])
         self.assertEqual(rq2.get_uuid(), DIFF_UUID)
-        self.assertEqual(rq2.str_resources(),
-                         '\n      linux.precise.ros.segbot.roberto/test_rapp')
         self.assertEqual(str(rq2),
                          'id: 01234567-cdef-fedc-89ab-ba9876543210\n'
                          '    resources: \n'

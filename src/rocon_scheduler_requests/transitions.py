@@ -122,7 +122,7 @@ class RequestBase:
     def __str__(self):
         """ :todo: add availability """
         return 'id: ' + str(unique_id.fromMsg(self.msg.id)) \
-            + '\n    resources: ' + self.str_resources() \
+            + '\n    resources: ' + self._str_resources() \
             + '\n    status: ' + str(self.msg.status)
 
     def get_uuid(self):
@@ -131,14 +131,14 @@ class RequestBase:
         """
         return unique_id.fromMsg(self.msg.id)
 
-    def str_resources(self):
+    def _str_resources(self):
         """ Format requested resource into a human-readable string. """
         retval = ''
         for res in self.msg.resources:
             retval += '\n      ' + res.platform_info + '/' + res.name
         return retval
 
-    def update_status(self, new_status):
+    def _update_status(self, new_status):
         """
         Update status for this resource request.
 
@@ -147,13 +147,13 @@ class RequestBase:
         :raises: :exc:`.TransitionError` if not a valid transition.
 
         """
-        if not self.validate(new_status):
+        if not self._validate(new_status):
             raise TransitionError('invalid status transition from '
                                   + str(self.msg.status)
                                   + ' to ' + str(new_status))
         self.msg.status = new_status
 
-    def validate(self, new_status):
+    def _validate(self, new_status):
         """
         Validate status update for this resource request.
 
@@ -176,7 +176,7 @@ class ResourceRequest(RequestBase):
     Provides all attributes defined for :class:`.RequestBase`.
 
     """
-    def reconcile(self, update):
+    def _reconcile(self, update):
         """
         Merge scheduler updates with this request.
 
@@ -192,7 +192,7 @@ class ResourceRequest(RequestBase):
             update.msg.status = Request.RELEASED
         elif update.get_uuid() != self.get_uuid():
             raise WrongRequestError('UUID does not match')
-        if self.validate(update.msg.status):
+        if self._validate(update.msg.status):
             self.msg.status = update.msg.status
             self.msg.priority = update.msg.priority
             self.msg.resources = update.msg.resources
@@ -206,7 +206,7 @@ class ResourceRequest(RequestBase):
         :raises: :exc:`.TransitionError`
 
         """
-        self.update_status(Request.RELEASING)
+        self._update_status(Request.RELEASING)
 
 
 class ResourceReply(RequestBase):
@@ -222,14 +222,14 @@ class ResourceReply(RequestBase):
     """
     def abort(self):
         """ Abort a request due to internal failure (always valid). """
-        self.update_status(Request.ABORTED)
+        self._update_status(Request.ABORTED)
 
     def free(self):
         """ Free up previously-assigned resources that were released.
 
         :raises: :exc:`.TransitionError`
         """
-        self.update_status(Request.RELEASED)
+        self._update_status(Request.RELEASED)
 
     def grant(self, resources):
         """ Grant some specific requested resources.
@@ -242,10 +242,10 @@ class ResourceReply(RequestBase):
         resources really do fully satisfy this request.
 
         """
-        self.update_status(Request.GRANTED)
+        self._update_status(Request.GRANTED)
         self.msg.resources = resources
 
-    def reconcile(self, update):
+    def _reconcile(self, update):
         """
         Merge updated request with current scheduler status.
 
@@ -261,7 +261,7 @@ class ResourceReply(RequestBase):
             update.msg.status = Request.RELEASED
         elif update.get_uuid() != self.get_uuid():
             raise WrongRequestError('UUID does not match')
-        if self.validate(update.msg.status):
+        if self._validate(update.msg.status):
             self.msg.status = update.msg.status
             self.msg.resources = update.msg.resources
             if update.msg.availability != rospy.Time():
@@ -273,7 +273,7 @@ class ResourceReply(RequestBase):
         :raises: :exc:`.TransitionError`
 
         """
-        self.update_status(Request.REJECTED)
+        self._update_status(Request.REJECTED)
 
     def wait(self):
         """
@@ -281,7 +281,7 @@ class ResourceReply(RequestBase):
 
         :raises: :exc:`.TransitionError`
         """
-        self.update_status(Request.WAITING)
+        self._update_status(Request.WAITING)
 
 
 class RequestSet:
@@ -434,7 +434,7 @@ class RequestSet:
             if new_rq is None and rq.msg.status == Request.RELEASED:
                 del self.requests[rid]  # no longer needed
             else:
-                rq.reconcile(new_rq)
+                rq._reconcile(new_rq)
 
         # Add any new requests not previously known.
         for rid, new_rq in updates.items():
