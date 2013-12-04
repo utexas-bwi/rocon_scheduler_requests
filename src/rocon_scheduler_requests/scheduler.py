@@ -140,6 +140,8 @@ class _RequesterStatus:
 
         :returns: true if time limit exceeded.
 
+        :todo: handle this timeout
+
         """
         return False            # test scaffolding
 

@@ -120,7 +120,7 @@ class RequestBase:
         """ Corresponding ``scheduler_msgs/Request``. """
 
     def __str__(self):
-        """ :todo: add availability """
+        """ Generate string representation. """
         return 'id: ' + str(unique_id.fromMsg(self.msg.id)) \
             + '\n    priority: ' + str(self.msg.priority) \
             + '\n    resources: ' + self._str_resources() \
@@ -423,9 +423,6 @@ class RequestSet:
 
         :param updates: Request set containing updated information.
         :type updates: :class:`.RequestSet`
-
-        :todo: Pay attention to timing as messages and updates
-               interleave.
 
         """
         # Reconcile each existing request with the updates.  Make a
