@@ -91,16 +91,8 @@ class _RequesterStatus:
 
         self.pub = rospy.Publisher(self.feedback_topic,
                                    SchedulerRequests)
-        self.feedback_msg = SchedulerRequests(requester=msg.requester,
-                                              priority=msg.priority)
 
         self.update(msg)        # set initial status
-
-    def _send_feedback(self):
-        """ Build feedback message and send it to the requester. """
-        self.feedback_msg.header.stamp = rospy.Time.now()
-        self.feedback_msg.requests = self.rset.list_requests()
-        self.pub.publish(self.feedback_msg)
 
     def update(self, msg):
         """ Update requester status.
@@ -118,7 +110,7 @@ class _RequesterStatus:
                                           replies=False)
         self.rset.merge(new_rset)
         self.sched.callback(self.rset)
-        self._send_feedback()   # notify the requester
+        self.pub.publish(self.rset.to_msg())  # notify the requester
 
     def timeout(self, limit, event):
         """ Check for requester timeout.
