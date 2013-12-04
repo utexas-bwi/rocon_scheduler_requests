@@ -46,6 +46,7 @@ from __future__ import absolute_import, print_function
 # Ros dependencies
 import rospy
 from scheduler_msgs.msg import Request
+from scheduler_msgs.msg import SchedulerRequests
 import unique_id
 
 
@@ -441,6 +442,24 @@ class RequestSet:
                     self.requests[rid] = ResourceReply(new_rq.msg)
                 else:
                     self.requests[rid] = ResourceRequest(new_rq.msg)
+
+    def to_msg(self, stamp=None):
+        """ Convert to ROS ``scheduler_msgs/SchedulerRequest`` message.
+
+        :param stamp: Time stamp for message header. If ``None``, use
+            current time.
+        :type stamp: rospy.Time
+
+        :returns: corresponding ``scheduler_msgs/SchedulerRequests``
+
+        """
+        msg = SchedulerRequests(requester=unique_id.toMsg(self.requester_id),
+                                priority=self.priority,
+                                requests=self.list_requests())
+        if stamp is None:
+            stamp = rospy.Time.now()
+        msg.header.stamp = stamp
+        return msg
 
     def values(self):
         """

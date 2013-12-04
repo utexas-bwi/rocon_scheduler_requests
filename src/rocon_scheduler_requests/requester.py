@@ -125,17 +125,13 @@ class Requester:
         self.feedback = feedback        # requester feedback
         self.pub_topic = topic
         self.sub_topic = common.feedback_topic(uuid, topic)
-        rospy.loginfo('ROCON resource requester topic: ' + self.sub_topic)
-
+        rospy.loginfo('ROCON requester feedback topic: ' + self.sub_topic)
         self.sub = rospy.Subscriber(self.sub_topic,
                                     SchedulerRequests,
                                     self._feedback)
-        self.alloc = SchedulerRequests()
-        self.alloc.requester = unique_id.toMsg(self.requester_id)
         self.pub = rospy.Publisher(self.pub_topic, SchedulerRequests)
-
-        self.timer = rospy.Timer(rospy.Duration(1.0 / frequency),
-                                 self._heartbeat)
+        self.time_delay = rospy.Duration(1.0 / frequency)
+        self._set_timer()
 
     def _feedback(self, msg):
         """ Scheduler feedback message handler. """
@@ -146,18 +142,18 @@ class Requester:
                                           replies=True)
         self.rset.merge(new_rset)
         self.feedback(self.rset)  # invoke user callback function
+        # :todo: if user changed the rset, send updates to scheduler
 
     def _heartbeat(self, event):
         """ Scheduler request heartbeat timer handler.
 
-        Publishes all active allocation requests to the scheduler at
-        appropriate time intervals.
+        Triggered after nothing has been sent to the scheduler within
+        they previous time_delay duration.  Sends another copy of the
+        current request set to the scheduler.
 
         """
-        self.alloc.header.stamp = event.current_real
-        self.alloc.priority = self.rset.priority
-        self.alloc.requests = self.rset.list_requests()
-        self.pub.publish(self.alloc)
+        self.pub.publish(self.rset.to_msg(stamp=event.current_real))
+        self._set_timer()       # reset timer
 
     def new_request(self, resources, priority=None, uuid=None):
         """ Add a new scheduler request.
@@ -187,4 +183,12 @@ class Requester:
                       resources=resources,
                       status=Request.NEW)
         self.rset[uuid] = transitions.ResourceRequest(msg)
+        self.pub.publish(self.rset.to_msg())
+        self._set_timer()       # reset heartbeat timer
         return uuid
+
+    def _set_timer(self):
+        """ Schedule next heartbeat timer callback. """
+        self.timer = rospy.Timer(self.time_delay,
+                                 self._heartbeat,
+                                 oneshot=True)
