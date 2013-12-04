@@ -52,13 +52,7 @@ import unique_id
 
 # ROS messages
 from scheduler_msgs.msg import Request
-DEPRECATED_MSGS = False         # do not use deprecated messages
-try:
-    from scheduler_msgs.msg import SchedulerRequests
-except ImportError:
-    from scheduler_msgs.msg import AllocateResources
-    from scheduler_msgs.msg import SchedulerFeedback
-    DEPRECATED_MSGS = True      # use deprecated messages
+from scheduler_msgs.msg import SchedulerRequests
 
 # internal modules
 from . import common
@@ -95,16 +89,10 @@ class _RequesterStatus:
                                                     self.sched.topic)
         rospy.loginfo('requester feedback topic: ' + self.feedback_topic)
 
-        if DEPRECATED_MSGS:             # using old message formats?
-            self.pub = rospy.Publisher(self.feedback_topic,
-                                       SchedulerFeedback)
-            self.feedback_msg = SchedulerFeedback(requester=msg.requester,
-                                                  priority=msg.priority)
-        else:                           # new message definition
-            self.pub = rospy.Publisher(self.feedback_topic,
-                                       SchedulerRequests)
-            self.feedback_msg = SchedulerRequests(requester=msg.requester,
-                                                  priority=msg.priority)
+        self.pub = rospy.Publisher(self.feedback_topic,
+                                   SchedulerRequests)
+        self.feedback_msg = SchedulerRequests(requester=msg.requester,
+                                              priority=msg.priority)
 
         self.update(msg)        # set initial status
 
@@ -123,10 +111,7 @@ class _RequesterStatus:
         """
         # Make a new RequestSet from this message
         requests = None
-        if DEPRECATED_MSGS:             # using old message formats?
-            requests = msg.resources
-        else:                           # new message definition
-            requests = msg.requests
+        requests = msg.requests
         new_rset = transitions.RequestSet(requests,
                                           self.requester_id,
                                           priority=msg.priority,
@@ -184,16 +169,9 @@ class Scheduler:
         self.topic = topic
         """ Scheduler request topic name. """
         rospy.loginfo('scheduler request topic: ' + self.topic)
-
-        if DEPRECATED_MSGS:             # using old message formats?
-            self.sub = rospy.Subscriber(self.topic,
-                                        AllocateResources,
-                                        self._allocate_resources)
-        else:                           # new message definition
-            self.sub = rospy.Subscriber(self.topic,
-                                        SchedulerRequests,
-                                        self._allocate_resources)
-
+        self.sub = rospy.Subscriber(self.topic,
+                                    SchedulerRequests,
+                                    self._allocate_resources)
         self.duration = rospy.Duration(1.0 / frequency)
         self.time_limit = self.duration * 4.0
         self.timer = rospy.Timer(self.duration, self._watchdog)
