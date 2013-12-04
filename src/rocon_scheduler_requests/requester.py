@@ -107,16 +107,6 @@ class Requester:
     :class:`.ResourceRequest` it contains, and modify them
     appropriately.
 
-    .. note::
-
-       Figure out how not to call the ``feedback`` function unless
-       something actually changes.
-
-    .. note::
-
-       Investigate whether it helps to also provide the previous
-       :class:`.RequestSet`.
-
     """
 
     def __init__(self, feedback, uuid=None,

@@ -180,16 +180,6 @@ class TestTransitions(unittest.TestCase):
         rq.free()
         self.assertEqual(rq.msg.status, Request.RELEASED)
 
-    def test_matches(self):
-        rq = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
-                                     resources=[TEST_WILDCARD],
-                                     status=Request.NEW))
-        self.assertTrue(rq.matches(TEST_RESOURCE))
-        ## currently scaffolded out:
-        #kobuki = Resource(name=TEST_RAPP,
-        #                  platform_info='linux.precise.ros.kobuki.roberto')
-        #self.assertFalse(rq.matches([kobuki]))
-
     def test_empty_request_set(self):
         rset = RequestSet([], RQR_UUID)
         self.assertIsNotNone(rset)

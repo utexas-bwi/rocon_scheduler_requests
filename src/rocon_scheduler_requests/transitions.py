@@ -51,11 +51,6 @@ from scheduler_msgs.msg import Request
 import unique_id
 
 
-class ResourceNotRequestedError(Exception):
-    """ Error exception: resource does not match the request. """
-    pass
-
-
 class TransitionError(Exception):
     """ Error exception: invalid state transition. """
     pass
@@ -138,18 +133,6 @@ class RequestBase:
         """
         return unique_id.fromMsg(self.msg.id)
 
-    def matches(self, resources):
-        """ Check whether a specific list of resources matches this request.
-
-        :param resources: List of exact resources to match.
-        :type resources: list of ``scheduler_msgs/Resource``
-        :returns: ``True`` if these resources match.
-
-        :todo: how is this done, now?
-
-        """
-        return True             # scaffolding
-
     def str_resources(self):
         """ Format requested resource into a human-readable string. """
         retval = ''
@@ -220,7 +203,7 @@ class ResourceRequest(RequestBase):
                 self.msg.availability = update.msg.availability
 
     def release(self):
-        """ Release a previously granted resource.
+        """ Release a previously requested resource.
 
         :raises: :exc:`.TransitionError`
 
@@ -244,7 +227,7 @@ class ResourceReply(RequestBase):
         self.update_status(Request.ABORTED)
 
     def free(self):
-        """ Free up a previously-assigned resource that was released.
+        """ Free up previously-assigned resources that were released.
 
         :raises: :exc:`.TransitionError`
         """
@@ -253,22 +236,20 @@ class ResourceReply(RequestBase):
     def grant(self, resources):
         """ Grant some specific requested resources.
 
-        :param resources: Exact resource granted.
+        :param resources: Exact resources granted.
         :type resources: list of ``scheduler_msgs/Resource``
         :raises: :exc:`.TransitionError`
-        :raises: :exc:`.ResourceNotRequestedError`
+
+        The caller is responsible for ensuring that the granted
+        resources really do fully satisfy this request.
 
         """
         self.update_status(Request.GRANTED)
-        if not self.matches(resources):
-            raise ResourceNotRequestedError(str(resource)
-                                            + ' does not match '
-                                            + str(self.msg.resources))
         self.msg.resources = resources
 
     def reconcile(self, update):
         """
-        Merge updated resource request with current scheduler status.
+        Merge updated request with current scheduler status.
 
         :param update: Latest information for this request, or
                        ``None`` if no longer present.
