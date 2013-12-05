@@ -245,6 +245,10 @@ requests:
         self.assertEqual(rset.get(TEST_UUID), rset[TEST_UUID])
         self.assertEqual(rset.get(DIFF_UUID), rset[DIFF_UUID])
         self.assertTrue(rset == RequestSet([msg1, msg2], RQR_UUID))
+        self.assertTrue(rset == RequestSet([msg2, msg1], RQR_UUID))
+        self.assertTrue(rset != RequestSet([msg1], RQR_UUID))
+        self.assertTrue(rset != RequestSet([msg2], RQR_UUID))
+        self.assertTrue(rset != RequestSet([], RQR_UUID))
 
     def test_empty_merge(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
