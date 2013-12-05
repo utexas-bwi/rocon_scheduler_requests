@@ -317,6 +317,12 @@ class RequestSet:
        :param rq: (:class:`.ResourceRequest`) request or
            (:class:`.ResourceReply`) reply.
 
+    .. describe:: rset == other
+
+       :returns: ``True`` if *rset* and *other* have the same contents.
+
+        Ignores the difference between request and reply messages.
+
     .. describe:: str(rset)
 
        :returns: String representation of :class:`.RequestSet`.
@@ -352,6 +358,19 @@ class RequestSet:
     def __contains__(self, uuid):
         """ Request set membership. """
         return uuid in self.requests
+
+    def __eq__(self, other):
+        """ RequestSet equality operator. """
+        if self.requester_id != other.requester_id:
+            return False        # different requester
+        if self.priority != other.priority:
+            return False        # changed priority
+        if set(self.requests.keys()) != set(other.requests.keys()):
+            return False        # different request IDs
+        for rqid, rq in self.requests.items():
+            if rq.msg != other[rqid].msg:
+                return False    # contents of some request changed
+        return True
 
     def __getitem__(self, uuid):
         """

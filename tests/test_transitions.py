@@ -192,6 +192,15 @@ replies: False
 requests:"""
         self.assertEqual(str(rset), rset_str)
 
+        # Test equality for empty rsets: the priority and requester_id
+        # are significant, but the replies field is ignored.
+        self.assertTrue(rset == RequestSet([], RQR_UUID, priority=1))
+        self.assertTrue(rset == RequestSet([], RQR_UUID,
+                                           priority=1, replies=True))
+        self.assertFalse(rset == RequestSet([], RQR_UUID, priority=2))
+        self.assertTrue(rset != RequestSet([], RQR_UUID, priority=2))
+        self.assertTrue(rset != RequestSet([], TEST_UUID, priority=1))
+
     def test_one_request_set(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_WILDCARD],
@@ -204,6 +213,8 @@ requests:"""
         self.assertFalse(DIFF_UUID in rset)
         self.assertIsNone(rset.get(DIFF_UUID))
         self.assertEqual(rset.get(DIFF_UUID, 10), 10)
+        self.assertTrue(rset == RequestSet([msg1], RQR_UUID))
+        self.assertTrue(rset == RequestSet([msg1], RQR_UUID, replies=True))
 
         rset_str = """requester_id: 01234567-89ab-cdef-0123-456789abcdef
 priority: 0
@@ -233,6 +244,7 @@ requests:
         self.assertEqual(rset[DIFF_UUID].msg, msg2)
         self.assertEqual(rset.get(TEST_UUID), rset[TEST_UUID])
         self.assertEqual(rset.get(DIFF_UUID), rset[DIFF_UUID])
+        self.assertTrue(rset == RequestSet([msg1, msg2], RQR_UUID))
 
     def test_empty_merge(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
