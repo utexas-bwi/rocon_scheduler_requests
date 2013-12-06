@@ -74,7 +74,7 @@ class Requester:
                  UUID will be assigned.
     :type uuid: :class:`uuid.UUID`
 
-    :param priority: Scheduling priority of this requester.
+    :param priority: default priority for requests from this requester.
 
     :param topic: Topic name for allocating resources.
     :type topic: str
@@ -104,7 +104,7 @@ class Requester:
     """
 
     def __init__(self, feedback, uuid=None,
-                 priority=0,
+                 priority=Request.DEFAULT_PRIORITY,
                  topic=common.SCHEDULER_TOPIC,
                  frequency=common.HEARTBEAT_HZ):
         """ Constructor. """
@@ -113,8 +113,7 @@ class Requester:
             uuid = unique_id.fromRandom()
         self.requester_id = uuid
         """ :class:`uuid.UUID` of this requester. """
-        self.rset = transitions.RequestSet([], self.requester_id,
-                                           priority=priority)
+        self.rset = transitions.RequestSet([], self.requester_id)
         """
         :class:`.RequestSet` containing the current status of every
         :class:`.ResourceRequest` made by this requester.  All
@@ -131,6 +130,7 @@ class Requester:
                                     self._feedback)
         self.pub = rospy.Publisher(self.pub_topic, SchedulerRequests)
         self.time_delay = rospy.Duration(1.0 / frequency)
+        self.priority = priority  # used to set new requests' priorities if no priority is specified
         self._set_timer()
 
     def _feedback(self, msg):
@@ -138,7 +138,6 @@ class Requester:
         # Make a new RequestSet of the scheduler replies from this message
         new_rset = transitions.RequestSet(msg.requests,
                                           self.requester_id,
-                                          priority=msg.priority,
                                           replies=True)
         self.rset.merge(new_rset)
         self.feedback(self.rset)  # invoke user callback function
@@ -173,7 +172,7 @@ class Requester:
         :raises: :exc:`.WrongRequestError` if request already exists.
         """
         if priority is None:
-            priority = self.rset.priority
+            priority = self.priority
         if uuid is None:
             uuid = unique_id.fromRandom()
         if uuid in self.rset:

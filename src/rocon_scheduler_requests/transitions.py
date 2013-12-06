@@ -295,7 +295,6 @@ class RequestSet:
         ``requests`` component of a ``SchedulerRequests`` message.
     :param requester_id: (:class:`uuid.UUID`) Unique ID this requester.
     :param replies: (bool) ``True`` if this set contains scheduler replies.
-    :param priority: Scheduling priority of this requester.
 
     :class:`.RequestSet` supports these standard container operations:
 
@@ -339,12 +338,10 @@ class RequestSet:
 
     """
 
-    def __init__(self, requests, requester_id, replies=False, priority=0):
+    def __init__(self, requests, requester_id, replies=False):
         """ Constructor. """
         self.requester_id = requester_id
         """ :class:`uuid.UUID` of this requester. """
-        self.priority = priority
-        """ Current requester priority. """
         self.replies = replies
         """ True if this RequestSet contains scheduler replies. """
         self.requests = {}
@@ -363,8 +360,6 @@ class RequestSet:
         """ RequestSet equality operator. """
         if self.requester_id != other.requester_id:
             return False        # different requester
-        if self.priority != other.priority:
-            return False        # changed priority
         if set(self.requests.keys()) != set(other.requests.keys()):
             return False        # different request IDs
         for rqid, rq in self.requests.items():
@@ -392,7 +387,6 @@ class RequestSet:
 
     def __str__(self):
         rval = 'requester_id: ' + str(self.requester_id) \
-            + '\npriority: ' + str(self.priority) \
             + '\nreplies: ' + str(self.replies) \
             + '\nrequests:'
         for rq in self.requests.values():
