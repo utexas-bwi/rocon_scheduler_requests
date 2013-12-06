@@ -47,6 +47,8 @@ knowledge of scheduler request messages or state transitions.
 # enable some python3 compatibility options:
 from __future__ import absolute_import, print_function, unicode_literals
 
+import copy
+
 # ROS dependencies
 import rospy
 import unique_id
@@ -130,6 +132,7 @@ class Requester:
                                     SchedulerRequests,
                                     self._feedback)
         self.pub = rospy.Publisher(self.pub_topic, SchedulerRequests)
+        rospy.sleep(0.1)        # without this, first msg gets lost WTF???
         self.time_delay = rospy.Duration(1.0 / frequency)
         self._set_timer()
 
@@ -141,8 +144,14 @@ class Requester:
                                           priority=msg.priority,
                                           replies=True)
         self.rset.merge(new_rset)
-        self.feedback(self.rset)  # invoke user callback function
-        # :todo: if user changed the rset, send updates to scheduler
+        prev_rset = copy.deepcopy(self.rset)
+
+        # invoke user-defined callback function
+        self.feedback(self.rset)
+
+        # :todo: reply immediately if callback changed something
+        #if self.rset != prev_rset:      # callback changed the rset?
+        #    self.send_requests()
 
     def _heartbeat(self, event):
         """ Scheduler request heartbeat timer handler.
@@ -152,8 +161,7 @@ class Requester:
         current request set to the scheduler.
 
         """
-        self.pub.publish(self.rset.to_msg(stamp=event.current_real))
-        self._set_timer()       # reset timer
+        self.send_requests()
 
     def new_request(self, resources, priority=None, uuid=None):
         """ Add a new scheduler request.
@@ -183,12 +191,19 @@ class Requester:
                       resources=resources,
                       status=Request.NEW)
         self.rset[uuid] = transitions.ResourceRequest(msg)
-        self.pub.publish(self.rset.to_msg())
-        self._set_timer()       # reset heartbeat timer
         return uuid
 
+    def send_requests(self):
+        """ Send all current requests to the scheduler. """
+        #print(str(self.rset))
+        self.pub.publish(self.rset.to_msg())
+        #self._set_timer()       # reset heartbeat timer
+
     def _set_timer(self):
-        """ Schedule next heartbeat timer callback. """
-        self.timer = rospy.Timer(self.time_delay,
-                                 self._heartbeat,
-                                 oneshot=True)
+        """ Schedule heartbeat timer callback. """
+        if not rospy.is_shutdown():
+            #self.timer.shutdown()
+            #self.timer = rospy.Timer(self.time_delay,
+            #                         self._heartbeat,
+            #                         oneshot=True)
+            self.timer = rospy.Timer(self.time_delay, self._heartbeat)

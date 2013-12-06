@@ -46,8 +46,9 @@ if __name__ == '__main__':
     # Repeat allocation requests at 1Hz frequency, speeds up testing.
     rqr = requester.Requester(feedback, uuid=TEST_UUID, frequency=1.0)
 
-    # Make a new request using a wildcard resource.
+    # Make a new request using a wildcard resource, and send it to the scheduler.
     rid = rqr.new_request([TEST_WILDCARD])
+    rqr.send_requests()
 
     # Spin in the main thread: required for message callbacks.
     rospy.spin()

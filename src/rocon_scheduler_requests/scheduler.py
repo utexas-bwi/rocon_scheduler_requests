@@ -47,6 +47,7 @@ knowledge of scheduler request state transitions.
 # enable some python3 compatibility options:
 from __future__ import absolute_import, print_function, unicode_literals
 
+import copy
 import rospy
 import unique_id
 
@@ -102,15 +103,18 @@ class _RequesterStatus:
 
         """
         # Make a new RequestSet from this message
-        requests = None
-        requests = msg.requests
-        new_rset = transitions.RequestSet(requests,
+        # :todo: make a constructor option for that.
+        new_rset = transitions.RequestSet(msg.requests,
                                           self.requester_id,
                                           priority=msg.priority,
                                           replies=False)
-        self.rset.merge(new_rset)
-        self.sched.callback(self.rset)
-        self.pub.publish(self.rset.to_msg())  # notify the requester
+        if self.rset != new_rset:       # something new?
+            self.rset.merge(new_rset)
+            prev_rset = copy.deepcopy(self.rset)
+            self.sched.callback(self.rset)
+            if self.rset != prev_rset:  # scheduler changed the rset?
+                # notify the requester
+                self.pub.publish(self.rset.to_msg())
 
     def timeout(self, limit, event):
         """ Check for requester timeout.
