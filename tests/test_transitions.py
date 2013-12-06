@@ -195,7 +195,9 @@ requests:"""
         # significant, but the replies field is ignored.
         self.assertTrue(rset == RequestSet([], RQR_UUID))
         self.assertTrue(rset == RequestSet([], RQR_UUID, replies=True))
-        #self.assertFalse(rset != RequestSet([], RQR_UUID))
+        self.assertFalse((rset != RequestSet([], RQR_UUID)))
+        self.assertFalse(not rset == RequestSet([], RQR_UUID))
+        self.assertFalse(rset == RequestSet([], TEST_UUID))
         self.assertTrue(rset != RequestSet([], TEST_UUID))
 
     def test_one_request_set(self):

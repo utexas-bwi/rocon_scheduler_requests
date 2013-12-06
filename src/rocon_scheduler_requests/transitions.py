@@ -322,6 +322,12 @@ class RequestSet:
 
         Ignores the difference between request and reply messages.
 
+    .. describe:: rset != other
+
+       :returns: ``True`` if *rset* and *other* have different contents.
+
+        Ignores the difference between request and reply messages.
+
     .. describe:: str(rset)
 
        :returns: String representation of :class:`.RequestSet`.
@@ -380,6 +386,10 @@ class RequestSet:
     def __len__(self):
         """ Number of requests. """
         return len(self.requests)
+
+    def __ne__(self, other):
+        """ RequestSet != operator. """
+        return not self == other
 
     def __setitem__(self, uuid, rq):
         """ Add a resource request to the set. """
