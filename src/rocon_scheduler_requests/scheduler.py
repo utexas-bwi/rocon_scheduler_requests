@@ -90,7 +90,8 @@ class _RequesterStatus:
         rospy.loginfo('requester feedback topic: ' + self.feedback_topic)
 
         self.pub = rospy.Publisher(self.feedback_topic,
-                                   SchedulerRequests)
+                                   SchedulerRequests,
+                                   latch=True)
 
         self.update(msg)        # set initial status
 

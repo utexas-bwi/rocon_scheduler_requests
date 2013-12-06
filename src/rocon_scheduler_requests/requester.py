@@ -132,8 +132,9 @@ class Requester:
         self.sub = rospy.Subscriber(self.sub_topic,
                                     SchedulerRequests,
                                     self._feedback)
-        self.pub = rospy.Publisher(self.pub_topic, SchedulerRequests)
-        rospy.sleep(0.1)        # without this, first msg gets lost WTF???
+        self.pub = rospy.Publisher(self.pub_topic,
+                                   SchedulerRequests,
+                                   latch=True)
         self.time_delay = rospy.Duration(1.0 / frequency)
         self._set_timer()
 
@@ -157,7 +158,7 @@ class Requester:
         """ Scheduler request heartbeat timer handler.
 
         Triggered after nothing has been sent to the scheduler within
-        they previous time_delay duration.  Sends another copy of the
+        the previous time_delay duration.  Sends another copy of the
         current request set to the scheduler.
 
         """
