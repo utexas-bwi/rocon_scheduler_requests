@@ -166,6 +166,9 @@ class Requester:
     def new_request(self, resources, priority=None, uuid=None):
         """ Add a new scheduler request.
 
+        Call this method for each desired new request, then invoke
+        :py:meth:`.send_requests` to notify the scheduler.
+
         :param resources: ROCON resources requested
         :type resources: list of scheduler_msgs/Resource
 
@@ -194,7 +197,20 @@ class Requester:
         return uuid
 
     def send_requests(self):
-        """ Send all current requests to the scheduler. """
+        """ Send all current requests to the scheduler.
+
+        Use this method after calling :py:meth:`.new_request` one or
+        more times.  It will send them to the scheduler immediately.
+        Otherwise, they would not go out until the next heartbeat
+        timer event.
+
+        .. note::
+
+           A recent heartbeat may already have sent some recent
+           requests.  This method just ensures they are all sent
+           without further delay.
+
+        """
         #print(str(self.rset))
         self.pub.publish(self.rset.to_msg())
         #self._set_timer()       # reset heartbeat timer
