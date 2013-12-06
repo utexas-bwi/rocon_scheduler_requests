@@ -106,7 +106,7 @@ class Requester:
     """
 
     def __init__(self, feedback, uuid=None,
-                 priority=Request.DEFAULT_PRIORITY,
+                 priority=0,
                  topic=common.SCHEDULER_TOPIC,
                  frequency=common.HEARTBEAT_HZ):
         """ Constructor. """
@@ -122,6 +122,8 @@ class Requester:
         requester operations are done using this object and its
         contents.
         """
+        self.priority = priority
+        """ Default for new requests' priorities if none specified. """
 
         self.feedback = feedback        # requester feedback
         self.pub_topic = topic
@@ -133,7 +135,6 @@ class Requester:
         self.pub = rospy.Publisher(self.pub_topic, SchedulerRequests)
         rospy.sleep(0.1)        # without this, first msg gets lost WTF???
         self.time_delay = rospy.Duration(1.0 / frequency)
-        self.priority = priority  # used to set new requests' priorities if no priority is specified
         self._set_timer()
 
     def _feedback(self, msg):

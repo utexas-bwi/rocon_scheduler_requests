@@ -179,27 +179,24 @@ class TestTransitions(unittest.TestCase):
         self.assertEqual(rq.msg.status, Request.RELEASED)
 
     def test_empty_request_set(self):
-        rset = RequestSet([], RQR_UUID, priority=1)
+        rset = RequestSet([], RQR_UUID)
         self.assertIsNotNone(rset)
         self.assertEqual(len(rset), 0)
         self.assertTrue(TEST_UUID not in rset)
         sch_msg = SchedulerRequests(requester=unique_id.toMsg(RQR_UUID),
-                                    priority=1, requests=[])
+                                    requests=[])
         self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
         rset_str = """requester_id: 01234567-89ab-cdef-0123-456789abcdef
-priority: 1
 replies: False
 requests:"""
         self.assertEqual(str(rset), rset_str)
 
-        # Test equality for empty rsets: the priority and requester_id
-        # are significant, but the replies field is ignored.
-        self.assertTrue(rset == RequestSet([], RQR_UUID, priority=1))
-        self.assertTrue(rset == RequestSet([], RQR_UUID,
-                                           priority=1, replies=True))
-        self.assertFalse(rset == RequestSet([], RQR_UUID, priority=2))
-        self.assertTrue(rset != RequestSet([], RQR_UUID, priority=2))
-        self.assertTrue(rset != RequestSet([], TEST_UUID, priority=1))
+        # Test equality for empty rsets: the requester_id is
+        # significant, but the replies field is ignored.
+        self.assertTrue(rset == RequestSet([], RQR_UUID))
+        self.assertTrue(rset == RequestSet([], RQR_UUID, replies=True))
+        #self.assertFalse(rset != RequestSet([], RQR_UUID))
+        self.assertTrue(rset != RequestSet([], TEST_UUID))
 
     def test_one_request_set(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
@@ -217,7 +214,6 @@ requests:"""
         self.assertTrue(rset == RequestSet([msg1], RQR_UUID, replies=True))
 
         rset_str = """requester_id: 01234567-89ab-cdef-0123-456789abcdef
-priority: 0
 replies: True
 requests:
   id: 01234567-89ab-cdef-fedc-ba9876543210
@@ -228,7 +224,7 @@ requests:
         self.assertEqual(str(rset), rset_str)
 
         sch_msg = SchedulerRequests(requester=unique_id.toMsg(RQR_UUID),
-                                    priority=0, requests=[msg1])
+                                    requests=[msg1])
         self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
 
     def test_two_request_set(self):
@@ -258,7 +254,7 @@ requests:
         self.assertEqual(len(rset), 1)
         self.assertTrue(TEST_UUID in rset)
         sch_msg = SchedulerRequests(requester=unique_id.toMsg(RQR_UUID),
-                                    priority=0, requests=[msg1])
+                                    requests=[msg1])
         self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
 
         # merge an empty request set: rset should remain the same
@@ -286,7 +282,7 @@ requests:
         self.assertEqual(rset[TEST_UUID].msg.status, Request.GRANTED)
         self.assertEqual(rset[TEST_UUID].msg.resources, [TEST_RESOURCE])
         sch_msg = SchedulerRequests(requester=unique_id.toMsg(RQR_UUID),
-                                    priority=0, requests=[msg2])
+                                    requests=[msg2])
         self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
 
 if __name__ == '__main__':
