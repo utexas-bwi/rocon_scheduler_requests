@@ -473,7 +473,6 @@ class RequestSet:
 
         """
         msg = SchedulerRequests(requester=unique_id.toMsg(self.requester_id),
-                                priority=self.priority,
                                 requests=self._list_requests())
         if stamp is None:
             stamp = rospy.Time.now()
