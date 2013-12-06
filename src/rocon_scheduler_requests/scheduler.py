@@ -82,7 +82,6 @@ class _RequesterStatus:
         self.requester_id = unique_id.fromMsg(msg.requester)
         """ :class:`uuid.UUID` of this requester. """
         self.rset = transitions.RequestSet([], self.requester_id,
-                                           priority=msg.priority,
                                            replies=True)
         """ All current scheduler replies to this requester. """
 
@@ -106,7 +105,6 @@ class _RequesterStatus:
         # :todo: make a constructor option for that.
         new_rset = transitions.RequestSet(msg.requests,
                                           self.requester_id,
-                                          priority=msg.priority,
                                           replies=False)
         if self.rset != new_rset:       # something new?
             self.rset.merge(new_rset)

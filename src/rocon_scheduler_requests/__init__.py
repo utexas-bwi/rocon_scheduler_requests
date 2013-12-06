@@ -31,3 +31,4 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 from .requester import Requester
+from .scheduler import Scheduler
