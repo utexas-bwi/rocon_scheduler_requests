@@ -369,8 +369,20 @@ class RequestSet:
         if set(self.requests.keys()) != set(other.requests.keys()):
             return False        # different request IDs
         for rqid, rq in self.requests.items():
-            if rq.msg != other[rqid].msg:
-                return False    # contents of some request changed
+            ## this does not work:
+            #if rq.msg != other[rqid].msg:
+            #    return False    # contents of some request changed
+            other_msg = other[rqid].msg
+            if rq.msg.status != other_msg.status:
+                return False
+            if rq.msg.priority != other_msg.priority:
+                return False
+            if rq.msg.availability != other_msg.availability:
+                return False
+            if rq.msg.hold_time != other_msg.hold_time:
+                return False
+            if rq.msg.resources != other_msg.resources:
+                return False
         return True
 
     def __getitem__(self, uuid):

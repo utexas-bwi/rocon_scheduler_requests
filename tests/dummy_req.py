@@ -25,7 +25,7 @@ TEST_WILDCARD = Resource(name=TEST_RAPP,
 rid = None                      # UUID for Resource Request
 
 def feedback(rset):
-    print(str(rset))
+    #print(str(rset))
     if rid:
         rq = rset[rid]
         if rq:

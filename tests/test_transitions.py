@@ -4,6 +4,7 @@
 # (unicode_literals not compatible with python2 uuid module)
 from __future__ import absolute_import, print_function
 
+import copy
 import uuid
 import unittest
 
@@ -214,6 +215,8 @@ requests:"""
         self.assertEqual(rset.get(DIFF_UUID, 10), 10)
         self.assertTrue(rset == RequestSet([msg1], RQR_UUID))
         self.assertTrue(rset == RequestSet([msg1], RQR_UUID, replies=True))
+        rs2 = copy.deepcopy(rset)
+        self.assertTrue(rset == rs2)
 
         rset_str = """requester_id: 01234567-89ab-cdef-0123-456789abcdef
 replies: True
@@ -247,6 +250,12 @@ requests:
         self.assertTrue(rset != RequestSet([msg1], RQR_UUID))
         self.assertTrue(rset != RequestSet([msg2], RQR_UUID))
         self.assertTrue(rset != RequestSet([], RQR_UUID))
+        rs2 = copy.deepcopy(rset)
+        self.assertTrue(rset == rs2)
+        self.assertFalse(rset != rs2)
+        rs2[TEST_UUID]._update_status(Request.GRANTED)
+        self.assertTrue(rset != rs2)
+        self.assertFalse(rset == rs2)
 
     def test_empty_merge(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
