@@ -33,10 +33,10 @@ def feedback(rset):
             elif rq.msg.status == Request.GRANTED:
                 print('Request granted: ' + str(rq.get_uuid()))
                 rq.release()
-            elif rq.msg.status == Request.RELEASED:
+            elif rq.msg.status == Request.RELEASING:
                 print('Request released: ' + str(rq.get_uuid()))
         else:
-            print('Request freed: ' + str(rq.get_uuid()))
+            print('Request no longer active: ' + str(rid))
 
 if __name__ == '__main__':
 
