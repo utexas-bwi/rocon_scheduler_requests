@@ -274,6 +274,45 @@ requests:
         self.assertTrue(TEST_UUID in rset)
         self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
 
+    def test_freed_merge(self):
+        msg1 = Request(id=unique_id.toMsg(TEST_UUID),
+                       resources=[TEST_WILDCARD],
+                       status=Request.RELEASED)
+        rset = RequestSet([msg1], RQR_UUID, replies=True)
+        self.assertEqual(len(rset), 1)
+        self.assertTrue(TEST_UUID in rset)
+        sch_msg = SchedulerRequests(requester=unique_id.toMsg(RQR_UUID),
+                                    requests=[msg1])
+        self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
+
+        # merge an empty request set: TEST_UUID should be deleted
+        empty_rset = RequestSet([], RQR_UUID)
+        rset.merge(empty_rset)
+        self.assertEqual(len(rset), 0)
+        self.assertFalse(TEST_UUID in rset)
+        self.assertNotEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
+        self.assertEqual(rset, empty_rset)
+
+    def test_released_merge(self):
+        msg1 = Request(id=unique_id.toMsg(TEST_UUID),
+                       resources=[TEST_WILDCARD],
+                       status=Request.RELEASED)
+        rset = RequestSet([msg1], RQR_UUID)
+        self.assertEqual(len(rset), 1)
+        self.assertTrue(TEST_UUID in rset)
+        sch_msg = SchedulerRequests(requester=unique_id.toMsg(RQR_UUID),
+                                    requests=[msg1])
+        self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
+
+        # merge a released request: TEST_UUID should be deleted
+        rel_rset = RequestSet([msg1], RQR_UUID, replies=True)
+        rset.merge(rel_rset)
+        self.assertEqual(len(rset), 0)
+        self.assertFalse(TEST_UUID in rset)
+        self.assertEqual(rset, RequestSet([], RQR_UUID, replies=True))
+        self.assertNotEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
+        self.assertNotEqual(rset, rel_rset)
+
     def test_single_merge(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_WILDCARD],

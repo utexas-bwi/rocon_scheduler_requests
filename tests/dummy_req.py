@@ -5,7 +5,6 @@ from __future__ import absolute_import, print_function
 
 import rospy
 import uuid
-import unique_id
 import rocon_scheduler_requests.requester as requester
 import rocon_scheduler_requests.transitions as transitions
 
@@ -27,17 +26,17 @@ rid = None                      # UUID for Resource Request
 def feedback(rset):
     #print(str(rset))
     if rid:
-        rq = rset[rid]
+        rq = rset.get(rid)
         if rq:
             if rq.msg.status == Request.WAITING:
-                print('Request queued: ' + str(unique_id.fromMsg(rq.msg.id)))
+                print('Request queued: ' + str(rq.get_uuid()))
             elif rq.msg.status == Request.GRANTED:
-                print('Request granted: ' + str(unique_id.fromMsg(rq.msg.id)))
+                print('Request granted: ' + str(rq.get_uuid()))
                 rq.release()
-            elif rq.msg.status == Request.RELEASING:
-                print('Request released: ' + str(unique_id.fromMsg(rq.msg.id)))
+            elif rq.msg.status == Request.RELEASED:
+                print('Request released: ' + str(rq.get_uuid()))
         else:
-            print('Request freed.')
+            print('Request freed: ' + str(rq.get_uuid()))
 
 if __name__ == '__main__':
 

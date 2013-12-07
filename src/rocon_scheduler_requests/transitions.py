@@ -461,15 +461,6 @@ class RequestSet:
         :type updates: :class:`.RequestSet`
 
         """
-        # Reconcile each existing request with the updates.  Make a
-        # copy of the dictionary items, so it can be altered in the loop.
-        for rid, rq in self.requests.items():
-            new_rq = updates.get(rid)
-            if new_rq is None and rq.msg.status == Request.RELEASED:
-                del self.requests[rid]  # no longer needed
-            else:
-                rq._reconcile(new_rq)
-
         # Add any new requests not previously known.
         for rid, new_rq in updates.items():
             if rid not in self.requests:
@@ -477,6 +468,16 @@ class RequestSet:
                     self.requests[rid] = ResourceReply(new_rq.msg)
                 else:
                     self.requests[rid] = ResourceRequest(new_rq.msg)
+
+        # Reconcile each existing request with the updates.  Make a
+        # copy of the dictionary items, so it can be altered in the loop.
+        for rid, rq in self.requests.items():
+            new_rq = updates.get(rid)
+            if (rq.msg.status == Request.RELEASED and
+                    (new_rq is None or new_rq.msg.status == Request.RELEASED)):
+                del self.requests[rid]  # no longer needed
+            else:
+                rq._reconcile(new_rq)
 
     def to_msg(self, stamp=None):
         """ Convert to ROS ``scheduler_msgs/SchedulerRequest`` message.

@@ -6,7 +6,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import rospy
-import unique_id
 from scheduler_msgs.msg import Request
 from scheduler_msgs.msg import Resource
 import rocon_scheduler_requests.scheduler as scheduler
@@ -22,10 +21,10 @@ def callback(rset):
     for rq in rset.values():
         if rq.msg.status == Request.NEW:
             rq.grant([TEST_RESOURCE])
-            print('Request granted: ' + str(unique_id.fromMsg(rq.msg.id)))
+            print('Request granted: ' + str(rq.get_uuid()))
         elif rq.msg.status == Request.RELEASING:
             rq.free()
-            print('Request released: ' + str(unique_id.fromMsg(rq.msg.id)))
+            print('Request released: ' + str(rq.get_uuid()))
 
 if __name__ == '__main__':
 
