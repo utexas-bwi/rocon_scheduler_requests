@@ -6,6 +6,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import rospy
+import unique_id
 from scheduler_msgs.msg import Request
 from scheduler_msgs.msg import Resource
 import rocon_scheduler_requests.scheduler as scheduler
@@ -16,18 +17,15 @@ TEST_RESOURCE = Resource(name='test_rapp',
 
 def callback(rset):
     """ Scheduler request callback. """
-    print(str(rset))
+    # :todo: make new requests wait, then grant after a second
+    #print(str(rset))
     for rq in rset.values():
-        #print(str(rq))
         if rq.msg.status == Request.NEW:
-            rq.wait()
-            print('Request queued')
-        elif rq.msg.status == Request.WAITING:
             rq.grant([TEST_RESOURCE])
-            print('Request granted')
+            print('Request granted: ' + str(unique_id.fromMsg(rq.msg.id)))
         elif rq.msg.status == Request.RELEASING:
             rq.free()
-            print('Request released')
+            print('Request released: ' + str(unique_id.fromMsg(rq.msg.id)))
 
 if __name__ == '__main__':
 

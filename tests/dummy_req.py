@@ -30,12 +30,12 @@ def feedback(rset):
         rq = rset[rid]
         if rq:
             if rq.msg.status == Request.WAITING:
-                print('Request queued')
+                print('Request queued: ' + str(unique_id.fromMsg(rq.msg.id)))
             elif rq.msg.status == Request.GRANTED:
-                print('Request granted: ' + str(rq))
-                rset[rid].release()
+                print('Request granted: ' + str(unique_id.fromMsg(rq.msg.id)))
+                rq.release()
             elif rq.msg.status == Request.RELEASING:
-                print('Request released')
+                print('Request released: ' + str(unique_id.fromMsg(rq.msg.id)))
         else:
             print('Request freed.')
 
@@ -43,8 +43,11 @@ if __name__ == '__main__':
 
     rospy.init_node("dummy_requester")
 
-    # Repeat allocation requests at 1Hz frequency, speeds up testing.
+    # Set heartbeat frequency to 1Hz, speeds up testing.
     rqr = requester.Requester(feedback, uuid=TEST_UUID, frequency=1.0)
+    rqr.send_requests()         # send empty request message
+
+    rospy.sleep(1)              # wait a second
 
     # Make a new request using a wildcard resource, and send it to the scheduler.
     rid = rqr.new_request([TEST_WILDCARD])
