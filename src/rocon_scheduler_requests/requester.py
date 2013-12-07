@@ -144,17 +144,14 @@ class Requester:
         new_rset = transitions.RequestSet(msg.requests,
                                           self.requester_id,
                                           replies=True)
-        self.rset.merge(new_rset)
         prev_rset = copy.deepcopy(self.rset)
+        self.rset.merge(new_rset)
 
         # invoke user-defined callback function
         self.feedback(self.rset)
 
-        # reply immediately if callback changed anything
-        if self.rset != prev_rset:      # callback changed the rset?
-            #print('requester callback changed requests:\n' + str(prev_rset)
-            #      + '\nto\n' + str(self.rset))
-            self.send_requests()
+        if self.rset != prev_rset:      # msg or callback changed something?
+            self.send_requests()        # send new request immediately
 
     def _heartbeat(self, event):
         """ Scheduler request heartbeat timer handler.

@@ -47,7 +47,6 @@ knowledge of scheduler request state transitions.
 # enable some python3 compatibility options:
 from __future__ import absolute_import, print_function, unicode_literals
 
-import copy
 import rospy
 import unique_id
 
@@ -109,11 +108,8 @@ class _RequesterStatus:
                                           replies=False)
         if self.rset != new_rset:       # something new?
             self.rset.merge(new_rset)
-            prev_rset = copy.deepcopy(self.rset)
             self.sched.callback(self.rset)
-            if self.rset != prev_rset:  # scheduler changed the rset?
-                # notify the requester
-                self.pub.publish(self.rset.to_msg())
+            self.pub.publish(self.rset.to_msg())
 
     def timeout(self, limit, event):
         """ Check for requester timeout.
