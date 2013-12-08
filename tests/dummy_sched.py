@@ -14,14 +14,41 @@ import rocon_scheduler_requests.scheduler as scheduler
 TEST_RESOURCE = Resource(name='test_rapp',
                          platform_info='linux.precise.ros.segbot.roberto')
 
+# Global variables
+queued_request = None           # pending request
+queued_requester = None         # corresponding requester ID
+sch = None                      # scheduler object
+timer = None                    # timer request object
+
+def allocate(event):
+    """ Timer handler: simulated resource availability callback. """
+    global queued_request
+    global queued_requester
+    global sch
+    if queued_request:
+        queued_request.grant([TEST_RESOURCE])
+        print('Request granted: ' + str(queued_request.get_uuid()))
+        queued_request = None
+        sch.notify(queued_requester)
+
+def queue(requester_id, request):
+    """ Queue timer request to simulate delayed resource availability. """
+    global queued_request
+    global queued_requester
+    global timer
+    queued_requester = requester_id
+    queued_request = request
+    timer = rospy.Timer(rospy.Duration(1.0), allocate, oneshot=True)
+
 def callback(rset):
     """ Scheduler request callback. """
     # :todo: make new requests wait, then grant after a second
     #print(str(rset))
     for rq in rset.values():
         if rq.msg.status == Request.NEW:
-            rq.grant([TEST_RESOURCE])
-            print('Request granted: ' + str(rq.get_uuid()))
+            rq.wait()
+            queue(rset.requester_id, rq)
+            print('Request queued: ' + str(rq.get_uuid()))
         elif rq.msg.status == Request.RELEASING:
             rq.free()
             print('Request released: ' + str(rq.get_uuid()))

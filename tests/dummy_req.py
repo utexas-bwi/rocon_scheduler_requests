@@ -46,7 +46,7 @@ if __name__ == '__main__':
     rqr = requester.Requester(feedback, uuid=TEST_UUID, frequency=1.0)
     rqr.send_requests()         # send empty request message
 
-    rospy.sleep(1)              # wait a second
+    rospy.sleep(2.0)            # wait a while
 
     # Make a new request using a wildcard resource, and send it to the scheduler.
     rid = rqr.new_request([TEST_WILDCARD])

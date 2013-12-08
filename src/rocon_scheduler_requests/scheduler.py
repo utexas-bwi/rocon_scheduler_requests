@@ -94,6 +94,10 @@ class _RequesterStatus:
 
         self.update(msg)        # set initial status
 
+    def send_feedback(self):
+        """ Send feedback message to requester. """
+        self.pub.publish(self.rset.to_msg())
+
     def update(self, msg):
         """ Update requester status.
 
@@ -109,7 +113,7 @@ class _RequesterStatus:
         if self.rset != new_rset:       # something new?
             self.rset.merge(new_rset)
             self.sched.callback(self.rset)
-            self.pub.publish(self.rset.to_msg())
+            self.send_feedback()
 
     def timeout(self, limit, event):
         """ Check for requester timeout.
@@ -183,3 +187,14 @@ class Scheduler:
         for rqr_id, rqr in self.requesters.items():
             if rqr.timeout(self.time_limit, event):
                 del self.requesters[rqr_id]
+
+    def notify(self, requester_id):
+        """ Notify requester of status updates.
+
+        :param requester_id: Requester to notify.
+        :type requester_id: uuid.UUID
+
+        :raises: :exc:`KeyError` if unknown requester identifier.
+
+        """
+        self.requesters[requester_id].send_feedback()
