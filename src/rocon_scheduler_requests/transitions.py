@@ -460,6 +460,14 @@ class RequestSet:
         :param updates: Request set containing updated information.
         :type updates: :class:`.RequestSet`
 
+        This is *not* a :py:meth:`set.update` or :py:meth:`set.union`
+        operation.
+
+        New elements from the *updates* will be added.  Already
+        existing elements will be reconciled with the corresponding
+        *updates* status.  When an element reaches a terminal status
+        known by both sides of the protocol, it will be deleted.
+
         """
         # Add any new requests not previously known.
         for rid, new_rq in updates.items():
