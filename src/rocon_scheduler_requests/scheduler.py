@@ -146,10 +146,12 @@ class Scheduler:
        :param rset: (:class:`.RequestSet`) The current status of all
            requests for some active requester.
 
-    The *callback* function is expected to iterate over its
+    The *callback* function is called when new or updated requests are
+    received.  It is expected to iterate over its
     :class:`.RequestSet`, checking the status of every
-    :class:`.ResourceReply` it contains, and modify them
-    appropriately.
+    :class:`.ResourceReply` it contains, modifying them appropriately.
+    The results will be sent to the requester after this callback
+    returns.
 
     """
 

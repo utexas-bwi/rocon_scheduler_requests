@@ -87,21 +87,23 @@ class Requester:
     :type frequency: float
 
     As long as the :class:`.Requester` object remains, it will
-    periodically send request messages to the scheduler, which will
-    provide feedback for them.  Those messages may be empty if no
-    requests are outstanding.  The caller-provided ``feedback`` function
-    will be invoked each time a feedback message arrives, like this:
+    periodically send request messages to the scheduler, even when no
+    requests are outstanding.  The scheduler will provide feedback for
+    them if anything has changed.  The caller-provided *feedback*
+    function will be invoked each time a feedback message arrives,
+    like this:
 
     .. describe:: feedback(rset)
 
-       :param rset: The current set of requests including possible
-                    updates from the scheduler.
+       :param rset: The current set of requests including any updates
+                    from the scheduler.
        :type rset: :class:`.RequestSet`
 
-    The ``feedback`` function is expected to iterate over its
+    The *feedback* function is expected to iterate over its
     :class:`.RequestSet`, checking the status of every
     :class:`.ResourceRequest` it contains, and modify them
-    appropriately.
+    appropriately.  If any changes occur, the scheduler will be
+    notified after this callback returns.
 
     """
 
