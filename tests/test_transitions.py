@@ -296,7 +296,7 @@ requests:
     def test_released_merge(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_WILDCARD],
-                       status=Request.RELEASED)
+                       status=Request.RELEASING)
         rset = RequestSet([msg1], RQR_UUID)
         self.assertEqual(len(rset), 1)
         self.assertTrue(TEST_UUID in rset)
@@ -305,7 +305,10 @@ requests:
         self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
 
         # merge a released request: TEST_UUID should be deleted
-        rel_rset = RequestSet([msg1], RQR_UUID, replies=True)
+        msg2 = Request(id=unique_id.toMsg(TEST_UUID),
+                       resources=[TEST_WILDCARD],
+                       status=Request.RELEASED)
+        rel_rset = RequestSet([msg2], RQR_UUID, replies=True)
         rset.merge(rel_rset)
         self.assertEqual(len(rset), 0)
         self.assertFalse(TEST_UUID in rset)
