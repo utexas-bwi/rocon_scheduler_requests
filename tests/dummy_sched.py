@@ -21,7 +21,7 @@ sch = None                      # scheduler object
 timer = None                    # timer request object
 
 def allocate(event):
-    """ Timer handler: simulated resource availability callback. """
+    """ Timer handler: simulated resource availability event. """
     global queued_request
     global queued_requester
     global sch
@@ -42,8 +42,7 @@ def queue(requester_id, request):
 
 def callback(rset):
     """ Scheduler request callback. """
-    # :todo: make new requests wait, then grant after a second
-    #print(str(rset))
+    # make new requests wait, then grant after a second
     for rq in rset.values():
         if rq.msg.status == Request.NEW:
             rq.wait()
