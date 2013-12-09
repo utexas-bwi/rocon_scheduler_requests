@@ -288,13 +288,13 @@ class ResourceReply(RequestBase):
 
 class RequestSet:
     """
-    This class is a container for all the resource requests or replies
-    for a single requester.  It acts like a dictionary.
+    This class is a container for all the resource requests or
+    responses for a single requester.  It acts like a dictionary.
 
-    :param requests: list of ``Request`` messages, typically from the
+    :param requests: List of ``Request`` messages, typically from the
         ``requests`` component of a ``SchedulerRequests`` message.
     :param requester_id: (:class:`uuid.UUID`) Unique ID this requester.
-    :param replies: (bool) ``True`` if this set contains scheduler replies.
+    :param contents: Class from which to instantiate set members.
 
     :class:`.RequestSet` supports these standard container operations:
 
@@ -344,18 +344,15 @@ class RequestSet:
 
     """
 
-    def __init__(self, requests, requester_id, replies=False):
+    def __init__(self, requests, requester_id, contents=ResourceRequest):
         """ Constructor. """
         self.requester_id = requester_id
         """ :class:`uuid.UUID` of this requester. """
-        self.replies = replies
-        """ True if this RequestSet contains scheduler replies. """
+        self.contents = contents
+        """ Type of objects this request set contains. """
         self.requests = {}
         for msg in requests:
-            if replies:
-                rq = ResourceReply(msg)
-            else:
-                rq = ResourceRequest(msg)
+            rq = self.contents(msg)
             self.requests[rq.get_uuid()] = rq
 
     def __contains__(self, uuid):
@@ -408,9 +405,7 @@ class RequestSet:
         self.requests[uuid] = rq
 
     def __str__(self):
-        rval = 'requester_id: ' + str(self.requester_id) \
-            + '\nreplies: ' + str(self.replies) \
-            + '\nrequests:'
+        rval = 'requester_id: ' + str(self.requester_id) + '\nrequests:'
         for rq in self.requests.values():
             rval += '\n  ' + str(rq)
         return rval
@@ -475,10 +470,7 @@ class RequestSet:
         # Add any new requests not previously known.
         for rid, new_rq in updates.items():
             if rid not in self.requests:
-                if self.replies:
-                    self.requests[rid] = ResourceReply(new_rq.msg)
-                else:
-                    self.requests[rid] = ResourceRequest(new_rq.msg)
+                self.requests[rid] = self.contents(new_rq.msg)
 
         # Reconcile each existing request with the updates.  Make a
         # copy of the dictionary items, so it can be altered in the loop.

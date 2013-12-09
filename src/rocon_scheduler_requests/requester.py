@@ -59,7 +59,9 @@ from scheduler_msgs.msg import SchedulerRequests
 
 # internal modules
 from . import common
-from . import transitions
+from .transitions import RequestSet
+from .transitions import ResourceRequest
+from .transitions import WrongRequestError
 
 
 class Requester:
@@ -117,7 +119,7 @@ class Requester:
             uuid = unique_id.fromRandom()
         self.requester_id = uuid
         """ :class:`uuid.UUID` of this requester. """
-        self.rset = transitions.RequestSet([], self.requester_id)
+        self.rset = RequestSet([], self.requester_id)
         """
         :class:`.RequestSet` containing the current status of every
         :class:`.ResourceRequest` made by this requester.  All
@@ -142,10 +144,7 @@ class Requester:
 
     def _feedback(self, msg):
         """ Scheduler feedback message handler. """
-        # Make a new RequestSet of the scheduler replies from this message
-        new_rset = transitions.RequestSet(msg.requests,
-                                          self.requester_id,
-                                          replies=True)
+        new_rset = RequestSet(msg.requests, self.requester_id)
         prev_rset = copy.deepcopy(self.rset)
         self.rset.merge(new_rset)
 
@@ -190,12 +189,12 @@ class Requester:
         if uuid is None:
             uuid = unique_id.fromRandom()
         if uuid in self.rset:
-            raise transitions.WrongRequestError('UUID already in use.')
+            raise WrongRequestError('UUID already in use.')
         msg = Request(id=unique_id.toMsg(uuid),
                       priority=priority,
                       resources=resources,
                       status=Request.NEW)
-        self.rset[uuid] = transitions.ResourceRequest(msg)
+        self.rset[uuid] = ResourceRequest(msg)
         return uuid
 
     def send_requests(self):

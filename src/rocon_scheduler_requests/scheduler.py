@@ -56,7 +56,8 @@ from scheduler_msgs.msg import SchedulerRequests
 
 # internal modules
 from . import common
-from . import transitions
+from .transitions import RequestSet
+from .transitions import ResourceReply
 
 
 class _RequesterStatus:
@@ -80,9 +81,8 @@ class _RequesterStatus:
         """ Scheduler for this requester. """
         self.requester_id = unique_id.fromMsg(msg.requester)
         """ :class:`uuid.UUID` of this requester. """
-        self.rset = transitions.RequestSet([], self.requester_id,
-                                           replies=True)
-        """ All current scheduler replies to this requester. """
+        self.rset = RequestSet([], self.requester_id, contents=ResourceReply)
+        """ All current scheduler responses for this requester. """
 
         self.feedback_topic = common.feedback_topic(self.requester_id,
                                                     self.sched.topic)
@@ -107,9 +107,8 @@ class _RequesterStatus:
         """
         # Make a new RequestSet from this message
         # :todo: make a constructor option for that.
-        new_rset = transitions.RequestSet(msg.requests,
-                                          self.requester_id,
-                                          replies=False)
+        new_rset = RequestSet(msg.requests, self.requester_id,
+                              contents=ResourceReply)
         if self.rset != new_rset:       # something new?
             self.rset.merge(new_rset)
             self.sched.callback(self.rset)
