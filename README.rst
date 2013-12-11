@@ -1,22 +1,16 @@
 Overview
 ========
 
-The `rocon_scheduler_requests`_ ROS_ package provides Python and C++
+The `rocon_scheduler_requests`_ ROS_ package provides Python 
 interfaces for managing scheduler requests within the `Robotics in
-Concert`_ (ROCON) framework.
+Concert`_ framework.
 
-The scheduler tries to allocate ROCON resources for multiple
-requesting services with good throughput and latency.  It is a
-resource allocator, but due to contention it is also a planner.  We
-call it a "scheduler" because in many ways it resembles the early
-batch `operating system schedulers`_, which assigned non-preemptable
-resources like printers and tape drives.
+*There is initially only an experimental Python module.*  
+*A similar C++ interface will be provided following that proof of concept.*
 
-This package provides high-level message interfaces for scheduler
-implementations and also for ROCON services making resource requests.
-
-*There are initially only some experimental Python modules.*  
-*Similar C++ interfaces will be provided following that proof of concept.*
+Because different systems require scheduling policies, the ROCON
+design allows for multiple scheduler implementations.  This package
+supplies a common infrastructure for various schedulers to use.
 
 Scheduler Topics
 ----------------
@@ -37,7 +31,7 @@ Scheduler Resource Requests
 ---------------------------
 
 Each `scheduler_msgs/SchedulerRequests`_ message describes all
-resources currently desired by that requester.  The status each
+resources currently desired by that requester.  The status of each
 resource request is passed back and forth between the requester and
 the scheduler via `scheduler_msgs/Request`_ elements contained in the
 allocation and feedback topics.
