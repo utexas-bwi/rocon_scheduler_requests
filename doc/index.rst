@@ -17,6 +17,7 @@ Contents:
 
    README
    common
+   exceptions
    requester
    scheduler
    transitions
