@@ -107,6 +107,58 @@ class Requester:
     appropriately.  If any changes occur, the scheduler will be
     notified after this callback returns.
 
+    Like all ROS Python callbacks, the *feedback* function runs in the
+    main :py:mod:`rospy` thread.  Updates made there are thread-safe
+    with respect to other changes made in the main thread or in
+    :py:mod:`rospy` timer, topic or service callbacks.  A node doing
+    its own threading must provide appropriate serialization when
+    using this interface.  Doing all updates in the main Python thread
+    is sufficient.
+
+    Simplified usage example::
+
+        import rospy
+        from scheduler_msgs.msg import Request
+        from scheduler_msgs.msg import Resource
+        from rocon_scheduler_requests.requester import Requester
+        from rocon_scheduler_requests.transitions import TransitionError
+
+        def feedback(rset):
+            \"\"\" Scheduler feedback function. \"\"\"
+            for rq in rset.values():
+                if rq.msg.status == Request.WAITING:
+                    rospy.loginfo('Request queued: ' + str(rq.get_uuid()))
+                elif rq.msg.status == Request.GRANTED:
+                    rospy.loginfo('Request granted: ' + str(rq))
+                elif rq.msg.status == Request.RELEASING:
+                    rospy.loginfo('Request released: ' + str(rq.get_uuid()))
+
+        if __name__ == '__main__':
+            rospy.init_node("simple_requester_example")
+            rqr = Requester(feedback)
+
+            rospy.loginfo('requesting any tutlebot able to run example_rapp')
+            resource = Resource(name='example_rapp',
+                                platform_info='linux.*.ros.turtlebot.*')
+            request_id = rqr.new_request([resource])
+            rqr.send_requests()
+
+            # Loop once every four seconds in the main thread.
+            cycle = rospy.Rate(1.0/4.0)
+            while not rospy.is_shutdown():
+                cycle.sleep()
+                try:
+                    # cancel the previously-issued request
+                    rqr.rset[request_id].release()
+                except KeyError:
+                    rospy.loginfo('old request no longer exists: '
+                                  + str(request_id))
+                    rospy.loginfo('requesting another similar robot now')
+                    request_id = rqr.new_request([resource])
+                    rqr.send_requests()
+                except TransitionError:
+                    rospy.loginfo('request not releasable: ' + str(request_id))
+
     """
 
     def __init__(self, feedback, uuid=None,
@@ -174,7 +226,7 @@ class Requester:
         :type resources: list of scheduler_msgs/Resource
 
         :param priority: Scheduling priority of this request.  If
-            ``None`` provided, use this requester's priority.
+            ``None`` provided, use this requester's default priority.
         :type priority: int
 
         :param uuid: UUID_ of this request. If ``None`` provided, a
@@ -200,10 +252,10 @@ class Requester:
     def send_requests(self):
         """ Send all current requests to the scheduler.
 
-        Use this method after calling :py:meth:`.new_request` one or
-        more times.  It will send them to the scheduler immediately.
-        Otherwise, they would not go out until the next heartbeat
-        timer event.
+        Use this method after updating :py:attr:`.rset` or calling
+        :py:meth:`.new_request` one or more times.  It will send them
+        to the scheduler immediately.  Otherwise, they would not go
+        out until the next heartbeat timer event.
 
         .. note::
 
