@@ -65,34 +65,55 @@ class WrongRequestError(Exception):
 # An immutable set of (old, new) status pairs.  All pairs in the table
 # are considered valid state transitions.  Any others are not.
 #
-TRANS_TABLE = frozenset([(Request.NEW, Request.ABORTED),
-                         (Request.NEW, Request.GRANTED),
-                         (Request.NEW, Request.PREEMPTING),
-                         (Request.NEW, Request.REJECTED),
-                         (Request.NEW, Request.WAITING),
+TRANS_TABLE = frozenset([
+    (Request.ABORTED, Request.ABORTED),
 
-                         (Request.WAITING, Request.ABORTED),
-                         (Request.WAITING, Request.GRANTED),
-                         (Request.WAITING, Request.PREEMPTING),
-                         (Request.WAITING, Request.REJECTED),
-                         (Request.WAITING, Request.RELEASING),
+    (Request.GRANTED, Request.ABORTED),
+    (Request.GRANTED, Request.GRANTED),
+    (Request.GRANTED, Request.PREEMPTING),
+    (Request.GRANTED, Request.RELEASING),
 
-                         (Request.GRANTED, Request.ABORTED),
-                         (Request.GRANTED, Request.PREEMPTING),
-                         (Request.GRANTED, Request.RELEASING),
+    (Request.NEW, Request.ABORTED),
+    (Request.NEW, Request.GRANTED),
+    (Request.NEW, Request.PREEMPTING),
+    (Request.NEW, Request.REJECTED),
+    (Request.NEW, Request.RELEASING),
+    (Request.NEW, Request.WAITING),
 
-                         (Request.PREEMPTING, Request.ABORTED),
-                         (Request.PREEMPTING, Request.PREEMPTED),
-                         (Request.PREEMPTING, Request.REJECTED),
-                         (Request.PREEMPTING, Request.RELEASING),
+    (Request.PREEMPTED, Request.ABORTED),
+    (Request.PREEMPTED, Request.NEW),
+    (Request.PREEMPTED, Request.REJECTED),
 
-                         (Request.PREEMPTED, Request.ABORTED),
-                         (Request.PREEMPTED, Request.NEW),
-                         (Request.PREEMPTED, Request.REJECTED),
+    (Request.PREEMPTING, Request.ABORTED),
+    (Request.PREEMPTING, Request.PREEMPTED),
+    (Request.PREEMPTING, Request.REJECTED),
+    (Request.PREEMPTING, Request.RELEASING),
 
-                         (Request.RELEASING, Request.ABORTED),
-                         (Request.RELEASING, Request.REJECTED),
-                         (Request.RELEASING, Request.RELEASED)])
+    (Request.REJECTED, Request.ABORTED),
+    (Request.REJECTED, Request.REJECTED),
+
+    (Request.RELEASING, Request.ABORTED),
+    (Request.RELEASING, Request.REJECTED),
+    (Request.RELEASING, Request.RELEASED),
+    (Request.RELEASING, Request.RELEASING),
+
+    (Request.RELEASED, Request.ABORTED),
+    (Request.RELEASED, Request.RELEASED),
+
+    (Request.RESERVED, Request.ABORTED),
+    (Request.RESERVED, Request.NEW),
+    (Request.RESERVED, Request.GRANTED),
+    (Request.RESERVED, Request.PREEMPTING),
+    (Request.RESERVED, Request.RELEASING),
+    (Request.RESERVED, Request.RESERVED),
+
+    (Request.WAITING, Request.ABORTED),
+    (Request.WAITING, Request.GRANTED),
+    (Request.WAITING, Request.PREEMPTING),
+    (Request.WAITING, Request.REJECTED),
+    (Request.WAITING, Request.RELEASING),
+    (Request.WAITING, Request.WAITING)
+    ])
 
 
 class RequestBase:
@@ -178,6 +199,14 @@ class ResourceRequest(RequestBase):
     Provides all attributes defined for :class:`.RequestBase`.
 
     """
+    def cancel(self):
+        """ Cancel a previously-requested resource.
+
+        :raises: :exc:`.TransitionError`
+
+        """
+        self._update_status(Request.RELEASING)
+
     def _reconcile(self, update):
         """
         Merge scheduler updates with this request.
@@ -203,12 +232,13 @@ class ResourceRequest(RequestBase):
                 self.msg.availability = update.msg.availability
 
     def release(self):
-        """ Release a previously requested resource.
+        """ Release a previously-requested resource.
 
-        :raises: :exc:`.TransitionError`
+        .. deprecated:: 0.0.1
+           use :py:meth:`.cancel` instead.
 
         """
-        self._update_status(Request.RELEASING)
+        self.cancel()
 
 
 class ResourceReply(RequestBase):
@@ -227,7 +257,7 @@ class ResourceReply(RequestBase):
         self._update_status(Request.ABORTED)
 
     def free(self):
-        """ Free up previously-assigned resources that were released.
+        """ Free up previously-assigned resources that were canceled.
 
         :raises: :exc:`.TransitionError`
         """

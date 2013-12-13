@@ -130,8 +130,8 @@ class Requester:
                     rospy.loginfo('Request queued: ' + str(rq.get_uuid()))
                 elif rq.msg.status == Request.GRANTED:
                     rospy.loginfo('Request granted: ' + str(rq))
-                elif rq.msg.status == Request.RELEASING:
-                    rospy.loginfo('Request released: ' + str(rq.get_uuid()))
+                elif rq.msg.status == Request.RELEASED:
+                    rospy.loginfo('Request canceled: ' + str(rq.get_uuid()))
 
         if __name__ == '__main__':
             rospy.init_node("simple_requester_example")
@@ -149,7 +149,7 @@ class Requester:
                 cycle.sleep()
                 try:
                     # cancel the previously-issued request
-                    rqr.rset[request_id].release()
+                    rqr.rset[request_id].cancel()
                 except KeyError:
                     rospy.loginfo('old request no longer exists: '
                                   + str(request_id))

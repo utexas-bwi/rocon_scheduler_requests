@@ -50,7 +50,7 @@ def callback(rset):
             print('Request queued: ' + str(rq.get_uuid()))
         elif rq.msg.status == Request.RELEASING:
             rq.free()
-            print('Request released: ' + str(rq.get_uuid()))
+            print('Request canceled: ' + str(rq.get_uuid()))
 
 if __name__ == '__main__':
 

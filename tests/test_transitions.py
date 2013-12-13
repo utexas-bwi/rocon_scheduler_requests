@@ -148,29 +148,29 @@ class TestTransitions(unittest.TestCase):
                                     status=Request.GRANTED))
         self.assertRaises(TransitionError, rq5.reject)
 
-    def test_release(self):
+    def test_cancel(self):
         rq1 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
                                       resources=[TEST_RESOURCE],
                                       status=Request.GRANTED))
-        rq1.release()
+        rq1.cancel()
         self.assertEqual(rq1.msg.status, Request.RELEASING)
 
         rq2 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
                                       resources=[TEST_RESOURCE],
                                       status=Request.WAITING))
-        rq2.release()
+        rq2.cancel()
         self.assertEqual(rq2.msg.status, Request.RELEASING)
 
         rq3 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
                                       resources=[TEST_RESOURCE],
                                       status=Request.PREEMPTING))
-        rq3.release()
+        rq3.cancel()
         self.assertEqual(rq3.msg.status, Request.RELEASING)
 
         rq4 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
                                       resources=[TEST_RESOURCE],
                                       status=Request.ABORTED))
-        self.assertRaises(TransitionError, rq4.release)
+        self.assertRaises(TransitionError, rq4.cancel)
 
     def test_free(self):
         rq = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
@@ -293,7 +293,7 @@ requests:
         self.assertNotEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
         self.assertEqual(rset, empty_rset)
 
-    def test_released_merge(self):
+    def test_canceled_merge(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_WILDCARD],
                        status=Request.RELEASING)
@@ -304,7 +304,7 @@ requests:
                                     requests=[msg1])
         self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
 
-        # merge a released request: TEST_UUID should be deleted
+        # merge a canceled request: TEST_UUID should be deleted
         msg2 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_WILDCARD],
                        status=Request.RELEASED)
