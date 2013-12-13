@@ -59,10 +59,9 @@ from scheduler_msgs.msg import SchedulerRequests
 
 # internal modules
 from . import common
+from . import TransitionError, WrongRequestError
 from .transitions import RequestSet
 from .transitions import ResourceRequest
-from .transitions import WrongRequestError
-from .transitions import TransitionError
 
 
 class Requester:
@@ -121,8 +120,8 @@ class Requester:
         import rospy
         from scheduler_msgs.msg import Request
         from scheduler_msgs.msg import Resource
+        from rocon_scheduler_requests import TransitionError
         from rocon_scheduler_requests.requester import Requester
-        from rocon_scheduler_requests.transitions import TransitionError
 
         def feedback(rset):
             \"\"\" Scheduler feedback function. \"\"\"
@@ -130,7 +129,7 @@ class Requester:
                 if rq.msg.status == Request.WAITING:
                     rospy.loginfo('Request queued: ' + str(rq.get_uuid()))
                 elif rq.msg.status == Request.GRANTED:
-                    rospy.loginfo('Request granted: ' + str(rq))
+                    rospy.loginfo('Request granted: ' + str(rq.get_uuid()))
                 elif rq.msg.status == Request.RELEASED:
                     rospy.loginfo('Request canceled: ' + str(rq.get_uuid()))
 

@@ -30,6 +30,20 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-from .exceptions import *
-from .requester import Requester
-from .scheduler import Scheduler
+"""
+.. module:: exceptions
+
+This module defines exceptions raised by the rocon_scheduler_requests
+package.
+
+"""
+
+
+class TransitionError(Exception):
+    """ Error exception: invalid state transition. """
+    pass
+
+
+class WrongRequestError(Exception):
+    """ Error exception: request update for the wrong UUID. """
+    pass

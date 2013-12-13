@@ -14,7 +14,7 @@ def feedback(rset):
         if rq.msg.status == Request.WAITING:
             rospy.loginfo('Request queued: ' + str(rq.get_uuid()))
         elif rq.msg.status == Request.GRANTED:
-            rospy.loginfo('Request granted: ' + str(rq))
+            rospy.loginfo('Request granted: ' + str(rq.get_uuid()))
         elif rq.msg.status == Request.RELEASED:
             rospy.loginfo('Request canceled: ' + str(rq.get_uuid()))
 

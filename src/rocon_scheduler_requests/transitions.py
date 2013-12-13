@@ -49,16 +49,7 @@ from scheduler_msgs.msg import Request
 from scheduler_msgs.msg import SchedulerRequests
 import unique_id
 
-
-class TransitionError(Exception):
-    """ Error exception: invalid state transition. """
-    pass
-
-
-class WrongRequestError(Exception):
-    """ Error exception: request update for the wrong UUID. """
-    pass
-
+from . import TransitionError, WrongRequestError
 
 # State transition table.
 #
