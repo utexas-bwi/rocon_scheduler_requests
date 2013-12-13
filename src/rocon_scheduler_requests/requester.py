@@ -62,6 +62,7 @@ from . import common
 from .transitions import RequestSet
 from .transitions import ResourceRequest
 from .transitions import WrongRequestError
+from .transitions import TransitionError
 
 
 class Requester:
@@ -115,7 +116,7 @@ class Requester:
     using this interface.  Doing all updates in the main Python thread
     is sufficient.
 
-    Simplified usage example::
+    Usage example::
 
         import rospy
         from scheduler_msgs.msg import Request
@@ -158,6 +159,8 @@ class Requester:
                     rqr.send_requests()
                 except TransitionError:
                     rospy.loginfo('request not releasable: ' + str(request_id))
+                    rqr.cancel_all()
+                    rqr.send_requests()
 
     """
 
@@ -193,6 +196,20 @@ class Requester:
                                    latch=True)
         self.time_delay = rospy.Duration(1.0 / frequency)
         self._set_timer()
+
+    def cancel_all(self):
+        """ Cancel all current requests to the scheduler.
+
+        After calling this method to cancel all your requests, invoke
+        :py:meth:`.send_requests` to notify the scheduler immediately.
+
+        """
+        for rq in self.rset.values():
+            try:
+                rq.cancel()
+            except TransitionError:
+                rospy.logwarn('Unable to cancel request: '
+                              + str(rq.get_uuid()))
 
     def _feedback(self, msg):
         """ Scheduler feedback message handler. """
@@ -264,9 +281,7 @@ class Requester:
            without further delay.
 
         """
-        #print(str(self.rset))
         self.pub.publish(self.rset.to_msg())
-        #self._set_timer()       # reset heartbeat timer
 
     def _set_timer(self):
         """ Schedule heartbeat timer callback. """

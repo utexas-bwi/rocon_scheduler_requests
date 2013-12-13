@@ -65,6 +65,11 @@ class WrongRequestError(Exception):
 # An immutable set of (old, new) status pairs.  All pairs in the table
 # are considered valid state transitions.  Any others are not.
 #
+# :todo: come up with a more event-driven state transition scheme.
+# :todo: eliminate ABORTED status, unless it is really needed.
+# :todo: rename RELEASED status to CANCELED.
+# :todo: eliminate PREEMPTED status: use CANCELED instead.
+#
 TRANS_TABLE = frozenset([
     (Request.ABORTED, Request.ABORTED),
 
@@ -80,30 +85,26 @@ TRANS_TABLE = frozenset([
     (Request.NEW, Request.RELEASING),
     (Request.NEW, Request.WAITING),
 
-    (Request.PREEMPTED, Request.ABORTED),
-    (Request.PREEMPTED, Request.NEW),
-    (Request.PREEMPTED, Request.REJECTED),
-
     (Request.PREEMPTING, Request.ABORTED),
-    (Request.PREEMPTING, Request.PREEMPTED),
-    (Request.PREEMPTING, Request.REJECTED),
+    (Request.PREEMPTING, Request.RELEASED),
     (Request.PREEMPTING, Request.RELEASING),
 
     (Request.REJECTED, Request.ABORTED),
     (Request.REJECTED, Request.REJECTED),
 
     (Request.RELEASING, Request.ABORTED),
-    (Request.RELEASING, Request.REJECTED),
     (Request.RELEASING, Request.RELEASED),
     (Request.RELEASING, Request.RELEASING),
 
     (Request.RELEASED, Request.ABORTED),
+    (Request.RELEASED, Request.REJECTED),
     (Request.RELEASED, Request.RELEASED),
 
     (Request.RESERVED, Request.ABORTED),
     (Request.RESERVED, Request.NEW),
     (Request.RESERVED, Request.GRANTED),
     (Request.RESERVED, Request.PREEMPTING),
+    (Request.RESERVED, Request.REJECTED),
     (Request.RESERVED, Request.RELEASING),
     (Request.RESERVED, Request.RESERVED),
 

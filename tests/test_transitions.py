@@ -53,7 +53,7 @@ class TestTransitions(unittest.TestCase):
 
         rq4 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
                                     resources=[TEST_RESOURCE],
-                                    status=Request.PREEMPTED))
+                                    status=Request.RELEASED))
         rq4.abort()
         self.assertEqual(rq4.msg.status, Request.ABORTED)
 
@@ -134,12 +134,11 @@ class TestTransitions(unittest.TestCase):
         rq3 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
                                     resources=[TEST_RESOURCE],
                                     status=Request.PREEMPTING))
-        rq3.reject()
-        self.assertEqual(rq3.msg.status, Request.REJECTED)
+        self.assertRaises(TransitionError, rq3.reject)
 
         rq4 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
                                     resources=[TEST_RESOURCE],
-                                    status=Request.PREEMPTED))
+                                    status=Request.RESERVED))
         rq4.reject()
         self.assertEqual(rq4.msg.status, Request.REJECTED)
 
