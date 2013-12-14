@@ -8,6 +8,7 @@ from scheduler_msgs.msg import Resource
 from rocon_scheduler_requests import TransitionError
 from rocon_scheduler_requests.requester import Requester
 
+
 def feedback(rset):
     """ Scheduler feedback function. """
     for rq in rset.values():

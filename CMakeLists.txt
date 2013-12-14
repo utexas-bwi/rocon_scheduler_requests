@@ -14,7 +14,8 @@ catkin_python_setup()
 # Lint Python modules files
 file(GLOB_RECURSE ${PROJECT_NAME}_PY_SRCS 
      RELATIVE ${PROJECT_SOURCE_DIR} src/*.py)
-roslint_python(${${PROJECT_NAME}_PY_SRCS})
+roslint_python(${${PROJECT_NAME}_PY_SRCS}
+               tests/example_requester.py)
 
 ## Unit tests
 if (CATKIN_ENABLE_TESTING)
