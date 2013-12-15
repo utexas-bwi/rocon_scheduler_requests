@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" Requester usage example for documentation. """
+""" Requester usage example. """
 
 import rospy
 from scheduler_msgs.msg import Request
@@ -20,7 +20,7 @@ def feedback(rset):
             rospy.loginfo('Request canceled: ' + str(rq.get_uuid()))
 
 if __name__ == '__main__':
-    rospy.init_node("simple_requester_example")
+    rospy.init_node("example_requester")
     rqr = Requester(feedback)
 
     rospy.loginfo('requesting any tutlebot able to run example_rapp')
