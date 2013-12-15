@@ -29,8 +29,8 @@ if __name__ == '__main__':
     request_id = rqr.new_request([resource])
     rqr.send_requests()
 
-    # Loop once every four seconds in the main thread.
-    cycle = rospy.Rate(1.0/4.0)
+    # Loop once every two seconds in the main thread.
+    cycle = rospy.Rate(0.5)
     while not rospy.is_shutdown():
         cycle.sleep()
         try:
