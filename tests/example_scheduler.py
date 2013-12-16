@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" Requester usage example. """
+""" Scheduler usage example. """
 import collections
 import rospy
 from scheduler_msgs.msg import Request, Resource
@@ -21,10 +21,7 @@ class ExampleScheduler:
         rospy.spin()
 
     def allocate(self, requester_id, rq):
-        """ Allocate requested resource, if available.
-        :returns: True if available; False if request queued.
-        """
-        retval = True
+        """ Allocate requested resource, if available. """
         if len(self.avail) > 0:         # resources available?
             rq.grant([self.avail.pop()])
             rospy.loginfo('Request granted: ' + str(rq.get_uuid()))
@@ -32,12 +29,10 @@ class ExampleScheduler:
             self.queue.append((requester_id, rq))
             rq.wait()
             rospy.loginfo('Request queued: ' + str(rq.get_uuid()))
-            retval = False
-        try:
+        try:                            # try to notify requester
             self.sch.notify(requester_id)
-        except KeyError:                # requester gone now
+        except KeyError:                # requester no longer there
             pass
-        return retval
 
     def callback(self, rset):
         """ Scheduler request callback: queue new requests until available. """
