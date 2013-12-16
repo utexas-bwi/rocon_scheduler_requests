@@ -152,6 +152,10 @@ class Scheduler:
     The results will be sent to the requester after this callback
     returns.
 
+    Usage example:
+
+    .. literalinclude:: ../tests/example_scheduler.py
+
     """
 
     def __init__(self, callback,
