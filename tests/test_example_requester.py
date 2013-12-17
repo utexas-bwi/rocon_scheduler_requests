@@ -26,7 +26,7 @@ class TestExampleRequester(unittest.TestCase):
 
     def test_example_requester_(self):
         """ Initialize ROCON scheduler node for example requester. """
-        self.number_of_requests = 2     # number of requests desired
+        self.number_of_requests = 3     # number of requests desired
         self.queued_request = None
         rospy.init_node("test_example_requester")
         self.sch = scheduler.Scheduler(self.callback)
@@ -35,8 +35,14 @@ class TestExampleRequester(unittest.TestCase):
     def allocate(self, event):
         """ Timer handler: simulated resource availability event. """
         if self.queued_request:
-            self.queued_request.grant([TEST_RESOURCE])
-            print('Request granted: ' + str(self.queued_request.get_uuid()))
+            if self.number_of_requests == 2:
+                self.queued_request.preempt()
+                rospy.loginfo('Request preempted: '
+                              + str(self.queued_request.get_uuid()))
+            else:
+                self.queued_request.grant([TEST_RESOURCE])
+                rospy.loginfo('Request granted: '
+                              + str(self.queued_request.get_uuid()))
             self.queued_request = None
             self.sch.notify(self.queued_requester)
 
@@ -44,10 +50,13 @@ class TestExampleRequester(unittest.TestCase):
         """
         Queue timer request to simulate delayed resource availability.
         """
+        # this test case only makes one request at a time:
+        self.assertIsNone(self.queued_request)
         self.queued_requester = requester_id
         self.queued_request = request
         self.timer = rospy.Timer(rospy.Duration(1.0),
                                  self.allocate, oneshot=True)
+        rospy.loginfo('Request queued: ' + str(request.get_uuid()))
 
     def callback(self, rset):
         """ Scheduler request callback.
@@ -59,10 +68,9 @@ class TestExampleRequester(unittest.TestCase):
             if rq.msg.status == Request.NEW:
                 rq.wait()
                 self.queue(rset.requester_id, rq)
-                print('Request queued: ' + str(rq.get_uuid()))
             elif rq.msg.status == Request.RELEASING:
                 rq.free()
-                print('Request canceled: ' + str(rq.get_uuid()))
+                rospy.loginfo('Request canceled: ' + str(rq.get_uuid()))
                 self.number_of_requests -= 1
                 if self.number_of_requests <= 0:
                     rospy.signal_shutdown('test completed.')
