@@ -35,13 +35,13 @@ class TestExampleRequester(unittest.TestCase):
     def allocate(self, event):
         """ Timer handler: simulated resource availability event. """
         if self.queued_request:
+            self.queued_request.grant([TEST_RESOURCE])
+            rospy.loginfo('Request granted: '
+                          + str(self.queued_request.get_uuid()))
             if self.number_of_requests == 2:
+                # preempt this request immediately
                 self.queued_request.preempt()
                 rospy.loginfo('Request preempted: '
-                              + str(self.queued_request.get_uuid()))
-            else:
-                self.queued_request.grant([TEST_RESOURCE])
-                rospy.loginfo('Request granted: '
                               + str(self.queued_request.get_uuid()))
             self.queued_request = None
             self.sch.notify(self.queued_requester)
