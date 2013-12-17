@@ -77,6 +77,7 @@ TRANS_TABLE = frozenset([
     (Request.NEW, Request.WAITING),
 
     (Request.PREEMPTING, Request.ABORTED),
+    (Request.PREEMPTING, Request.PREEMPTING),
     (Request.PREEMPTING, Request.RELEASED),
     (Request.PREEMPTING, Request.RELEASING),
 
@@ -290,6 +291,14 @@ class ResourceReply(RequestBase):
             self.msg.resources = update.msg.resources
             if update.msg.availability != rospy.Time():
                 self.msg.availability = update.msg.availability
+
+    def preempt(self):
+        """ Preempt a previously granted request.
+
+        :raises: :exc:`.TransitionError`
+
+        """
+        self._update_status(Request.PREEMPTING)
 
     def reject(self):
         """ Reject an invalid request.

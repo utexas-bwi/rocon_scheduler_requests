@@ -23,6 +23,9 @@ class ExampleRequester:
                 rospy.loginfo('Request granted: ' + str(rq.get_uuid()))
             elif rq.msg.status == Request.RELEASED:
                 rospy.loginfo('Request canceled: ' + str(rq.get_uuid()))
+            elif rq.msg.status == Request.PREEMPTING:
+                rospy.loginfo('Request preempted: ' + str(rq.get_uuid()))
+                rq.cancel()     # release preempted resource immediately
 
     def periodic_update(self, event):
         """ Timer event handler for periodic request updates. """
