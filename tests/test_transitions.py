@@ -32,37 +32,6 @@ class TestTransitions(unittest.TestCase):
     These tests do not require a running ROS core.
     """
 
-    def test_abort(self):
-        rq1 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_RESOURCE],
-                                    status=Request.NEW))
-        rq1.abort()
-        self.assertEqual(rq1.msg.status, Request.ABORTED)
-
-        rq2 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_RESOURCE],
-                                    status=Request.WAITING))
-        rq2.abort()
-        self.assertEqual(rq2.msg.status, Request.ABORTED)
-
-        rq3 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_RESOURCE],
-                                    status=Request.PREEMPTING))
-        rq3.abort()
-        self.assertEqual(rq3.msg.status, Request.ABORTED)
-
-        rq4 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_RESOURCE],
-                                    status=Request.RELEASED))
-        rq4.abort()
-        self.assertEqual(rq4.msg.status, Request.ABORTED)
-
-        rq5 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_WILDCARD],
-                                    status=Request.GRANTED))
-        rq5.abort()
-        self.assertEqual(rq5.msg.status, Request.ABORTED)
-
     def test_constructor(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_WILDCARD],
@@ -117,35 +86,6 @@ class TestTransitions(unittest.TestCase):
                                     resources=[TEST_WILDCARD],
                                     status=Request.ABORTED))
         self.assertRaises(TransitionError, rq4.grant, [TEST_RESOURCE])
-
-    def test_reject(self):
-        rq1 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_RESOURCE],
-                                    status=Request.NEW))
-        rq1.reject()
-        self.assertEqual(rq1.msg.status, Request.REJECTED)
-
-        rq2 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_RESOURCE],
-                                    status=Request.WAITING))
-        rq2.reject()
-        self.assertEqual(rq2.msg.status, Request.REJECTED)
-
-        rq3 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_RESOURCE],
-                                    status=Request.PREEMPTING))
-        self.assertRaises(TransitionError, rq3.reject)
-
-        rq4 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_RESOURCE],
-                                    status=Request.RESERVED))
-        rq4.reject()
-        self.assertEqual(rq4.msg.status, Request.REJECTED)
-
-        rq5 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_WILDCARD],
-                                    status=Request.GRANTED))
-        self.assertRaises(TransitionError, rq5.reject)
 
     def test_preempt(self):
         rq1 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),

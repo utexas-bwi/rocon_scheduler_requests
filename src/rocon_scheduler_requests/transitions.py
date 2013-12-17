@@ -246,8 +246,13 @@ class ResourceReply(RequestBase):
 
     """
     def abort(self):
-        """ Abort a request due to internal failure (always valid). """
-        self._update_status(Request.ABORTED)
+        """ Abort a request due to internal failure (always valid).
+
+        .. deprecated:: 0.0.1
+           use :py:meth:`.preempt` instead.
+
+        """
+        self.preempt()
 
     def free(self):
         """ Free up previously-assigned resources that were canceled.
@@ -279,7 +284,7 @@ class ResourceReply(RequestBase):
         :type update: :class:`.ResourceRequest` or ``None``
 
         :raises: :exc:`.WrongRequestError`
-
+p
         """
         if update is None:      # this request not mentioned in updates
             update = ResourceRequest(self.msg)
@@ -305,8 +310,11 @@ class ResourceReply(RequestBase):
 
         :raises: :exc:`.TransitionError`
 
+        .. deprecated:: 0.0.1
+           use :py:meth:`.preempt` instead.
+
         """
-        self._update_status(Request.REJECTED)
+        self.preempt()
 
     def wait(self):
         """
