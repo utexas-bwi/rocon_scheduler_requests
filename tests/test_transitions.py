@@ -87,6 +87,13 @@ class TestTransitions(unittest.TestCase):
                                     status=Request.ABORTED))
         self.assertRaises(TransitionError, rq4.grant, [TEST_RESOURCE])
 
+        rq5 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
+                                    resources=[TEST_WILDCARD],
+                                    status=Request.RESERVED))
+        rq5.grant([TEST_RESOURCE])
+        self.assertEqual(rq5.msg.status, Request.GRANTED)
+        self.assertEqual(rq5.msg.resources, [TEST_RESOURCE])
+
     def test_preempt(self):
         rq1 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
                                     resources=[TEST_RESOURCE],

@@ -51,59 +51,49 @@ import unique_id
 
 from . import TransitionError, WrongRequestError
 
-# State transition table.
+# State transition merge table.
+#
+# This table is only used for merging scheduler and requester request
+# sets when a new message arrives.
 #
 # An immutable set of (old, new) status pairs.  All pairs in the table
 # are considered valid state transitions.  Any others are not.
 #
-# :todo: come up with a more event-driven state transition scheme.
-# :todo: eliminate ABORTED status, unless it is really needed.
-# :todo: rename RELEASED status to CANCELED.
-# :todo: eliminate PREEMPTED status: use CANCELED instead.
+# :todo: revise Request.status labels (robotics-in-concert/rocon_msgs#60)
+#
+#  * rename RELEASED status to CANCELED.
+#  * rename RELEASING status to CANCELING.
+#  * eliminate ABORTED status: use CANCELED instead.
+#  * eliminate PREEMPTED status: use CANCELED instead.
+#  * eliminate REJECTED status: use CANCELED instead.
 #
 TRANS_TABLE = frozenset([
-    (Request.ABORTED, Request.ABORTED),
-
-    (Request.GRANTED, Request.ABORTED),
     (Request.GRANTED, Request.GRANTED),
     (Request.GRANTED, Request.PREEMPTING),
     (Request.GRANTED, Request.RELEASING),
 
-    (Request.NEW, Request.ABORTED),
     (Request.NEW, Request.GRANTED),
     (Request.NEW, Request.PREEMPTING),
-    (Request.NEW, Request.REJECTED),
     (Request.NEW, Request.RELEASING),
     (Request.NEW, Request.WAITING),
 
-    (Request.PREEMPTING, Request.ABORTED),
     (Request.PREEMPTING, Request.PREEMPTING),
     (Request.PREEMPTING, Request.RELEASED),
     (Request.PREEMPTING, Request.RELEASING),
 
-    (Request.REJECTED, Request.ABORTED),
-    (Request.REJECTED, Request.REJECTED),
-
-    (Request.RELEASING, Request.ABORTED),
     (Request.RELEASING, Request.RELEASED),
     (Request.RELEASING, Request.RELEASING),
 
-    (Request.RELEASED, Request.ABORTED),
-    (Request.RELEASED, Request.REJECTED),
     (Request.RELEASED, Request.RELEASED),
 
-    (Request.RESERVED, Request.ABORTED),
     (Request.RESERVED, Request.NEW),
     (Request.RESERVED, Request.GRANTED),
     (Request.RESERVED, Request.PREEMPTING),
-    (Request.RESERVED, Request.REJECTED),
     (Request.RESERVED, Request.RELEASING),
     (Request.RESERVED, Request.RESERVED),
 
-    (Request.WAITING, Request.ABORTED),
     (Request.WAITING, Request.GRANTED),
     (Request.WAITING, Request.PREEMPTING),
-    (Request.WAITING, Request.REJECTED),
     (Request.WAITING, Request.RELEASING),
     (Request.WAITING, Request.WAITING)
     ])
@@ -132,6 +122,7 @@ EVENT_CANCEL = _EventTranitions(
     {Request.GRANTED: Request.RELEASING,
      Request.NEW: Request.RELEASING,
      Request.PREEMPTING: Request.RELEASING,
+     Request.RELEASED: Request.RELEASED,
      Request.RELEASING: Request.RELEASING,
      Request.RESERVED: Request.RELEASING,
      Request.WAITING: Request.RELEASING,
@@ -150,7 +141,7 @@ EVENT_GRANT = _EventTranitions(
     'grant',
     {Request.GRANTED: Request.GRANTED,
      Request.NEW: Request.GRANTED,
-     Request.RESERVED: Request.RELEASED,
+     Request.RESERVED: Request.GRANTED,
      Request.WAITING: Request.GRANTED,
      })
 
@@ -265,7 +256,7 @@ class ResourceRequest(RequestBase):
 
     def _reconcile(self, update):
         """
-        Merge scheduler updates with this request.
+        Merge scheduler updates with requester status.
 
         :param update: Latest information for this request, or
                        ``None`` if no longer present.
@@ -283,7 +274,6 @@ class ResourceRequest(RequestBase):
             self.msg.status = update.msg.status
             self.msg.priority = update.msg.priority
             self.msg.resources = update.msg.resources
-            self.msg.availability = update.msg.availability
             if update.msg.availability != rospy.Time():
                 self.msg.availability = update.msg.availability
 
@@ -356,7 +346,6 @@ class ResourceReply(RequestBase):
             raise WrongRequestError('UUID does not match')
         if self._validate(update.msg.status):
             self.msg.status = update.msg.status
-            self.msg.resources = update.msg.resources
             self.msg.hold_time = update.msg.hold_time
             if (update.msg.status == Request.RESERVED
                     and update.msg.availability != rospy.Time()):
