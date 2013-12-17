@@ -190,7 +190,9 @@ class Requester:
         """
         self.send_requests()
 
-    def new_request(self, resources, priority=None, uuid=None):
+    def new_request(self, resources, priority=None, uuid=None,
+                    reservation=rospy.Time(),
+                    hold_time=rospy.Duration()):
         """ Add a new scheduler request.
 
         Call this method for each desired new request, then invoke
@@ -207,11 +209,22 @@ class Requester:
             random UUID will be assigned.
         :type uuid: :class:`uuid.UUID` or ``None``
 
+        :param reservation: time when request desired, default
+            immediately.
+        :type reservation: rospy.Time
+
+        :param hold_time: estimated duration the resource will be
+            held, default unknown.
+        :type hold_time: rospy.Duration
+
         :returns: UUID (:class:`uuid.UUID`) assigned.
         :raises: :exc:`.WrongRequestError` if request already exists.
         """
         if priority is None:
             priority = self.priority
+        status = Request.NEW
+        if reservation != rospy.Time():
+            status = Request.RESERVED
         if uuid is None:
             uuid = unique_id.fromRandom()
         if uuid in self.rset:
@@ -219,7 +232,9 @@ class Requester:
         msg = Request(id=unique_id.toMsg(uuid),
                       priority=priority,
                       resources=resources,
-                      status=Request.NEW)
+                      status=status,
+                      availability=reservation,
+                      hold_time=hold_time)
         self.rset[uuid] = ResourceRequest(msg)
         return uuid
 

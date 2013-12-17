@@ -46,7 +46,8 @@ class TestExampleRequester(unittest.TestCase):
         """
         self.queued_requester = requester_id
         self.queued_request = request
-        self.timer = rospy.Timer(rospy.Duration(1.0), self.allocate, oneshot=True)
+        self.timer = rospy.Timer(rospy.Duration(1.0),
+                                 self.allocate, oneshot=True)
 
     def callback(self, rset):
         """ Scheduler request callback.
