@@ -209,12 +209,12 @@ class Requester:
             random UUID will be assigned.
         :type uuid: :class:`uuid.UUID` or ``None``
 
-        :param reservation: time when request desired, default
+        :param reservation: time when request desired, default:
             immediately.
         :type reservation: rospy.Time
 
         :param hold_time: estimated duration the resource will be
-            held, default unknown.
+            held, default: unknown.
         :type hold_time: rospy.Duration
 
         :returns: UUID (:class:`uuid.UUID`) assigned.
