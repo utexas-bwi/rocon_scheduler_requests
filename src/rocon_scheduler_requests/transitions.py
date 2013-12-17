@@ -109,6 +109,68 @@ TRANS_TABLE = frozenset([
     ])
 
 
+class _EventTranitions:
+    """
+    Define valid status transitions for a given event type.
+
+    :param name: Human-readable name for this event type.
+    :type name: str
+    :param trans: Dictionary of valid status transitions.
+    :type trans: dict
+
+    """
+    def __init__(self, name, trans):
+        self.name = name
+        """ Name of this event type. """
+        self.trans = trans
+        """ Dictionary of valid status transitions. """
+
+##  Requester transitions:
+#
+EVENT_CANCEL = _EventTranitions(
+    'cancel',
+    {Request.GRANTED: Request.RELEASING,
+     Request.NEW: Request.RELEASING,
+     Request.PREEMPTING: Request.RELEASING,
+     Request.RELEASING: Request.RELEASING,
+     Request.RESERVED: Request.RELEASING,
+     Request.WAITING: Request.RELEASING,
+     })
+
+##  Scheduler transitions:
+#
+EVENT_FREE = _EventTranitions(
+    'free',
+    {Request.PREEMPTING: Request.RELEASED,
+     Request.RELEASING: Request.RELEASED,
+     Request.RELEASED: Request.RELEASED,
+     })
+
+EVENT_GRANT = _EventTranitions(
+    'grant',
+    {Request.GRANTED: Request.GRANTED,
+     Request.NEW: Request.GRANTED,
+     Request.RESERVED: Request.RELEASED,
+     Request.WAITING: Request.GRANTED,
+     })
+
+EVENT_PREEMPT = _EventTranitions(
+    'preempt',
+    {Request.GRANTED: Request.PREEMPTING,
+     Request.NEW: Request.NEW,
+     Request.PREEMPTING: Request.PREEMPTING,
+     Request.RESERVED: Request.RESERVED,
+     Request.WAITING: Request.WAITING,
+     })
+
+EVENT_WAIT = _EventTranitions(
+    'wait',
+    {Request.NEW: Request.WAITING,
+     Request.RESERVED: Request.WAITING,
+     Request.WAITING: Request.WAITING,
+     })
+
+
 class RequestBase:
     """
     Base class for tracking the status of a single resource request.
@@ -134,18 +196,18 @@ class RequestBase:
         self.msg = msg
         """ Corresponding ``scheduler_msgs/Request``. """
 
+    def get_uuid(self):
+        """ :returns: UUID of this request.
+        :rtype: :class:`uuid.UUID`
+        """
+        return unique_id.fromMsg(self.msg.id)
+
     def __str__(self):
         """ Generate string representation. """
         return 'id: ' + str(unique_id.fromMsg(self.msg.id)) \
             + '\n    priority: ' + str(self.msg.priority) \
             + '\n    resources: ' + self._str_resources() \
             + '\n    status: ' + str(self.msg.status)
-
-    def get_uuid(self):
-        """ :returns: UUID of this request.
-        :rtype: :class:`uuid.UUID`
-        """
-        return unique_id.fromMsg(self.msg.id)
 
     def _str_resources(self):
         """ Format requested resource into a human-readable string. """
@@ -154,19 +216,20 @@ class RequestBase:
             retval += '\n      ' + res.platform_info + '/' + res.name
         return retval
 
-    def _update_status(self, new_status):
+    def _transition(self, event):
         """
         Update status for this resource request.
 
-        :param new_status: Desired status.
+        :param event: Transition table for this type of *event*.
+        :type event: :class:`._EventTranitions`
 
         :raises: :exc:`.TransitionError` if not a valid transition.
 
         """
-        if not self._validate(new_status):
-            raise TransitionError('invalid status transition from '
-                                  + str(self.msg.status)
-                                  + ' to ' + str(new_status))
+        new_status = event.trans.get(self.msg.status)
+        if new_status is None:
+            raise TransitionError('invalid event ' + event.name
+                                  + ' in state ' + str(self.msg.status))
         self.msg.status = new_status
 
     def _validate(self, new_status):
@@ -198,7 +261,7 @@ class ResourceRequest(RequestBase):
         :raises: :exc:`.TransitionError`
 
         """
-        self._update_status(Request.RELEASING)
+        self._transition(EVENT_CANCEL)
 
     def _reconcile(self, update):
         """
@@ -259,7 +322,7 @@ class ResourceReply(RequestBase):
 
         :raises: :exc:`.TransitionError`
         """
-        self._update_status(Request.RELEASED)
+        self._transition(EVENT_FREE)
 
     def grant(self, resources):
         """ Grant some specific requested resources.
@@ -272,7 +335,7 @@ class ResourceReply(RequestBase):
         resources really do fully satisfy this request.
 
         """
-        self._update_status(Request.GRANTED)
+        self._transition(EVENT_GRANT)
         self.msg.resources = resources
 
     def _reconcile(self, update):
@@ -284,7 +347,7 @@ class ResourceReply(RequestBase):
         :type update: :class:`.ResourceRequest` or ``None``
 
         :raises: :exc:`.WrongRequestError`
-p
+
         """
         if update is None:      # this request not mentioned in updates
             update = ResourceRequest(self.msg)
@@ -294,7 +357,9 @@ p
         if self._validate(update.msg.status):
             self.msg.status = update.msg.status
             self.msg.resources = update.msg.resources
-            if update.msg.availability != rospy.Time():
+            self.msg.hold_time = update.msg.hold_time
+            if (update.msg.status == Request.RESERVED
+                    and update.msg.availability != rospy.Time()):
                 self.msg.availability = update.msg.availability
 
     def preempt(self):
@@ -303,7 +368,7 @@ p
         :raises: :exc:`.TransitionError`
 
         """
-        self._update_status(Request.PREEMPTING)
+        self._transition(EVENT_PREEMPT)
 
     def reject(self):
         """ Reject an invalid request.
@@ -322,7 +387,7 @@ p
 
         :raises: :exc:`.TransitionError`
         """
-        self._update_status(Request.WAITING)
+        self._transition(EVENT_WAIT)
 
 
 class RequestSet:

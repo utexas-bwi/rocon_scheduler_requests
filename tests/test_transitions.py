@@ -92,13 +92,13 @@ class TestTransitions(unittest.TestCase):
                                     resources=[TEST_RESOURCE],
                                     status=Request.NEW))
         rq1.preempt()
-        self.assertEqual(rq1.msg.status, Request.PREEMPTING)
+        self.assertEqual(rq1.msg.status, Request.NEW)
 
         rq2 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
                                     resources=[TEST_RESOURCE],
                                     status=Request.WAITING))
         rq2.preempt()
-        self.assertEqual(rq2.msg.status, Request.PREEMPTING)
+        self.assertEqual(rq2.msg.status, Request.WAITING)
 
         rq3 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
                                     resources=[TEST_RESOURCE],
@@ -110,7 +110,7 @@ class TestTransitions(unittest.TestCase):
                                     resources=[TEST_RESOURCE],
                                     status=Request.RESERVED))
         rq4.preempt()
-        self.assertEqual(rq4.msg.status, Request.PREEMPTING)
+        self.assertEqual(rq4.msg.status, Request.RESERVED)
 
         rq5 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
                                     resources=[TEST_WILDCARD],
@@ -148,6 +148,31 @@ class TestTransitions(unittest.TestCase):
                                    status=Request.RELEASING))
         rq.free()
         self.assertEqual(rq.msg.status, Request.RELEASED)
+
+    def test_wait(self):
+        rq1 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
+                                    resources=[TEST_RESOURCE],
+                                    status=Request.NEW))
+        rq1.wait()
+        self.assertEqual(rq1.msg.status, Request.WAITING)
+
+        rq2 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
+                                    resources=[TEST_RESOURCE],
+                                    status=Request.WAITING))
+        rq2.wait()
+        self.assertEqual(rq2.msg.status, Request.WAITING)
+
+        rq3 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
+                                    resources=[TEST_RESOURCE],
+                                    status=Request.RESERVED))
+        rq3.wait()
+        self.assertEqual(rq3.msg.status, Request.WAITING)
+
+        # should this be allowed, but not change status?
+        rq4 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
+                                    resources=[TEST_RESOURCE],
+                                    status=Request.RELEASING))
+        self.assertRaises(TransitionError, rq4.wait)
 
     def test_empty_request_set(self):
         rset = RequestSet([], RQR_UUID)
@@ -223,7 +248,7 @@ requests:
         rs2 = copy.deepcopy(rset)
         self.assertTrue(rset == rs2)
         self.assertFalse(rset != rs2)
-        rs2[TEST_UUID]._update_status(Request.GRANTED)
+        rs2[TEST_UUID]._transition(EVENT_GRANT)
         self.assertTrue(rset != rs2)
         self.assertFalse(rset == rs2)
 

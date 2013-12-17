@@ -48,7 +48,7 @@ class ExampleScheduler:
         rospy.loginfo('Request canceled: ' + str(rq.get_uuid()))
         rq.free()
         if len(self.queue) > 0:
-            pair = popleft(self.avail)
+            pair = self.queue.popleft()
             self.allocate(pair[0], pair[1])
 
 if __name__ == '__main__':
