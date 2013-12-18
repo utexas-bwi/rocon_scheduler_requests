@@ -155,6 +155,8 @@ EVENT_PREEMPT = _EventTranitions(
     {Request.GRANTED: Request.PREEMPTING,
      Request.NEW: Request.NEW,
      Request.PREEMPTING: Request.PREEMPTING,
+     Request.RELEASED: Request.RELEASED,
+     Request.RELEASING: Request.RELEASING,
      Request.RESERVED: Request.RESERVED,
      Request.WAITING: Request.WAITING,
      })
@@ -254,7 +256,7 @@ class ResourceRequest(RequestBase):
     def cancel(self):
         """ Cancel a previously-requested resource.
 
-        :raises: :exc:`.TransitionError`
+        *Always valid for requesters.*
 
         """
         self._transition(EVENT_CANCEL)
@@ -361,7 +363,8 @@ class ResourceReply(RequestBase):
     def preempt(self):
         """ Preempt a previously granted request.
 
-        :raises: :exc:`.TransitionError`
+        Always valid for the scheduler, but has no effect unless the
+        request was previously granted.
 
         """
         self._transition(EVENT_PREEMPT)
