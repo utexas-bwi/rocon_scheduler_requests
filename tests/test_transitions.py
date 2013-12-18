@@ -319,6 +319,32 @@ requests:
         self.assertNotEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
         self.assertNotEqual(rset, rel_rset)
 
+    def test_canceled_merge_plus_new_request(self):
+        msg1 = Request(id=unique_id.toMsg(TEST_UUID),
+                       resources=[TEST_RESOURCE],
+                       status=Request.RELEASING)
+        msg2 = Request(id=unique_id.toMsg(DIFF_UUID),
+                       resources=[TEST_WILDCARD],
+                       status=Request.NEW)
+        rset = RequestSet([msg1, msg2], RQR_UUID)
+        self.assertEqual(len(rset), 2)
+        self.assertTrue(TEST_UUID in rset)
+        self.assertTrue(DIFF_UUID in rset)
+
+        # merge a canceled request: TEST_UUID should be deleted, but
+        # DIFF_UUID should not
+        msg3 = Request(id=unique_id.toMsg(TEST_UUID),
+                       resources=[TEST_RESOURCE],
+                       status=Request.RELEASED)
+        rel_rset = RequestSet([msg3], RQR_UUID, contents=ResourceReply)
+        rset.merge(rel_rset)
+        self.assertEqual(len(rset), 1)
+        self.assertFalse(TEST_UUID in rset)
+        self.assertTrue(DIFF_UUID in rset)
+        self.assertEqual(rset, RequestSet([msg2], RQR_UUID,
+                                          contents=ResourceReply))
+        self.assertNotEqual(rset, rel_rset)
+
     def test_single_merge(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_WILDCARD],
