@@ -36,7 +36,12 @@
 This module tracks resource request state transitions as messages flow
 between schedulers and requesters.
 
-.. _UUID: http://en.wikipedia.org/wiki/Uuid
+As individual requests are passed back and forth between the original
+requester and the scheduler, they pass through some of the following
+state transitions.  The usual paths are shown with **bold**
+transitions:
+
+.. graphviz:: state_transitions.dot
 
 """
 
@@ -86,11 +91,11 @@ TRANS_TABLE = frozenset([
 
     (Request.RELEASED, Request.RELEASED),
 
-    (Request.RESERVED, Request.NEW),
     (Request.RESERVED, Request.GRANTED),
     (Request.RESERVED, Request.PREEMPTING),
     (Request.RESERVED, Request.RELEASING),
     (Request.RESERVED, Request.RESERVED),
+    (Request.RESERVED, Request.WAITING),
 
     (Request.WAITING, Request.GRANTED),
     (Request.WAITING, Request.PREEMPTING),
@@ -237,8 +242,8 @@ class RequestBase:
 
 class ResourceRequest(RequestBase):
     """
-    This class represents a single resource request flowing from
-    requester to scheduler.
+    This class represents a single resource request from the point of
+    view of the original requester.
 
     :param msg: ROCON scheduler request message.
     :type msg: scheduler_msgs/Request
@@ -289,8 +294,8 @@ class ResourceRequest(RequestBase):
 
 class ResourceReply(RequestBase):
     """
-    This class represents a single resource reply flowing from
-    scheduler to requester.
+    This class represents a single resource reply from the point of
+    view of the scheduler.
 
     :param msg: ROCON scheduler request message.
     :type msg: scheduler_msgs/Request
@@ -404,7 +409,7 @@ class RequestSet:
 
        Define a new item for this UUID.
 
-       :param uuid: (:class:`uuid.UUID`) UUID_ of the request.
+       :param uuid: (:class:`uuid.UUID`) UUID of the request.
 
        :param rq: (:class:`.ResourceRequest`) request or
            (:class:`.ResourceReply`) reply.
@@ -477,7 +482,7 @@ class RequestSet:
 
     def __getitem__(self, uuid):
         """
-        :param uuid: UUID_ of desired request.
+        :param uuid: UUID of desired request.
         :type uuid: :class:`uuid.UUID`
 
         :returns: named item.
@@ -506,7 +511,7 @@ class RequestSet:
     def get(self, uuid, default=None):
         """ Get request, if known.
 
-        :param uuid: UUID_ of desired request.
+        :param uuid: UUID of desired request.
         :type uuid: :class:`uuid.UUID`
         :param default: value to return if no such request.
 
