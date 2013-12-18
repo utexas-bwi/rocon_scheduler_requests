@@ -283,12 +283,13 @@ class ResourceRequest(RequestBase):
                 self.msg.availability = update.msg.availability
 
     def release(self):
-        """ Release a previously-requested resource.
-
-        .. deprecated:: 0.0.1
-           use :py:meth:`.cancel` instead.
-
-        """
+        ##   comment out docstring to remove from documentation:
+        #""" Release a previously-requested resource.
+        #
+        #.. deprecated:: 0.0.1
+        #   use :py:meth:`.cancel` instead.
+        #
+        #"""
         self.cancel()
 
 
@@ -304,12 +305,13 @@ class ResourceReply(RequestBase):
 
     """
     def abort(self):
-        """ Abort a request due to internal failure (always valid).
-
-        .. deprecated:: 0.0.1
-           use :py:meth:`.preempt` instead.
-
-        """
+        ##   comment out docstring to remove from documentation:
+        #""" Abort a request due to internal failure (always valid).
+        #
+        #.. deprecated:: 0.0.1
+        #   use :py:meth:`.preempt` instead.
+        #
+        #"""
         self.preempt()
 
     def free(self):
@@ -365,14 +367,15 @@ class ResourceReply(RequestBase):
         self._transition(EVENT_PREEMPT)
 
     def reject(self):
-        """ Reject an invalid request.
-
-        :raises: :exc:`.TransitionError`
-
-        .. deprecated:: 0.0.1
-           use :py:meth:`.preempt` instead.
-
-        """
+        ##   comment out docstring to remove from documentation:
+        #""" Reject an invalid request.
+        #
+        #:raises: :exc:`.TransitionError`
+        #
+        #.. deprecated:: 0.0.1
+        #   use :py:meth:`.preempt` instead.
+        #
+        #"""
         self.preempt()
 
     def wait(self):
