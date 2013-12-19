@@ -565,8 +565,8 @@ class RequestSet:
         This is *not* a :py:meth:`set.update` or :py:meth:`set.union`
         operation:
 
-        * New elements from the *updates* will be added, but if they
-          are in an initial state (NEW or RESERVED).
+        * New elements from the *updates* will be added, but only if
+          they are in an initial state (NEW or RESERVED).
 
         * Existing elements will be reconciled with the corresponding
           *updates* status.
