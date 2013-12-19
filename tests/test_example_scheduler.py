@@ -23,7 +23,9 @@ class TestExampleScheduler(unittest.TestCase):
 
     def feedback(self, rset):
         """ Scheduler feedback function. """
+        print('feedback callback:')
         for rq in rset.values():
+            print('  ' + str(rq))
             if rq.msg.status == Request.WAITING:
                 print('Request queued: ' + str(rq.get_uuid()))
             elif rq.msg.status == Request.GRANTED:
