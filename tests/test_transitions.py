@@ -156,6 +156,13 @@ class TestTransitions(unittest.TestCase):
         rq.free()
         self.assertEqual(rq.msg.status, Request.RELEASED)
 
+    def test_validate(self):
+        rq1 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
+                                      resources=[TEST_RESOURCE],
+                                      status=Request.NEW))
+        assertFalse(rq1._validate(Request.RELEASED))
+
+
     def test_wait(self):
         rq1 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
                                     resources=[TEST_RESOURCE],
@@ -330,19 +337,25 @@ requests:
         self.assertEqual(len(rset), 2)
         self.assertTrue(TEST_UUID in rset)
         self.assertTrue(DIFF_UUID in rset)
+        self.assertEqual(rset[DIFF_UUID].msg.status, Request.NEW)
 
         # merge a canceled request: TEST_UUID should be deleted, but
         # DIFF_UUID should not
         msg3 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_RESOURCE],
                        status=Request.RELEASED)
-        rel_rset = RequestSet([msg3], RQR_UUID, contents=ResourceReply)
+        rel_rset = RequestSet([msg3], RQR_UUID)
         rset.merge(rel_rset)
         self.assertEqual(len(rset), 1)
-        self.assertFalse(TEST_UUID in rset)
+        self.assertTrue(TEST_UUID not in rset)
         self.assertTrue(DIFF_UUID in rset)
-        self.assertEqual(rset, RequestSet([msg2], RQR_UUID,
-                                          contents=ResourceReply))
+        self.assertEqual(rset[DIFF_UUID].msg.status, Request.NEW)
+
+        # make a fresh object like the original msg2 for comparison
+        msg4 = Request(id=unique_id.toMsg(DIFF_UUID),
+                       resources=[TEST_WILDCARD],
+                       status=Request.NEW)
+        self.assertEqual(rset, RequestSet([msg4], RQR_UUID))
         self.assertNotEqual(rset, rel_rset)
 
     def test_single_merge(self):

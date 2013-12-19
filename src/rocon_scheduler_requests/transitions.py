@@ -271,11 +271,14 @@ class ResourceRequest(RequestBase):
 
         :raises: :exc:`.WrongRequestError`
 
+        Only the requester creates new requests.  If something is
+        missing from the scheduler feedback, that just means the
+        scheduler has not yet heard about it.
+
         """
-        if update is None:      # this request not mentioned in updates
-            update = ResourceReply(self.msg)
-            update.msg.status = Request.RELEASED
-        elif update.get_uuid() != self.get_uuid():
+        if update is None:      # this request not yet known to scheduler?
+            return              # leave it alone
+        if update.get_uuid() != self.get_uuid():
             raise WrongRequestError('UUID does not match')
         if self._validate(update.msg.status):
             self.msg.status = update.msg.status
