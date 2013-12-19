@@ -10,4 +10,4 @@ catkin_add_nosetests(test_common.py)
 # Unit tests using nose, but needing a running ROS core.
 find_package(catkin REQUIRED COMPONENTS rostest)
 add_rostest(py_example_requester.test)
-#add_rostest(py_example_scheduler.test)
+add_rostest(py_example_scheduler.test)

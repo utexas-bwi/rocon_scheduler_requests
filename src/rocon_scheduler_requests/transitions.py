@@ -565,7 +565,8 @@ class RequestSet:
         This is *not* a :py:meth:`set.update` or :py:meth:`set.union`
         operation:
 
-        * New elements from the *updates* will be added.
+        * New elements from the *updates* will be added, but if they
+          are in an initial state (NEW or RESERVED).
 
         * Existing elements will be reconciled with the corresponding
           *updates* status.
@@ -576,7 +577,9 @@ class RequestSet:
         """
         # Add any new requests not previously known.
         for rid, new_rq in updates.items():
-            if rid not in self.requests:
+            if (rid not in self.requests and
+                    (new_rq.msg.status == Request.NEW or
+                     new_rq.msg.status == Request.RESERVED)):
                 self.requests[rid] = self.contents(new_rq.msg)
 
         # Reconcile each existing request with the updates.  Make a
