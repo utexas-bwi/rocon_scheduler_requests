@@ -36,9 +36,9 @@ class ExampleScheduler:
 
     def callback(self, rset):
         """ Scheduler request callback: queue new requests until available. """
-        print('scheduler callback:')
+        rospy.loginfo('scheduler callback:')
         for rq in rset.values():
-            print('  ' + str(rq))
+            rospy.loginfo('  ' + str(rq))
             if rq.msg.status == Request.NEW:
                 self.allocate(rset.requester_id, rq)
             elif rq.msg.status == Request.RELEASING:

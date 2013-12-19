@@ -112,7 +112,8 @@ class _RequesterStatus:
         if self.rset != new_rset:       # something new?
             self.rset.merge(new_rset)
             self.sched.callback(self.rset)
-            self.send_feedback()
+            if self.rset != new_rset:   # still different?
+                self.send_feedback()
 
     def timeout(self, limit, event):
         """ Check for requester timeout.

@@ -170,15 +170,17 @@ class Requester:
 
     def _feedback(self, msg):
         """ Scheduler feedback message handler. """
-        new_rset = RequestSet(msg.requests, self.requester_id)
         prev_rset = copy.deepcopy(self.rset)
+        new_rset = RequestSet(msg.requests, self.requester_id)
         self.rset.merge(new_rset)
 
-        # invoke user-defined callback function
-        self.feedback(self.rset)
+        if self.rset != prev_rset:      # anything changed?
 
-        if self.rset != prev_rset:      # msg or callback changed something?
-            self.send_requests()        # send new request immediately
+            # invoke user-defined callback function
+            self.feedback(self.rset)
+
+            if self.rset != prev_rset:  # msg or callback changed something?
+                self.send_requests()    # send updated requests immediately
 
     def _heartbeat(self, event):
         """ Scheduler request heartbeat timer handler.

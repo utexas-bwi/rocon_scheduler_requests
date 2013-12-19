@@ -5,7 +5,7 @@
 
 <launch>
 
-  <!-- start exampl scheduler node -->
+  <!-- start example scheduler node -->
   <node pkg="rocon_scheduler_requests" type="example_scheduler.py"
         name="example_scheduler" />
 
