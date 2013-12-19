@@ -160,7 +160,9 @@ class TestTransitions(unittest.TestCase):
         rq1 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
                                       resources=[TEST_RESOURCE],
                                       status=Request.NEW))
-        assertFalse(rq1._validate(Request.RELEASED))
+        self.assertTrue(rq1._validate(Request.GRANTED))
+        self.assertTrue(rq1._validate(Request.PREEMPTING))
+        self.assertFalse(rq1._validate(Request.RELEASED))
 
 
     def test_wait(self):
