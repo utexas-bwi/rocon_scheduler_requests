@@ -56,13 +56,8 @@ from scheduler_msgs.msg import SchedulerRequests
 # temporarily provide status label backwards compatibility
 from scheduler_msgs.msg import Request
 if not hasattr(Request, 'CANCELED'):
-    # :todo: revise Request.status labels.
+    # Define revised Request.status labels.
     # See: (robotics-in-concert/rocon_msgs#60)
-    #  * rename RELEASED status to CANCELED.
-    #  * rename RELEASING status to CANCELING.
-    #  * eliminate ABORTED status: use CANCELED instead.
-    #  * eliminate PREEMPTED status: use CANCELED instead.
-    #  * eliminate REJECTED status: use CANCELED instead.
     Request.CANCELED = Request.RELEASED
     Request.CANCELING = Request.RELEASING
 
@@ -125,16 +120,15 @@ class _EventTranitions:
 
 ##  Requester transitions:
 #
-EVENT_CANCEL = _EventTranitions(
-    'cancel',
-    {Request.GRANTED: Request.CANCELING,
-     Request.NEW: Request.CANCELING,
-     Request.PREEMPTING: Request.CANCELING,
-     Request.CANCELED: Request.CANCELED,
-     Request.CANCELING: Request.CANCELING,
-     Request.RESERVED: Request.CANCELING,
-     Request.WAITING: Request.CANCELING,
-     })
+EVENT_CANCEL = _EventTranitions('cancel', {
+    Request.CANCELED: Request.CANCELED,
+    Request.CANCELING: Request.CANCELING,
+    Request.GRANTED: Request.CANCELING,
+    Request.NEW: Request.CANCELING,
+    Request.PREEMPTING: Request.CANCELING,
+    Request.RESERVED: Request.CANCELING,
+    Request.WAITING: Request.CANCELING,
+    })
 
 ##  Scheduler transitions:
 #
