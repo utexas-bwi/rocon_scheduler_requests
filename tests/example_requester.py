@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 """ Requester usage example. """
 import rospy
-from scheduler_msgs.msg import Request, Resource
-from rocon_scheduler_requests.requester import Requester
+from scheduler_msgs.msg import Resource
+from rocon_scheduler_requests.transitions import Request
+from rocon_scheduler_requests import Requester
 
 
 class ExampleRequester:
@@ -21,7 +22,7 @@ class ExampleRequester:
                 rospy.loginfo('Request queued: ' + str(rq.get_uuid()))
             elif rq.msg.status == Request.GRANTED:
                 rospy.loginfo('Request granted: ' + str(rq.get_uuid()))
-            elif rq.msg.status == Request.RELEASED:
+            elif rq.msg.status == Request.CANCELED:
                 rospy.loginfo('Request canceled: ' + str(rq.get_uuid()))
             elif rq.msg.status == Request.PREEMPTING:
                 rospy.loginfo('Request preempted: ' + str(rq.get_uuid()))

@@ -7,9 +7,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 import rospy
-from scheduler_msgs.msg import Request
 from scheduler_msgs.msg import Resource
-import rocon_scheduler_requests.scheduler as scheduler
+from rocon_scheduler_requests.transitions import Request
+from rocon_scheduler_requests import Scheduler
 
 # Resource to grant
 TEST_RESOURCE = Resource(
@@ -29,7 +29,7 @@ class TestExampleRequester(unittest.TestCase):
         self.number_of_requests = 3     # number of requests desired
         self.queued_request = None
         rospy.init_node("test_example_requester")
-        self.sch = scheduler.Scheduler(self.callback)
+        self.sch = Scheduler(self.callback)
         rospy.spin()                    # spin in the main thread
 
     def allocate(self, event):
@@ -68,7 +68,7 @@ class TestExampleRequester(unittest.TestCase):
             if rq.msg.status == Request.NEW:
                 rq.wait()
                 self.queue(rset.requester_id, rq)
-            elif rq.msg.status == Request.RELEASING:
+            elif rq.msg.status == Request.CANCELING:
                 rq.free()
                 rospy.loginfo('Request canceled: ' + str(rq.get_uuid()))
                 self.number_of_requests -= 1

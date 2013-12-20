@@ -7,8 +7,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 import unittest
 import collections
 import rospy
-from scheduler_msgs.msg import Request, Resource
-from rocon_scheduler_requests.requester import Requester
+from scheduler_msgs.msg import Resource
+from rocon_scheduler_requests.transitions import Request
+from rocon_scheduler_requests import Requester
 
 
 class TestExampleScheduler(unittest.TestCase):
@@ -30,7 +31,7 @@ class TestExampleScheduler(unittest.TestCase):
                 print('Request queued: ' + str(rq.get_uuid()))
             elif rq.msg.status == Request.GRANTED:
                 print('Request granted: ' + str(rq.get_uuid()))
-            elif rq.msg.status == Request.RELEASED:
+            elif rq.msg.status == Request.CANCELED:
                 print('Request canceled: ' + str(rq.get_uuid()))
             elif rq.msg.status == Request.PREEMPTING:
                 print('Request preempted: ' + str(rq.get_uuid()))

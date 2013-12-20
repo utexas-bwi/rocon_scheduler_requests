@@ -84,7 +84,7 @@ class TestTransitions(unittest.TestCase):
 
         rq4 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
                                     resources=[TEST_WILDCARD],
-                                    status=Request.ABORTED))
+                                    status=Request.CANCELING))
         self.assertRaises(TransitionError, rq4.grant, [TEST_RESOURCE])
 
         rq5 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
@@ -130,31 +130,31 @@ class TestTransitions(unittest.TestCase):
                                       resources=[TEST_RESOURCE],
                                       status=Request.GRANTED))
         rq1.cancel()
-        self.assertEqual(rq1.msg.status, Request.RELEASING)
+        self.assertEqual(rq1.msg.status, Request.CANCELING)
 
         rq2 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
                                       resources=[TEST_RESOURCE],
                                       status=Request.WAITING))
         rq2.cancel()
-        self.assertEqual(rq2.msg.status, Request.RELEASING)
+        self.assertEqual(rq2.msg.status, Request.CANCELING)
 
         rq3 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
                                       resources=[TEST_RESOURCE],
                                       status=Request.PREEMPTING))
         rq3.cancel()
-        self.assertEqual(rq3.msg.status, Request.RELEASING)
+        self.assertEqual(rq3.msg.status, Request.CANCELING)
 
         rq4 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
                                       resources=[TEST_RESOURCE],
-                                      status=Request.ABORTED))
-        self.assertRaises(TransitionError, rq4.cancel)
+                                      status=Request.CANCELING))
+        self.assertEqual(rq3.msg.status, Request.CANCELING)
 
     def test_free(self):
         rq = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
                                    resources=[TEST_RESOURCE],
-                                   status=Request.RELEASING))
+                                   status=Request.CANCELING))
         rq.free()
-        self.assertEqual(rq.msg.status, Request.RELEASED)
+        self.assertEqual(rq.msg.status, Request.CANCELED)
 
     def test_validate(self):
         rq1 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
@@ -162,7 +162,7 @@ class TestTransitions(unittest.TestCase):
                                       status=Request.NEW))
         self.assertTrue(rq1._validate(Request.GRANTED))
         self.assertTrue(rq1._validate(Request.PREEMPTING))
-        self.assertFalse(rq1._validate(Request.RELEASED))
+        self.assertFalse(rq1._validate(Request.CANCELED))
 
 
     def test_wait(self):
@@ -187,7 +187,7 @@ class TestTransitions(unittest.TestCase):
         # should this be allowed, but not change status?
         rq4 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
                                     resources=[TEST_RESOURCE],
-                                    status=Request.RELEASING))
+                                    status=Request.CANCELING))
         self.assertRaises(TransitionError, rq4.wait)
 
     def test_empty_request_set(self):
@@ -288,7 +288,7 @@ requests:
     def test_freed_merge(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_WILDCARD],
-                       status=Request.RELEASED)
+                       status=Request.CANCELED)
         rset = RequestSet([msg1], RQR_UUID, contents=ResourceReply)
         self.assertEqual(len(rset), 1)
         self.assertTrue(TEST_UUID in rset)
@@ -307,7 +307,7 @@ requests:
     def test_canceled_merge(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_WILDCARD],
-                       status=Request.RELEASING)
+                       status=Request.CANCELING)
         rset = RequestSet([msg1], RQR_UUID)
         self.assertEqual(len(rset), 1)
         self.assertTrue(TEST_UUID in rset)
@@ -318,7 +318,7 @@ requests:
         # merge a canceled request: TEST_UUID should be deleted
         msg2 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_WILDCARD],
-                       status=Request.RELEASED)
+                       status=Request.CANCELED)
         rel_rset = RequestSet([msg2], RQR_UUID, contents=ResourceReply)
         rset.merge(rel_rset)
         self.assertEqual(len(rset), 0)
@@ -331,7 +331,7 @@ requests:
     def test_canceled_merge_plus_new_request(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_RESOURCE],
-                       status=Request.RELEASING)
+                       status=Request.CANCELING)
         msg2 = Request(id=unique_id.toMsg(DIFF_UUID),
                        resources=[TEST_WILDCARD],
                        status=Request.NEW)
@@ -345,7 +345,7 @@ requests:
         # DIFF_UUID should not
         msg3 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_RESOURCE],
-                       status=Request.RELEASED)
+                       status=Request.CANCELED)
         rel_rset = RequestSet([msg3], RQR_UUID)
         rset.merge(rel_rset)
         self.assertEqual(len(rset), 1)

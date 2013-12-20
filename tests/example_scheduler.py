@@ -2,8 +2,9 @@
 """ Scheduler usage example. """
 import collections
 import rospy
-from scheduler_msgs.msg import Request, Resource
-from rocon_scheduler_requests.scheduler import Scheduler
+from scheduler_msgs.msg import Resource
+from rocon_scheduler_requests.transitions import Request
+from rocon_scheduler_requests import Scheduler
 
 
 class ExampleScheduler:
@@ -41,7 +42,7 @@ class ExampleScheduler:
             rospy.loginfo('  ' + str(rq))
             if rq.msg.status == Request.NEW:
                 self.allocate(rset.requester_id, rq)
-            elif rq.msg.status == Request.RELEASING:
+            elif rq.msg.status == Request.CANCELING:
                 self.free(rset.requester_id, rq)
 
     def free(self, requester_id, rq):

@@ -51,7 +51,6 @@ import rospy
 import unique_id
 
 # ROS messages
-from scheduler_msgs.msg import Request
 from scheduler_msgs.msg import SchedulerRequests
 
 # internal modules

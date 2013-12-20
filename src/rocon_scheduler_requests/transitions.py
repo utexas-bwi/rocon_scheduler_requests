@@ -50,9 +50,21 @@ from __future__ import absolute_import, print_function
 
 # Ros dependencies
 import rospy
-from scheduler_msgs.msg import Request
-from scheduler_msgs.msg import SchedulerRequests
 import unique_id
+from scheduler_msgs.msg import SchedulerRequests
+
+# temporarily provide status label backwards compatibility
+from scheduler_msgs.msg import Request
+if not hasattr(Request, 'CANCELED'):
+    # :todo: revise Request.status labels.
+    # See: (robotics-in-concert/rocon_msgs#60)
+    #  * rename RELEASED status to CANCELED.
+    #  * rename RELEASING status to CANCELING.
+    #  * eliminate ABORTED status: use CANCELED instead.
+    #  * eliminate PREEMPTED status: use CANCELED instead.
+    #  * eliminate REJECTED status: use CANCELED instead.
+    Request.CANCELED = Request.RELEASED
+    Request.CANCELING = Request.RELEASING
 
 from . import TransitionError, WrongRequestError
 
@@ -64,44 +76,35 @@ from . import TransitionError, WrongRequestError
 # An immutable set of (old, new) status pairs.  All pairs in the table
 # are considered valid state transitions.  Any others are not.
 #
-# :todo: revise Request.status labels (robotics-in-concert/rocon_msgs#60)
-#
-#  * rename RELEASED status to CANCELED.
-#  * rename RELEASING status to CANCELING.
-#  * eliminate ABORTED status: use CANCELED instead.
-#  * eliminate PREEMPTED status: use CANCELED instead.
-#  * eliminate REJECTED status: use CANCELED instead.
-#
 TRANS_TABLE = frozenset([
+    (Request.CANCELED, Request.CANCELED),
+
+    (Request.CANCELING, Request.CANCELED),
+    (Request.CANCELING, Request.CANCELING),
+
+    (Request.GRANTED, Request.CANCELING),
     (Request.GRANTED, Request.GRANTED),
     (Request.GRANTED, Request.PREEMPTING),
-    (Request.GRANTED, Request.RELEASING),
 
+    (Request.NEW, Request.CANCELING),
     (Request.NEW, Request.GRANTED),
     (Request.NEW, Request.PREEMPTING),
-    (Request.NEW, Request.RELEASING),
     (Request.NEW, Request.WAITING),
 
+    (Request.PREEMPTING, Request.CANCELED),
+    (Request.PREEMPTING, Request.CANCELING),
     (Request.PREEMPTING, Request.PREEMPTING),
-    (Request.PREEMPTING, Request.RELEASED),
-    (Request.PREEMPTING, Request.RELEASING),
 
-    (Request.RELEASING, Request.RELEASED),
-    (Request.RELEASING, Request.RELEASING),
-
-    (Request.RELEASED, Request.RELEASED),
-
+    (Request.RESERVED, Request.CANCELING),
     (Request.RESERVED, Request.GRANTED),
     (Request.RESERVED, Request.PREEMPTING),
-    (Request.RESERVED, Request.RELEASING),
     (Request.RESERVED, Request.RESERVED),
     (Request.RESERVED, Request.WAITING),
 
+    (Request.WAITING, Request.CANCELING),
     (Request.WAITING, Request.GRANTED),
     (Request.WAITING, Request.PREEMPTING),
-    (Request.WAITING, Request.RELEASING),
-    (Request.WAITING, Request.WAITING)
-    ])
+    (Request.WAITING, Request.WAITING)])
 
 
 class _EventTranitions:
@@ -124,49 +127,45 @@ class _EventTranitions:
 #
 EVENT_CANCEL = _EventTranitions(
     'cancel',
-    {Request.GRANTED: Request.RELEASING,
-     Request.NEW: Request.RELEASING,
-     Request.PREEMPTING: Request.RELEASING,
-     Request.RELEASED: Request.RELEASED,
-     Request.RELEASING: Request.RELEASING,
-     Request.RESERVED: Request.RELEASING,
-     Request.WAITING: Request.RELEASING,
+    {Request.GRANTED: Request.CANCELING,
+     Request.NEW: Request.CANCELING,
+     Request.PREEMPTING: Request.CANCELING,
+     Request.CANCELED: Request.CANCELED,
+     Request.CANCELING: Request.CANCELING,
+     Request.RESERVED: Request.CANCELING,
+     Request.WAITING: Request.CANCELING,
      })
 
 ##  Scheduler transitions:
 #
-EVENT_FREE = _EventTranitions(
-    'free',
-    {Request.PREEMPTING: Request.RELEASED,
-     Request.RELEASING: Request.RELEASED,
-     Request.RELEASED: Request.RELEASED,
-     })
+EVENT_FREE = _EventTranitions('free', {
+    Request.CANCELED: Request.CANCELED,
+    Request.CANCELING: Request.CANCELED,
+    Request.PREEMPTING: Request.CANCELED,
+    })
 
-EVENT_GRANT = _EventTranitions(
-    'grant',
-    {Request.GRANTED: Request.GRANTED,
-     Request.NEW: Request.GRANTED,
-     Request.RESERVED: Request.GRANTED,
-     Request.WAITING: Request.GRANTED,
-     })
+EVENT_GRANT = _EventTranitions('grant', {
+    Request.GRANTED: Request.GRANTED,
+    Request.NEW: Request.GRANTED,
+    Request.RESERVED: Request.GRANTED,
+    Request.WAITING: Request.GRANTED,
+    })
 
-EVENT_PREEMPT = _EventTranitions(
-    'preempt',
-    {Request.GRANTED: Request.PREEMPTING,
-     Request.NEW: Request.NEW,
-     Request.PREEMPTING: Request.PREEMPTING,
-     Request.RELEASED: Request.RELEASED,
-     Request.RELEASING: Request.RELEASING,
-     Request.RESERVED: Request.RESERVED,
-     Request.WAITING: Request.WAITING,
-     })
+EVENT_PREEMPT = _EventTranitions('preempt', {
+    Request.CANCELED: Request.CANCELED,
+    Request.CANCELING: Request.CANCELING,
+    Request.GRANTED: Request.PREEMPTING,
+    Request.NEW: Request.NEW,
+    Request.PREEMPTING: Request.PREEMPTING,
+    Request.RESERVED: Request.RESERVED,
+    Request.WAITING: Request.WAITING,
+    })
 
-EVENT_WAIT = _EventTranitions(
-    'wait',
-    {Request.NEW: Request.WAITING,
-     Request.RESERVED: Request.WAITING,
-     Request.WAITING: Request.WAITING,
-     })
+EVENT_WAIT = _EventTranitions('wait', {
+    Request.NEW: Request.WAITING,
+    Request.RESERVED: Request.WAITING,
+    Request.WAITING: Request.WAITING,
+    })
 
 
 class RequestBase:
@@ -353,7 +352,7 @@ class ResourceReply(RequestBase):
         """
         if update is None:      # this request not mentioned in updates
             update = ResourceRequest(self.msg)
-            update.msg.status = Request.RELEASED
+            update.msg.status = Request.CANCELED
         elif update.get_uuid() != self.get_uuid():
             raise WrongRequestError('UUID does not match')
         if self._validate(update.msg.status):
@@ -586,9 +585,9 @@ class RequestSet:
         # copy of the dictionary items, so it can be altered in the loop.
         for rid, rq in self.requests.items():
             new_rq = updates.get(rid)
-            if ((rq.msg.status == Request.RELEASING and
-                    new_rq.msg.status == Request.RELEASED)
-                    or (rq.msg.status == Request.RELEASED and
+            if ((rq.msg.status == Request.CANCELING and
+                    new_rq.msg.status == Request.CANCELED)
+                    or (rq.msg.status == Request.CANCELED and
                         new_rq is None)):
                 del self.requests[rid]  # no longer needed
             else:
