@@ -237,7 +237,7 @@ class Requester:
                       status=status,
                       availability=reservation,
                       hold_time=hold_time)
-        self.rset[uuid] = ResourceRequest(msg)
+        self.rset[uuid] = msg
         return uuid
 
     def send_requests(self):

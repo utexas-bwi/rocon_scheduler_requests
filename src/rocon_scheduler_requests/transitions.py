@@ -185,7 +185,7 @@ class RequestBase:
     def __init__(self, msg):
         """ Constructor. """
         self.msg = msg
-        """ Corresponding ``scheduler_msgs/Request``. """
+        """ Corresponding *scheduler_msgs/Request*. """
 
     def get_uuid(self):
         """ :returns: UUID of this request.
@@ -400,21 +400,19 @@ class RequestSet:
 
     .. describe:: len(rset)
 
-       :returns: the number of requesters in the set.
+       :returns: The number of requests in the set.
 
     .. describe:: rset[uuid]
 
-       :returns: the item corresponding to *uuid*.
+       :returns: The item corresponding to *uuid*.
        :raises: :exc:`KeyError` if no such request.
 
-    .. describe:: rset[uuid] = rq
+    .. describe:: rset[uuid] = msg
 
-       Define a new item for this UUID.
+       Assign a Request message for this *uuid*.
 
        :param uuid: (:class:`uuid.UUID`) UUID of the request.
-
-       :param rq: (:class:`.ResourceRequest`) request or
-           (:class:`.ResourceReply`) reply.
+       :param msg: (*scheduler_msgs/Request*) message to add.
 
     .. describe:: rset == other
 
@@ -500,9 +498,9 @@ class RequestSet:
         """ RequestSet != operator. """
         return not self == other
 
-    def __setitem__(self, uuid, rq):
-        """ Add a resource request to the set. """
-        self.requests[uuid] = rq
+    def __setitem__(self, uuid, msg):
+        """ Assign a Request message for this *uuid*. """
+        self.requests[uuid] = self.contents(msg)
 
     def __str__(self):
         rval = 'requester_id: ' + str(self.requester_id) + '\nrequests:'
@@ -543,7 +541,7 @@ class RequestSet:
         Return a list of resource requests suitable for inclusion in
         a ``SchedulerRequests`` message.
 
-        :returns: list of ``scheduler_msgs/Request`` messages.
+        :returns: list of *scheduler_msgs/Request* messages.
 
         """
         return [rq.msg for rq in self.requests.values()]
