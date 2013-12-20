@@ -35,6 +35,18 @@ class TestTransitions(unittest.TestCase):
     ####################
     # utility methods
     ####################
+    def assert_invalid(self, request_type, old_status,
+                       operation, exception):
+        """
+        Assert that *request_type* with *old_status* rejects named
+        *operation*, raising *exception*.
+        """
+        rq = request_type(Request(id=unique_id.toMsg(TEST_UUID),
+                                  resources=[TEST_RESOURCE],
+                                  status=old_status))
+        op_method = getattr(rq, operation)
+        self.assertRaises(exception, op_method)
+
     def assert_valid(self, request_type, old_status,
                      operation, new_status):
         """
@@ -134,8 +146,16 @@ class TestTransitions(unittest.TestCase):
                           'free', Request.CANCELED)
         self.assert_valid(ResourceReply, Request.CANCELING,
                           'free', Request.CANCELED)
+        self.assert_invalid(ResourceReply, Request.GRANTED,
+                            'free', TransitionError)
+        self.assert_invalid(ResourceReply, Request.NEW,
+                            'free', TransitionError)
         self.assert_valid(ResourceReply, Request.PREEMPTING,
                           'free', Request.CANCELED)
+        self.assert_invalid(ResourceReply, Request.RESERVED,
+                            'free', TransitionError)
+        self.assert_invalid(ResourceReply, Request.WAITING,
+                            'free', TransitionError)
 
     def test_preempt(self):
         # valid in every state, but only affects GRANTED requests
@@ -164,18 +184,20 @@ class TestTransitions(unittest.TestCase):
 
 
     def test_wait(self):
+        self.assert_invalid(ResourceReply, Request.CANCELED,
+                            'wait', TransitionError)
+        self.assert_invalid(ResourceReply, Request.CANCELING,
+                            'wait', TransitionError)
+        self.assert_invalid(ResourceReply, Request.GRANTED,
+                            'wait', TransitionError)
         self.assert_valid(ResourceReply, Request.NEW,
                           'wait', Request.WAITING)
+        self.assert_invalid(ResourceReply, Request.PREEMPTING,
+                            'wait', TransitionError)
         self.assert_valid(ResourceReply, Request.RESERVED,
                           'wait', Request.WAITING)
         self.assert_valid(ResourceReply, Request.WAITING,
                           'wait', Request.WAITING)
-
-        # should this be allowed, but not change status?
-        rq4 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_RESOURCE],
-                                    status=Request.CANCELING))
-        self.assertRaises(TransitionError, rq4.wait)
 
     ####################
     # request set tests
