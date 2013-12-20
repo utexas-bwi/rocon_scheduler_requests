@@ -32,6 +32,24 @@ class TestTransitions(unittest.TestCase):
     These tests do not require a running ROS core.
     """
 
+    ####################
+    # utility methods
+    ####################
+    def assert_valid(self, request_type, old_status,
+                     operation, new_status):
+        """
+        Assert that *request_type* with *old_status* accepts named
+        *operation*, yielding *new_status*.
+        """
+        rq = request_type(Request(id=unique_id.toMsg(TEST_UUID),
+                                  resources=[TEST_RESOURCE],
+                                  status=old_status))
+        getattr(rq, operation)()
+        self.assertEqual(rq.msg.status, new_status)
+
+    ####################
+    # request tests
+    ####################
     def test_constructor(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_WILDCARD],
@@ -94,67 +112,47 @@ class TestTransitions(unittest.TestCase):
         self.assertEqual(rq5.msg.status, Request.GRANTED)
         self.assertEqual(rq5.msg.resources, [TEST_RESOURCE])
 
-    def test_preempt(self):
-        rq1 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_RESOURCE],
-                                    status=Request.NEW))
-        rq1.preempt()
-        self.assertEqual(rq1.msg.status, Request.NEW)
-
-        rq2 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_RESOURCE],
-                                    status=Request.WAITING))
-        rq2.preempt()
-        self.assertEqual(rq2.msg.status, Request.WAITING)
-
-        rq3 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_RESOURCE],
-                                    status=Request.PREEMPTING))
-        rq3.preempt()
-        self.assertEqual(rq3.msg.status, Request.PREEMPTING)
-
-        rq4 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_RESOURCE],
-                                    status=Request.RESERVED))
-        rq4.preempt()
-        self.assertEqual(rq4.msg.status, Request.RESERVED)
-
-        rq5 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_WILDCARD],
-                                    status=Request.GRANTED))
-        rq5.preempt()
-        self.assertEqual(rq5.msg.status, Request.PREEMPTING)
-
     def test_cancel(self):
-        rq1 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
-                                      resources=[TEST_RESOURCE],
-                                      status=Request.GRANTED))
-        rq1.cancel()
-        self.assertEqual(rq1.msg.status, Request.CANCELING)
-
-        rq2 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
-                                      resources=[TEST_RESOURCE],
-                                      status=Request.WAITING))
-        rq2.cancel()
-        self.assertEqual(rq2.msg.status, Request.CANCELING)
-
-        rq3 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
-                                      resources=[TEST_RESOURCE],
-                                      status=Request.PREEMPTING))
-        rq3.cancel()
-        self.assertEqual(rq3.msg.status, Request.CANCELING)
-
-        rq4 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
-                                      resources=[TEST_RESOURCE],
-                                      status=Request.CANCELING))
-        self.assertEqual(rq3.msg.status, Request.CANCELING)
+        # should be valid in every state:
+        self.assert_valid(ResourceRequest, Request.CANCELED,
+                          'cancel', Request.CANCELED)
+        self.assert_valid(ResourceRequest, Request.CANCELING,
+                          'cancel', Request.CANCELING)
+        self.assert_valid(ResourceRequest, Request.GRANTED,
+                          'cancel', Request.CANCELING)
+        self.assert_valid(ResourceRequest, Request.NEW,
+                          'cancel', Request.CANCELING)
+        self.assert_valid(ResourceRequest, Request.PREEMPTING,
+                          'cancel', Request.CANCELING)
+        self.assert_valid(ResourceRequest, Request.RESERVED,
+                          'cancel', Request.CANCELING)
+        self.assert_valid(ResourceRequest, Request.WAITING,
+                          'cancel', Request.CANCELING)
 
     def test_free(self):
-        rq = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                   resources=[TEST_RESOURCE],
-                                   status=Request.CANCELING))
-        rq.free()
-        self.assertEqual(rq.msg.status, Request.CANCELED)
+        self.assert_valid(ResourceReply, Request.CANCELED,
+                          'free', Request.CANCELED)
+        self.assert_valid(ResourceReply, Request.CANCELING,
+                          'free', Request.CANCELED)
+        self.assert_valid(ResourceReply, Request.PREEMPTING,
+                          'free', Request.CANCELED)
+
+    def test_preempt(self):
+        # valid in every state, but only affects GRANTED requests
+        self.assert_valid(ResourceReply, Request.CANCELED,
+                          'preempt', Request.CANCELED)
+        self.assert_valid(ResourceReply, Request.CANCELING,
+                          'preempt', Request.CANCELING)
+        self.assert_valid(ResourceReply, Request.GRANTED,
+                          'preempt', Request.PREEMPTING)
+        self.assert_valid(ResourceReply, Request.NEW,
+                          'preempt', Request.NEW)
+        self.assert_valid(ResourceReply, Request.PREEMPTING,
+                          'preempt', Request.PREEMPTING)
+        self.assert_valid(ResourceReply, Request.RESERVED,
+                          'preempt', Request.RESERVED)
+        self.assert_valid(ResourceReply, Request.WAITING,
+                          'preempt', Request.WAITING)
 
     def test_validate(self):
         rq1 = ResourceRequest(Request(id=unique_id.toMsg(TEST_UUID),
@@ -166,23 +164,12 @@ class TestTransitions(unittest.TestCase):
 
 
     def test_wait(self):
-        rq1 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_RESOURCE],
-                                    status=Request.NEW))
-        rq1.wait()
-        self.assertEqual(rq1.msg.status, Request.WAITING)
-
-        rq2 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_RESOURCE],
-                                    status=Request.WAITING))
-        rq2.wait()
-        self.assertEqual(rq2.msg.status, Request.WAITING)
-
-        rq3 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_RESOURCE],
-                                    status=Request.RESERVED))
-        rq3.wait()
-        self.assertEqual(rq3.msg.status, Request.WAITING)
+        self.assert_valid(ResourceReply, Request.NEW,
+                          'wait', Request.WAITING)
+        self.assert_valid(ResourceReply, Request.RESERVED,
+                          'wait', Request.WAITING)
+        self.assert_valid(ResourceReply, Request.WAITING,
+                          'wait', Request.WAITING)
 
         # should this be allowed, but not change status?
         rq4 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
@@ -190,6 +177,9 @@ class TestTransitions(unittest.TestCase):
                                     status=Request.CANCELING))
         self.assertRaises(TransitionError, rq4.wait)
 
+    ####################
+    # request set tests
+    ####################
     def test_empty_request_set(self):
         rset = RequestSet([], RQR_UUID)
         self.assertIsNotNone(rset)
