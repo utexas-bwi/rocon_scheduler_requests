@@ -37,9 +37,9 @@ This module tracks resource request state transitions as messages flow
 between schedulers and requesters.
 
 As individual requests are passed back and forth between the original
-requester and the scheduler, they pass through some of the following
-state transitions.  The usual paths are shown with **bold**
-transitions:
+requester and the scheduler, they pass through several of these state
+transitions.  States created by the scheduler are gray, and
+transitions initiated by the requester are dashed:
 
 .. graphviz:: state_transitions.dot
 
