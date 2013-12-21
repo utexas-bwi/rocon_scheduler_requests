@@ -16,11 +16,7 @@ Contents:
    :maxdepth: 2
 
    README
-   common
-   exceptions
-   requester
-   scheduler
-   transitions
+   rocon_scheduler_requests
    CHANGELOG
 
 Indices and tables

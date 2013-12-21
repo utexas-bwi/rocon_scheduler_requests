@@ -33,15 +33,36 @@
 """
 .. module:: transitions
 
-This module tracks resource request state transitions as messages flow
-between schedulers and requesters.
+This module tracks resource request state transitions, which occur as
+`scheduler_msgs/Request`_ messages flow between schedulers and
+requesters.
 
-As individual requests are passed back and forth between the original
-requester and the scheduler, they pass through several of these state
-transitions.  States created by the scheduler are gray, and
-transitions initiated by the requester are dashed:
+.. warning::
+
+   Some of the ``scheduler_msgs.Request.status`` labels have changed,
+   and older scheduler_msgs_ releases use different names.  As an
+   interim work-around, this module provides a compatible Request
+   message which works with either message version.  Use it like
+   this::
+
+       from rocon_scheduler_requests.transitions import Request
+
+   Once all the released scheduler_msgs_ labels have been updated,
+   switch back to the usual message import::
+
+       from scheduler_msgs.msg import Request
+
+As individual ``Request`` messages are passed back and forth between
+the original requester and the scheduler, their ``status`` passes
+through several state transitions.  States created by the scheduler
+are gray, and transitions initiated by the requester are dashed:
 
 .. graphviz:: state_transitions.dot
+
+.. _scheduler_msgs:
+    http://wiki.ros.org/scheduler_msgs
+.. _`scheduler_msgs/Request`:
+    http://docs.ros.org/api/scheduler_msgs/html/msg/Request.html
 
 """
 
