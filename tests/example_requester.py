@@ -22,8 +22,8 @@ class ExampleRequester:
                 rospy.loginfo('Request queued: ' + str(rq.get_uuid()))
             elif rq.msg.status == Request.GRANTED:
                 rospy.loginfo('Request granted: ' + str(rq.get_uuid()))
-            elif rq.msg.status == Request.CANCELED:
-                rospy.loginfo('Request canceled: ' + str(rq.get_uuid()))
+            elif rq.msg.status == Request.CLOSED:
+                rospy.loginfo('Request closed: ' + str(rq.get_uuid()))
             elif rq.msg.status == Request.PREEMPTING:
                 rospy.loginfo('Request preempted: ' + str(rq.get_uuid()))
                 rq.cancel()     # release preempted resource immediately

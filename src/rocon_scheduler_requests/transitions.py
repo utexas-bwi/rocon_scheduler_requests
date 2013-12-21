@@ -76,27 +76,26 @@ from scheduler_msgs.msg import SchedulerRequests
 
 # temporarily provide status label backwards compatibility
 from scheduler_msgs.msg import Request
-if not hasattr(Request, 'CANCELED'):
+if not hasattr(Request, 'CLOSED'):
     # Define revised Request.status labels.
     # See: (robotics-in-concert/rocon_msgs#60)
-    Request.CANCELED = Request.RELEASED
     Request.CANCELING = Request.RELEASING
+    Request.CLOSED = Request.RELEASED
 
 from . import TransitionError, WrongRequestError
 
-# State transition merge table.
+## State transition merge table.
 #
-# This table is only used for merging scheduler and requester request
-# sets when a new message arrives.
+#  An immutable set of (old, new) status pairs.  All pairs in the
+#  table are considered valid state transitions.  Any others are not.
 #
-# An immutable set of (old, new) status pairs.  All pairs in the table
-# are considered valid state transitions.  Any others are not.
+#  This table is only used for merging scheduler and requester request
+#  sets when a new message arrives.  Data from the new message are
+#  ignored unless the corresponding transition appears here.
 #
 TRANS_TABLE = frozenset([
-    (Request.CANCELED, Request.CANCELED),
-
-    (Request.CANCELING, Request.CANCELED),
     (Request.CANCELING, Request.CANCELING),
+    (Request.CANCELING, Request.CLOSED),
 
     (Request.GRANTED, Request.CANCELING),
     (Request.GRANTED, Request.GRANTED),
@@ -107,8 +106,8 @@ TRANS_TABLE = frozenset([
     (Request.NEW, Request.PREEMPTING),
     (Request.NEW, Request.WAITING),
 
-    (Request.PREEMPTING, Request.CANCELED),
     (Request.PREEMPTING, Request.CANCELING),
+    (Request.PREEMPTING, Request.CLOSED),
     (Request.PREEMPTING, Request.PREEMPTING),
 
     (Request.RESERVED, Request.CANCELING),
@@ -142,8 +141,8 @@ class _EventTranitions:
 ##  Requester transitions:
 #
 EVENT_CANCEL = _EventTranitions('cancel', {
-    Request.CANCELED: Request.CANCELED,
     Request.CANCELING: Request.CANCELING,
+    Request.CLOSED: Request.CLOSED,
     Request.GRANTED: Request.CANCELING,
     Request.NEW: Request.CANCELING,
     Request.PREEMPTING: Request.CANCELING,
@@ -154,9 +153,9 @@ EVENT_CANCEL = _EventTranitions('cancel', {
 ##  Scheduler transitions:
 #
 EVENT_CLOSE = _EventTranitions('close', {
-    Request.CANCELED: Request.CANCELED,
-    Request.CANCELING: Request.CANCELED,
-    Request.PREEMPTING: Request.CANCELED,
+    Request.CANCELING: Request.CLOSED,
+    Request.CLOSED: Request.CLOSED,
+    Request.PREEMPTING: Request.CLOSED,
     })
 
 EVENT_GRANT = _EventTranitions('grant', {
@@ -167,8 +166,8 @@ EVENT_GRANT = _EventTranitions('grant', {
     })
 
 EVENT_PREEMPT = _EventTranitions('preempt', {
-    Request.CANCELED: Request.CANCELED,
     Request.CANCELING: Request.CANCELING,
+    Request.CLOSED: Request.CLOSED,
     Request.GRANTED: Request.PREEMPTING,
     Request.NEW: Request.NEW,
     Request.PREEMPTING: Request.PREEMPTING,
@@ -379,7 +378,7 @@ class ResourceReply(RequestBase):
         """
         if update is None:      # this request not mentioned in updates
             update = ResourceRequest(self.msg)
-            update.msg.status = Request.CANCELED
+            update.msg.status = Request.CLOSED
         elif update.get_uuid() != self.get_uuid():
             raise WrongRequestError('UUID does not match')
         if self._validate(update.msg.status):
@@ -611,8 +610,8 @@ class RequestSet:
         for rid, rq in self.requests.items():
             new_rq = updates.get(rid)
             if ((rq.msg.status == Request.CANCELING and
-                    new_rq.msg.status == Request.CANCELED)
-                    or (rq.msg.status == Request.CANCELED and
+                    new_rq.msg.status == Request.CLOSED)
+                    or (rq.msg.status == Request.CLOSED and
                         new_rq is None)):
                 del self.requests[rid]  # no longer needed
             else:

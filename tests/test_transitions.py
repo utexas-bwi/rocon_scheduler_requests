@@ -126,10 +126,10 @@ class TestTransitions(unittest.TestCase):
 
     def test_cancel(self):
         # should be valid in every state:
-        self.assert_valid(ResourceRequest, Request.CANCELED,
-                          'cancel', Request.CANCELED)
         self.assert_valid(ResourceRequest, Request.CANCELING,
                           'cancel', Request.CANCELING)
+        self.assert_valid(ResourceRequest, Request.CLOSED,
+                          'cancel', Request.CLOSED)
         self.assert_valid(ResourceRequest, Request.GRANTED,
                           'cancel', Request.CANCELING)
         self.assert_valid(ResourceRequest, Request.NEW,
@@ -142,16 +142,16 @@ class TestTransitions(unittest.TestCase):
                           'cancel', Request.CANCELING)
 
     def test_close(self):
-        self.assert_valid(ResourceReply, Request.CANCELED,
-                          'close', Request.CANCELED)
         self.assert_valid(ResourceReply, Request.CANCELING,
-                          'close', Request.CANCELED)
+                          'close', Request.CLOSED)
+        self.assert_valid(ResourceReply, Request.CLOSED,
+                          'close', Request.CLOSED)
         self.assert_invalid(ResourceReply, Request.GRANTED,
                             'close', TransitionError)
         self.assert_invalid(ResourceReply, Request.NEW,
                             'close', TransitionError)
         self.assert_valid(ResourceReply, Request.PREEMPTING,
-                          'close', Request.CANCELED)
+                          'close', Request.CLOSED)
         self.assert_invalid(ResourceReply, Request.RESERVED,
                             'close', TransitionError)
         self.assert_invalid(ResourceReply, Request.WAITING,
@@ -159,10 +159,10 @@ class TestTransitions(unittest.TestCase):
 
     def test_preempt(self):
         # valid in every state, but only affects GRANTED requests
-        self.assert_valid(ResourceReply, Request.CANCELED,
-                          'preempt', Request.CANCELED)
         self.assert_valid(ResourceReply, Request.CANCELING,
                           'preempt', Request.CANCELING)
+        self.assert_valid(ResourceReply, Request.CLOSED,
+                          'preempt', Request.CLOSED)
         self.assert_valid(ResourceReply, Request.GRANTED,
                           'preempt', Request.PREEMPTING)
         self.assert_valid(ResourceReply, Request.NEW,
@@ -180,13 +180,13 @@ class TestTransitions(unittest.TestCase):
                                       status=Request.NEW))
         self.assertTrue(rq1._validate(Request.GRANTED))
         self.assertTrue(rq1._validate(Request.PREEMPTING))
-        self.assertFalse(rq1._validate(Request.CANCELED))
+        self.assertFalse(rq1._validate(Request.CLOSED))
 
 
     def test_wait(self):
-        self.assert_invalid(ResourceReply, Request.CANCELED,
-                            'wait', TransitionError)
         self.assert_invalid(ResourceReply, Request.CANCELING,
+                            'wait', TransitionError)
+        self.assert_invalid(ResourceReply, Request.CLOSED,
                             'wait', TransitionError)
         self.assert_invalid(ResourceReply, Request.GRANTED,
                             'wait', TransitionError)
@@ -300,7 +300,7 @@ requests:
     def test_closed_merge(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_WILDCARD],
-                       status=Request.CANCELED)
+                       status=Request.CLOSED)
         rset = RequestSet([msg1], RQR_UUID, contents=ResourceReply)
         self.assertEqual(len(rset), 1)
         self.assertTrue(TEST_UUID in rset)
@@ -330,7 +330,7 @@ requests:
         # merge a canceled request: TEST_UUID should be deleted
         msg2 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_WILDCARD],
-                       status=Request.CANCELED)
+                       status=Request.CLOSED)
         rel_rset = RequestSet([msg2], RQR_UUID, contents=ResourceReply)
         rset.merge(rel_rset)
         self.assertEqual(len(rset), 0)
@@ -357,7 +357,7 @@ requests:
         # DIFF_UUID should not
         msg3 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_RESOURCE],
-                       status=Request.CANCELED)
+                       status=Request.CLOSED)
         rel_rset = RequestSet([msg3], RQR_UUID)
         rset.merge(rel_rset)
         self.assertEqual(len(rset), 1)
