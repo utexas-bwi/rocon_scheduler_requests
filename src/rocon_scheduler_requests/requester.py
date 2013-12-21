@@ -35,9 +35,6 @@
 
 Python interface for ROCON services making scheduler requests.
 
-This module provides a relatively simple API, not requiring detailed
-knowledge of scheduler request messages or state transitions.
-
 .. _`uuid_msgs/UniqueID`:
      http://ros.org/doc/api/uuid_msgs/html/msg/UniqueID.html
 .. _UUID: http://en.wikipedia.org/wiki/Uuid
