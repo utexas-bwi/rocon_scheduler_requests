@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """ Scheduler usage example. """
-import collections
+from collections import deque
 import rospy
 from scheduler_msgs.msg import Resource
 from rocon_scheduler_requests.transitions import Request
@@ -11,20 +11,20 @@ class ExampleScheduler:
 
     def __init__(self):
         rospy.init_node("example_scheduler")
-        self.avail = [                  # list of available robots
+        self.avail = deque([            # FIFO queue of available robots
             Resource(name='example_rapp',
                      platform_info='linux.precise.ros.turtlebot.roberto'),
             Resource(name='example_rapp',
                      platform_info='linux.precise.ros.turtlebot.marvin'),
-            ]
-        self.queue = collections.deque()
+            ])
+        self.queue = deque()            # FIFO queue of waiting requests
         self.sch = Scheduler(self.callback)
         rospy.spin()
 
     def allocate(self, requester_id, rq):
         """ Allocate requested resource, if available. """
         if len(self.avail) > 0:         # resources available?
-            rq.grant([self.avail.pop()])
+            rq.grant([self.avail.popleft()])
             rospy.loginfo('Request granted: ' + str(rq.get_uuid()))
         else:                           # nothing right now
             self.queue.append((requester_id, rq))
