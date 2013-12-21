@@ -16,6 +16,6 @@ digraph state_transitions {
    Preempting [style="filled", color="grey"]
    Preempting -> Canceling [label="cancel", style="dashed"]
    Canceling
-   Canceling -> Canceled [label="free"]
+   Canceling -> Canceled [label="close"]
    Canceled [peripheries=2, style="filled", color="grey"]
 }

@@ -69,7 +69,7 @@ class TestExampleRequester(unittest.TestCase):
                 rq.wait()
                 self.queue(rset.requester_id, rq)
             elif rq.msg.status == Request.CANCELING:
-                rq.free()
+                rq.close()
                 rospy.loginfo('Request canceled: ' + str(rq.get_uuid()))
                 self.number_of_requests -= 1
                 if self.number_of_requests <= 0:

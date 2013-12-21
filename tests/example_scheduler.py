@@ -49,7 +49,7 @@ class ExampleScheduler:
         """ Free the resource allocated for this request. """
         self.avail.append(rq.msg.resources[0])
         rospy.loginfo('Request canceled: ' + str(rq.get_uuid()))
-        rq.free()
+        rq.close()
         if len(self.queue) > 0:
             pair = self.queue.popleft()
             self.allocate(pair[0], pair[1])

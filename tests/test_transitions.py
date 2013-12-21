@@ -141,21 +141,21 @@ class TestTransitions(unittest.TestCase):
         self.assert_valid(ResourceRequest, Request.WAITING,
                           'cancel', Request.CANCELING)
 
-    def test_free(self):
+    def test_close(self):
         self.assert_valid(ResourceReply, Request.CANCELED,
-                          'free', Request.CANCELED)
+                          'close', Request.CANCELED)
         self.assert_valid(ResourceReply, Request.CANCELING,
-                          'free', Request.CANCELED)
+                          'close', Request.CANCELED)
         self.assert_invalid(ResourceReply, Request.GRANTED,
-                            'free', TransitionError)
+                            'close', TransitionError)
         self.assert_invalid(ResourceReply, Request.NEW,
-                            'free', TransitionError)
+                            'close', TransitionError)
         self.assert_valid(ResourceReply, Request.PREEMPTING,
-                          'free', Request.CANCELED)
+                          'close', Request.CANCELED)
         self.assert_invalid(ResourceReply, Request.RESERVED,
-                            'free', TransitionError)
+                            'close', TransitionError)
         self.assert_invalid(ResourceReply, Request.WAITING,
-                            'free', TransitionError)
+                            'close', TransitionError)
 
     def test_preempt(self):
         # valid in every state, but only affects GRANTED requests
@@ -297,7 +297,7 @@ requests:
         self.assertTrue(TEST_UUID in rset)
         self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
 
-    def test_freed_merge(self):
+    def test_closed_merge(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_WILDCARD],
                        status=Request.CANCELED)

@@ -153,7 +153,7 @@ EVENT_CANCEL = _EventTranitions('cancel', {
 
 ##  Scheduler transitions:
 #
-EVENT_FREE = _EventTranitions('free', {
+EVENT_CLOSE = _EventTranitions('close', {
     Request.CANCELED: Request.CANCELED,
     Request.CANCELING: Request.CANCELED,
     Request.PREEMPTING: Request.CANCELED,
@@ -333,12 +333,24 @@ class ResourceReply(RequestBase):
         #"""
         self.preempt()
 
-    def free(self):
-        """ Free up previously-assigned resources that were canceled.
+    def close(self):
+        """ Close resource request.
 
         :raises: :exc:`.TransitionError`
+
         """
-        self._transition(EVENT_FREE)
+        self._transition(EVENT_CLOSE)
+
+    def free(self):
+        ##   comment out docstring to remove from documentation:
+        #""" Free up previously-assigned resources that were canceled.
+        #
+        #:raises: :exc:`.TransitionError`
+        #
+        #.. deprecated:: 0.0.1
+        #   use :py:meth:`.close` instead.
+        #"""
+        self.close()
 
     def grant(self, resources):
         """ Grant some specific requested resources.
