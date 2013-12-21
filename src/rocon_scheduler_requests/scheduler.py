@@ -171,7 +171,8 @@ class Scheduler:
         rospy.loginfo('scheduler request topic: ' + self.topic)
         self.sub = rospy.Subscriber(self.topic,
                                     SchedulerRequests,
-                                    self._allocate_resources)
+                                    self._allocate_resources,
+                                    queue_size=1, tcp_nodelay=True)
         self.duration = rospy.Duration(1.0 / frequency)
         self.time_limit = self.duration * 4.0
         self.timer = rospy.Timer(self.duration, self._watchdog)

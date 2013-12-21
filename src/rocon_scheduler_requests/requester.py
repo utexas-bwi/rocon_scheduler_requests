@@ -147,7 +147,8 @@ class Requester:
         rospy.loginfo('ROCON requester feedback topic: ' + self.sub_topic)
         self.sub = rospy.Subscriber(self.sub_topic,
                                     SchedulerRequests,
-                                    self._feedback)
+                                    self._feedback,
+                                    queue_size=1, tcp_nodelay=True)
         self.pub = rospy.Publisher(self.pub_topic,
                                    SchedulerRequests,
                                    latch=True)
