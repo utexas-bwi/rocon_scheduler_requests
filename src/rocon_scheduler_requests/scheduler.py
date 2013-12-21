@@ -83,14 +83,11 @@ class _RequesterStatus:
         self.rset = RequestSet([], self.requester_id, contents=ResourceReply)
         """ All current scheduler responses for this requester. """
 
-        self.feedback_topic = common.feedback_topic(self.requester_id,
-                                                    self.sched.topic)
-        rospy.loginfo('requester feedback topic: ' + self.feedback_topic)
-
-        self.pub = rospy.Publisher(self.feedback_topic,
-                                   SchedulerRequests,
+        feedback_topic = common.feedback_topic(self.requester_id,
+                                               self.sched.topic)
+        rospy.loginfo('requester feedback topic: ' + feedback_topic)
+        self.pub = rospy.Publisher(feedback_topic, SchedulerRequests,
                                    latch=True)
-
         self.update(msg)        # set initial status
 
     def send_feedback(self):
@@ -169,8 +166,7 @@ class Scheduler:
         self.topic = topic
         """ Scheduler request topic name. """
         rospy.loginfo('scheduler request topic: ' + self.topic)
-        self.sub = rospy.Subscriber(self.topic,
-                                    SchedulerRequests,
+        self.sub = rospy.Subscriber(self.topic, SchedulerRequests,
                                     self._allocate_resources,
                                     queue_size=1, tcp_nodelay=True)
         self.duration = rospy.Duration(1.0 / frequency)
