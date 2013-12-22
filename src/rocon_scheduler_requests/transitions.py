@@ -72,9 +72,9 @@ from __future__ import absolute_import, print_function
 # Ros dependencies
 import rospy
 import unique_id
-from scheduler_msgs.msg import SchedulerRequests
 
 # temporarily provide status label backwards compatibility
+HAVE_REASON = True
 from scheduler_msgs.msg import Request
 if not hasattr(Request, 'CLOSED'):
     # Define revised Request.status labels.
@@ -89,7 +89,9 @@ if not hasattr(Request, 'CLOSED'):
     Request.UNAVAILABLE = 3
     Request.TIMEOUT = 4
     Request.reason = Request.NONE
+    HAVE_REASON = False
 
+from scheduler_msgs.msg import SchedulerRequests
 from . import TransitionError, WrongRequestError
 
 ## State transition merge table.
@@ -250,12 +252,8 @@ class RequestBase:
             raise TransitionError('invalid event ' + event.name
                                   + ' in state ' + str(self.msg.status))
         self.msg.status = new_status
-        if reason is not None:
-            try:
-                self.msg.reason = reason
-            except AttributeError:
-                # reason field not writable: old message format
-                pass
+        if reason is not None and HAVE_REASON:
+            self.msg.reason = reason
 
     def _validate(self, new_status):
         """
