@@ -117,7 +117,14 @@ class _RequesterStatus:
         :returns: True if *limit* exceeded, False if still active.
 
         """
-        return (event.current_real - self.last_msg_time) >= limit
+        lost = (event.current_real - self.last_msg_time) > limit
+        if lost:                # lost contact with this requester?
+            # Cancel every active request, so the callback will
+            # recover everything it had allocated.
+            self.rset.cancel_all(reason=Request.TIMEOUT)
+            self.sched.callback(self.rset)
+            # No one left to notify.
+        return lost
 
 
 class Scheduler:

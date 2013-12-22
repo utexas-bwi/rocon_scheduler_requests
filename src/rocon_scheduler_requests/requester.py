@@ -155,12 +155,7 @@ class Requester:
         :py:meth:`.send_requests` to notify the scheduler immediately.
 
         """
-        for rq in self.rset.values():
-            try:
-                rq.cancel()
-            except TransitionError:
-                rospy.logwarn('Unable to cancel request: '
-                              + str(rq.get_uuid()))
+        self.rset.cancel_all()
 
     def _feedback(self, msg):
         """ Scheduler feedback message handler. """

@@ -54,8 +54,9 @@ requesters.
 
 As individual ``Request`` messages are passed back and forth between
 the original requester and the scheduler, their ``status`` passes
-through several state transitions.  States created by the scheduler
-are gray, and transitions initiated by the requester are dashed:
+through several state transitions.  Gray states are created by the
+scheduler via solid transitions.  The dashed **cancel** transitions
+may be initiated by either the requester or the scheduler.
 
 .. graphviz:: state_transitions.dot
 
@@ -148,7 +149,7 @@ class _EventTranitions:
         self.trans = trans
         """ Dictionary of valid status transitions. """
 
-##  Requester transitions:
+##  Requester or scheduler transitions:
 #
 EVENT_CANCEL = _EventTranitions('cancel', {
     Request.CANCELING: Request.CANCELING,
@@ -217,6 +218,16 @@ class RequestBase:
         self.msg = msg
         """ Corresponding *scheduler_msgs/Request*. """
 
+    def cancel(self, reason=None):
+        """ Cancel a previously-requested resource.
+
+        :param reason: Reason code for cancellation, or ``None``.
+
+        *Always valid for requesters and schedulers.*
+
+        """
+        self._transition(EVENT_CANCEL, reason)
+
     def get_uuid(self):
         """ :returns: UUID of this request.
         :rtype: :class:`uuid.UUID`
@@ -278,14 +289,6 @@ class ResourceRequest(RequestBase):
     Provides all attributes defined for :class:`.RequestBase`.
 
     """
-    def cancel(self):
-        """ Cancel a previously-requested resource.
-
-        *Always valid for requesters.*
-
-        """
-        self._transition(EVENT_CANCEL)
-
     def _reconcile(self, update):
         """
         Merge scheduler updates with requester status.
@@ -557,6 +560,14 @@ class RequestSet:
         for rq in self.requests.values():
             rval += '\n  ' + str(rq)
         return rval
+
+    def cancel_all(self, reason=None):
+        """ Cancel every active request in this set.
+
+        :param reason: Reason code for mass cancellation, or ``None``.
+        """
+        for rq in self.requests.values():
+            rq.cancel(reason=reason)
 
     def get(self, uuid, default=None):
         """ Get request, if known.
