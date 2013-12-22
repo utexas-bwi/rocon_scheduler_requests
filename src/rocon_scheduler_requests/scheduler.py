@@ -98,8 +98,8 @@ class _RequesterStatus:
         :type msg: scheduler_msgs/SchedulerRequests
 
         """
+        self.last_msg_time = msg.header.stamp
         # Make a new RequestSet from this message
-        # :todo: make a constructor option for that.
         new_rset = RequestSet(msg.requests, self.requester_id,
                               contents=ResourceReply)
         if self.rset != new_rset:       # something new?
@@ -111,12 +111,13 @@ class _RequesterStatus:
     def timeout(self, limit, event):
         """ Check for requester timeout.
 
-        :returns: true if time limit exceeded.
-
-        :todo: handle this timeout
+        :param limit: Time *limit* since last message received.
+        :type limit: :class:`rospy.Duration`
+        :param event: Current :class:`rospy.TimerEvent` object.
+        :returns: True if *limit* exceeded, False if still active.
 
         """
-        return False            # test scaffolding
+        return (event.current_real - self.last_msg_time) >= limit
 
 
 class Scheduler:
