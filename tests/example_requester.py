@@ -25,7 +25,9 @@ class ExampleRequester:
             elif rq.msg.status == Request.CLOSED:
                 rospy.loginfo('Request closed: ' + str(rq.get_uuid()))
             elif rq.msg.status == Request.PREEMPTING:
-                rospy.loginfo('Request preempted: ' + str(rq.get_uuid()))
+                rospy.loginfo('Request preempted (reason='
+                              + str(rq.msg.reason) + '): '
+                              + str(rq.get_uuid()))
                 rq.cancel()     # release preempted resource immediately
 
     def periodic_update(self, event):

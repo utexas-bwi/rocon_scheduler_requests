@@ -66,7 +66,7 @@ class TestExampleRequester(unittest.TestCase):
         """
         for rq in rset.values():
             if rq.msg.status == Request.NEW:
-                rq.wait()
+                rq.wait(reason=Request.BUSY)
                 self.queue(rset.requester_id, rq)
             elif rq.msg.status == Request.CANCELING:
                 rq.close()

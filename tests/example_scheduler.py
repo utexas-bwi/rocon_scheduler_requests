@@ -28,7 +28,7 @@ class ExampleScheduler:
             rospy.loginfo('Request granted: ' + str(rq.get_uuid()))
         else:                           # nothing right now
             self.queue.append((requester_id, rq))
-            rq.wait()
+            rq.wait(reason=Request.BUSY)
             rospy.loginfo('Request queued: ' + str(rq.get_uuid()))
         try:                            # try to notify requester
             self.sch.notify(requester_id)

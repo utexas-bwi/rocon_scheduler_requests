@@ -34,7 +34,8 @@ class TestExampleScheduler(unittest.TestCase):
             elif rq.msg.status == Request.CLOSED:
                 print('Request closed: ' + str(rq.get_uuid()))
             elif rq.msg.status == Request.PREEMPTING:
-                print('Request preempted: ' + str(rq.get_uuid()))
+                print('Request preempted (reason=' + str(rq.msg.reason)
+                      + '): ' + str(rq.get_uuid()))
                 rq.cancel()     # release preempted resource immediately
 
     def periodic_update(self, event):
