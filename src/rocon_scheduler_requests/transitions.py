@@ -251,7 +251,11 @@ class RequestBase:
                                   + ' in state ' + str(self.msg.status))
         self.msg.status = new_status
         if reason is not None:
-            self.msg.reason = reason
+            try:
+                self.msg.reason = reason
+            except AttributeError:
+                # reason field not writable: old message format
+                pass
 
     def _validate(self, new_status):
         """
