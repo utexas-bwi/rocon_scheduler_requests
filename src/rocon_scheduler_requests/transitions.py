@@ -81,6 +81,14 @@ if not hasattr(Request, 'CLOSED'):
     # See: (robotics-in-concert/rocon_msgs#60)
     Request.CANCELING = Request.RELEASING
     Request.CLOSED = Request.RELEASED
+    # The reason code will not flow in messages, but it can be set
+    # and tested without throwing exceptions.
+    Request.NONE = 0
+    Request.PREEMPTED = 1
+    Request.BUSY = 2
+    Request.UNAVAILABLE = 3
+    Request.TIMEOUT = 4
+    Request.reason = Request.NONE
 
 from . import TransitionError, WrongRequestError
 
