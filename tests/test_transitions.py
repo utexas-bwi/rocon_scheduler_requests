@@ -36,28 +36,31 @@ class TestTransitions(unittest.TestCase):
     # utility methods
     ####################
     def assert_invalid(self, request_type, old_status,
-                       operation, exception):
+                       operation, exception, *args):
         """
         Assert that *request_type* with *old_status* rejects named
         *operation*, raising *exception*.
         """
         rq = request_type(Request(id=unique_id.toMsg(TEST_UUID),
-                                  resources=[TEST_RESOURCE],
+                                  resources=[TEST_WILDCARD],
                                   status=old_status))
         op_method = getattr(rq, operation)
-        self.assertRaises(exception, op_method)
+        self.assertRaises(exception, op_method, *args)
 
     def assert_valid(self, request_type, old_status,
-                     operation, new_status):
+                     operation, new_status, *args):
         """
         Assert that *request_type* with *old_status* accepts named
         *operation*, yielding *new_status*.
+
+        :returns: request contents after the *operation*.
         """
         rq = request_type(Request(id=unique_id.toMsg(TEST_UUID),
-                                  resources=[TEST_RESOURCE],
+                                  resources=[TEST_WILDCARD],
                                   status=old_status))
-        getattr(rq, operation)()
+        getattr(rq, operation)(*args)
         self.assertEqual(rq.msg.status, new_status)
+        return rq
 
     ####################
     # request tests
@@ -92,37 +95,6 @@ class TestTransitions(unittest.TestCase):
                          '    resources: \n'
                          '      linux.precise.ros.segbot.roberto/test_rapp\n'
                          '    status: 0')
-    def test_grant(self):
-        rq1 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_WILDCARD],
-                                    status=Request.NEW))
-        rq1.grant([TEST_RESOURCE])
-        self.assertEqual(rq1.msg.status, Request.GRANTED)
-        self.assertEqual(rq1.msg.resources, [TEST_RESOURCE])
-
-        rq2 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_WILDCARD],
-                                    status=Request.WAITING))
-        rq2.grant([TEST_RESOURCE])
-        self.assertEqual(rq2.msg.status, Request.GRANTED)
-        self.assertEqual(rq2.msg.resources, [TEST_RESOURCE])
-
-        rq3 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_WILDCARD],
-                                    status=Request.PREEMPTING))
-        self.assertRaises(TransitionError, rq3.grant, [TEST_RESOURCE])
-
-        rq4 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_WILDCARD],
-                                    status=Request.CANCELING))
-        self.assertRaises(TransitionError, rq4.grant, [TEST_RESOURCE])
-
-        rq5 = ResourceReply(Request(id=unique_id.toMsg(TEST_UUID),
-                                    resources=[TEST_WILDCARD],
-                                    status=Request.RESERVED))
-        rq5.grant([TEST_RESOURCE])
-        self.assertEqual(rq5.msg.status, Request.GRANTED)
-        self.assertEqual(rq5.msg.resources, [TEST_RESOURCE])
 
     def test_cancel(self):
         # should be valid in every state:
@@ -157,14 +129,37 @@ class TestTransitions(unittest.TestCase):
         self.assert_invalid(ResourceReply, Request.WAITING,
                             'close', TransitionError)
 
+    def test_grant(self):
+        self.assert_invalid(ResourceReply, Request.CANCELING,
+                               'grant', TransitionError, [TEST_RESOURCE])
+        self.assert_invalid(ResourceReply, Request.CLOSED,
+                               'grant', TransitionError, [TEST_RESOURCE])
+        self.assert_valid(ResourceReply, Request.GRANTED,
+                          'grant', Request.GRANTED, [TEST_RESOURCE])
+        rq = self.assert_valid(ResourceReply, Request.NEW,
+                               'grant', Request.GRANTED, [TEST_RESOURCE])
+        self.assertEqual(rq.msg.resources, [TEST_RESOURCE])
+        self.assertEqual(rq.msg.reason, Request.NONE)
+        self.assert_valid(ResourceReply, Request.RESERVED,
+                          'grant', Request.GRANTED, [TEST_RESOURCE])
+        self.assert_invalid(ResourceReply, Request.PREEMPTING,
+                               'grant', TransitionError, [TEST_RESOURCE])
+        self.assert_valid(ResourceReply, Request.WAITING,
+                          'grant', Request.GRANTED, [TEST_RESOURCE])
+
     def test_preempt(self):
         # valid in every state, but only affects GRANTED requests
         self.assert_valid(ResourceReply, Request.CANCELING,
                           'preempt', Request.CANCELING)
-        self.assert_valid(ResourceReply, Request.CLOSED,
-                          'preempt', Request.CLOSED)
-        self.assert_valid(ResourceReply, Request.GRANTED,
-                          'preempt', Request.PREEMPTING)
+        rq = self.assert_valid(ResourceReply, Request.CLOSED,
+                               'preempt', Request.CLOSED,
+                               Request.PREEMPTED)
+        self.assertNotEqual(rq.msg.reason, Request.PREEMPTED)
+        self.assertEqual(rq.msg.reason, Request.NONE)
+        rq = self.assert_valid(ResourceReply, Request.GRANTED,
+                               'preempt', Request.PREEMPTING,
+                               Request.PREEMPTED)
+        self.assertEqual(rq.msg.reason, Request.PREEMPTED)
         self.assert_valid(ResourceReply, Request.NEW,
                           'preempt', Request.NEW)
         self.assert_valid(ResourceReply, Request.PREEMPTING,
@@ -190,14 +185,17 @@ class TestTransitions(unittest.TestCase):
                             'wait', TransitionError)
         self.assert_invalid(ResourceReply, Request.GRANTED,
                             'wait', TransitionError)
-        self.assert_valid(ResourceReply, Request.NEW,
-                          'wait', Request.WAITING)
+        rq = self.assert_valid(ResourceReply, Request.NEW,
+                               'wait', Request.WAITING, Request.BUSY)
+        self.assertEqual(rq.msg.reason, Request.BUSY)
         self.assert_invalid(ResourceReply, Request.PREEMPTING,
                             'wait', TransitionError)
-        self.assert_valid(ResourceReply, Request.RESERVED,
-                          'wait', Request.WAITING)
-        self.assert_valid(ResourceReply, Request.WAITING,
-                          'wait', Request.WAITING)
+        rq = self.assert_valid(ResourceReply, Request.RESERVED,
+                               'wait', Request.WAITING, Request.UNAVAILABLE)
+        self.assertEqual(rq.msg.reason, Request.UNAVAILABLE)
+        rq = self.assert_valid(ResourceReply, Request.WAITING,
+                               'wait', Request.WAITING)
+        self.assertEqual(rq.msg.reason, Request.NONE)
 
     ####################
     # request set tests

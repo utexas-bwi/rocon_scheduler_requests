@@ -235,13 +235,13 @@ class RequestBase:
             retval += '\n      ' + res.platform_info + '/' + res.name
         return retval
 
-    def _transition(self, event):
+    def _transition(self, event, reason=None):
         """
         Update status for this resource request.
 
         :param event: Transition table for this type of *event*.
         :type event: :class:`._EventTranitions`
-
+        :param reason: Reason code for transition, or ``None``.
         :raises: :exc:`.TransitionError` if not a valid transition.
 
         """
@@ -250,6 +250,8 @@ class RequestBase:
             raise TransitionError('invalid event ' + event.name
                                   + ' in state ' + str(self.msg.status))
         self.msg.status = new_status
+        if reason is not None:
+            self.msg.reason = reason
 
     def _validate(self, new_status):
         """
@@ -344,7 +346,6 @@ class ResourceReply(RequestBase):
         """ Close resource request.
 
         :raises: :exc:`.TransitionError`
-
         """
         self._transition(EVENT_CLOSE)
 
@@ -370,7 +371,7 @@ class ResourceReply(RequestBase):
         resources really do fully satisfy this request.
 
         """
-        self._transition(EVENT_GRANT)
+        self._transition(EVENT_GRANT, reason=Request.NONE)
         self.msg.resources = resources
 
     def _reconcile(self, update):
@@ -396,14 +397,19 @@ class ResourceReply(RequestBase):
                     and update.msg.availability != rospy.Time()):
                 self.msg.availability = update.msg.availability
 
-    def preempt(self):
+    def preempt(self, reason=Request.NONE):
         """ Preempt a previously granted request.
+
+        :param reason: Reason for preemption.
+        :type reason: int
 
         Always valid for the scheduler, but has no effect unless the
         request was previously granted.
 
         """
-        self._transition(EVENT_PREEMPT)
+        if self.msg.status != Request.GRANTED:
+            reason = self.msg.reason    # leave reason unchanged
+        self._transition(EVENT_PREEMPT, reason)
 
     def reject(self):
         ##   comment out docstring to remove from documentation:
@@ -417,13 +423,15 @@ class ResourceReply(RequestBase):
         #"""
         self.preempt()
 
-    def wait(self):
+    def wait(self, reason=Request.NONE):
         """
         Put request in wait status until a suitable resource is available.
 
+        :param reason: Reason for waiting.
+        :type reason: int
         :raises: :exc:`.TransitionError`
         """
-        self._transition(EVENT_WAIT)
+        self._transition(EVENT_WAIT, reason)
 
 
 class RequestSet:
