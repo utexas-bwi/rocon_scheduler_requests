@@ -49,11 +49,12 @@ import unique_id
 
 # ROS messages
 from scheduler_msgs.msg import SchedulerRequests
+#from scheduler_msgs.msg import Request
+from .transitions import Request        # temporary substitute
 
 # internal modules
 from . import common
-from .transitions import RequestSet
-from .transitions import ResourceReply
+from .transitions import ResourceReply, RequestSet
 
 
 class _RequesterStatus:
