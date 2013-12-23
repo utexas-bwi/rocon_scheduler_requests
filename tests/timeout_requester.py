@@ -23,7 +23,9 @@ class TestTimeoutRequester(unittest.TestCase):
 
     def feedback(self, rset):
         """ Scheduler feedback function. """
+        rospy.logdebug('feedback callback:')
         for rq in rset.values():
+            rospy.logdebug('  ' + str(rq))
             if rq.msg.status == Request.WAITING:
                 rospy.loginfo('Request queued: ' + str(rq.get_uuid()))
             elif rq.msg.status == Request.GRANTED:
