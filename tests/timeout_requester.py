@@ -23,20 +23,20 @@ class TestTimeoutRequester(unittest.TestCase):
 
     def feedback(self, rset):
         """ Scheduler feedback function. """
-        rospy.logdebug('feedback callback:')
+        rospy.loginfo('feedback callback:')
         for rq in rset.values():
             rospy.logdebug('  ' + str(rq))
             if rq.msg.status == Request.WAITING:
-                rospy.loginfo('Request queued: ' + str(rq.get_uuid()))
+                rospy.loginfo('  request queued: ' + str(rq.get_uuid()))
             elif rq.msg.status == Request.GRANTED:
-                rospy.loginfo('Request granted: ' + str(rq.get_uuid()))
+                rospy.loginfo('  request granted: ' + str(rq.get_uuid()))
             elif rq.msg.status == Request.CLOSED:
-                rospy.loginfo('Request closed: ' + str(rq.get_uuid()))
+                rospy.loginfo('  request closed: ' + str(rq.get_uuid()))
             elif rq.msg.status == Request.PREEMPTING:
-                rospy.loginfo('Request preempted (reason='
+                rospy.loginfo('  request preempted (reason='
                               + str(rq.msg.reason) + '): '
                               + str(rq.get_uuid()))
-                rq.cancel()     # release preempted resource immediately
+                rq.cancel()     # release preempted resources immediately
 
     def periodic_update(self, event):
         """ Timer event handler for periodic request updates.
@@ -56,7 +56,7 @@ class TestTimeoutRequester(unittest.TestCase):
         bot = Resource(name='example_rapp',
                        platform_info='*.*.ros.turtlebot.*')
         rq_id = self.rqr.new_request([bot])
-        rospy.loginfo('new request: ' + str(rq_id))
+        rospy.loginfo('  new request: ' + str(rq_id))
         return rq_id
 
     def verify(self, rq_list):

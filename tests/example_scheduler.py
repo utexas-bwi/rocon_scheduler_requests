@@ -4,36 +4,24 @@ from collections import deque
 import rospy
 from scheduler_msgs.msg import Resource
 from rocon_scheduler_requests.transitions import Request
-from rocon_scheduler_requests import Scheduler
+from rocon_scheduler_requests import Scheduler, TransitionError
 
 
 class ExampleScheduler:
 
     def __init__(self):
         rospy.init_node("example_scheduler")
+        # simplifying assumptions: all requests want a single robot,
+        # and any of these will do:
         self.avail = deque([            # FIFO queue of available robots
             Resource(name='example_rapp',
                      platform_info='linux.precise.ros.turtlebot.roberto'),
             Resource(name='example_rapp',
                      platform_info='linux.precise.ros.turtlebot.marvin'),
             ])
-        self.queue = deque()            # FIFO queue of waiting requests
+        self.ready_queue = deque()      # FIFO queue of waiting requests
         self.sch = Scheduler(self.callback)
         rospy.spin()
-
-    def allocate(self, requester_id, rq):
-        """ Allocate requested resource, if available. """
-        if len(self.avail) > 0:         # resources available?
-            rq.grant([self.avail.popleft()])
-            rospy.loginfo('Request granted: ' + str(rq.get_uuid()))
-        else:                           # nothing right now
-            self.queue.append((requester_id, rq))
-            rq.wait(reason=Request.BUSY)
-            rospy.loginfo('Request queued: ' + str(rq.get_uuid()))
-        try:                            # try to notify requester
-            self.sch.notify(requester_id)
-        except KeyError:                # requester no longer there
-            pass
 
     def callback(self, rset):
         """ Scheduler request callback. """
@@ -41,18 +29,42 @@ class ExampleScheduler:
         for rq in rset.values():
             rospy.logdebug('  ' + str(rq))
             if rq.msg.status == Request.NEW:
-                self.allocate(rset.requester_id, rq)
+                self.queue(rset.requester_id, rq)
             elif rq.msg.status == Request.CANCELING:
                 self.free(rset.requester_id, rq)
+
+    def dispatch(self):
+        """ Grant any available resources to waiting requests. """
+        while len(self.ready_queue) > 0:
+            if len(self.avail) == 0:    # no resources available?
+                return
+            resource = self.avail.popleft()
+            requester_id, rq = self.ready_queue.popleft()
+            try:                        # grant request & notify requester
+                rq.grant([resource])
+                self.sch.notify(requester_id)
+                rospy.loginfo('Request granted: ' + str(rq.get_uuid()))
+            except (TransitionError, KeyError):
+                # request no longer active or requester missing?
+                # Put resource back at the front of the queue.
+                self.avail.appendleft(resource)
 
     def free(self, requester_id, rq):
         """ Free the resource allocated for this request. """
         self.avail.append(rq.msg.resources[0])
         rospy.loginfo('Request canceled: ' + str(rq.get_uuid()))
         rq.close()
-        if len(self.queue) > 0:
-            pair = self.queue.popleft()
-            self.allocate(pair[0], pair[1])
+        self.dispatch()                 # grant waiting requests
+
+    def queue(self, requester_id, rq):
+        """ Add request to ready queue, making it wait. """
+        try:
+            rq.wait(reason=Request.BUSY)
+        except TransitionError:         # request no longer active?
+            return
+        self.ready_queue.append((requester_id, rq))
+        rospy.loginfo('Request queued: ' + str(rq.get_uuid()))
+        self.dispatch()
 
 if __name__ == '__main__':
     node = ExampleScheduler()
