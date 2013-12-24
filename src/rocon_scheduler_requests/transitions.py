@@ -291,7 +291,7 @@ class ResourceRequest(RequestBase):
     """
     def _reconcile(self, update):
         """
-        Merge scheduler updates with requester status.
+        Reconcile scheduler updates with requester status.
 
         :param update: Latest information for this request, or
                        ``None`` if no longer present.
@@ -381,7 +381,7 @@ class ResourceReply(RequestBase):
 
     def _reconcile(self, update):
         """
-        Merge updated request with current scheduler status.
+        Reconcile updated request with current scheduler status.
 
         :param update: Latest information for this request, or
                        ``None`` if no longer present.
@@ -444,9 +444,11 @@ class RequestSet:
     This class is a container for all the resource requests or
     responses for a single requester.  It acts like a dictionary.
 
-    :param requests: List of ``Request`` messages, typically from the
-        ``requests`` component of a ``SchedulerRequests`` message.
-    :param requester_id: (:class:`uuid.UUID`) Unique ID this requester.
+    :param reqs: Either a ``SchedulerRequests`` message or a list of
+        ``Request`` messages, like the ``requests`` component of a
+        ``SchedulerRequests`` message.
+    :param requester_id: (:class:`uuid.UUID`) Unique ID this requester
+        or ``None``.
     :param contents: Class from which to instantiate set members.
 
     :class:`.RequestSet` supports these standard container operations:
@@ -495,14 +497,26 @@ class RequestSet:
 
     """
 
-    def __init__(self, requests, requester_id, contents=ResourceRequest):
+    def __init__(self, reqs, requester_id=None, contents=ResourceRequest):
         """ Constructor. """
         self.requester_id = requester_id
         """ :class:`uuid.UUID` of this requester. """
         self.contents = contents
         """ Type of objects this request set contains. """
+        self.stamp = rospy.Time()       # zero time stamp
+        """ ROS time (:class:`rospy.Time`) of last update, or time zero. """
+
+        # reqs is either a SchedulerRequests message, or a list of
+        # Request messages.
+        if isinstance(reqs, SchedulerRequests):
+            self.stamp = reqs.header.stamp
+            self.requester_id = unique_id.fromMsg(reqs.requester)
+            # Reset *reqs* to list of requests from the message.
+            reqs = reqs.requests
+
         self.requests = {}
-        for msg in requests:
+        """ Dictionary of active requests. """
+        for msg in reqs:
             rq = self.contents(msg)
             self.requests[rq.get_uuid()] = rq
 

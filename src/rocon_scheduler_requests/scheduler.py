@@ -101,8 +101,7 @@ class _RequesterStatus:
         """
         self.last_msg_time = msg.header.stamp
         # Make a new RequestSet from this message
-        new_rset = RequestSet(msg.requests, self.requester_id,
-                              contents=ResourceReply)
+        new_rset = RequestSet(msg, contents=ResourceReply)
         if self.rset != new_rset:       # something new?
             self.rset.merge(new_rset)
             self.sched.callback(self.rset)

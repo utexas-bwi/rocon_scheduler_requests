@@ -162,8 +162,7 @@ class Requester:
     def _feedback(self, msg):
         """ Scheduler feedback message handler. """
         prev_rset = copy.deepcopy(self.rset)
-        new_rset = RequestSet(msg.requests, self.requester_id)
-        self.rset.merge(new_rset)
+        self.rset.merge(RequestSet(msg))
 
         if self.rset != prev_rset:      # anything changed?
 

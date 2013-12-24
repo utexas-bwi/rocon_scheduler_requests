@@ -203,9 +203,17 @@ class TestTransitions(unittest.TestCase):
         if HAVE_REASON:
             self.assertEqual(rq.msg.reason, Request.NONE)
 
+
+class TestRequestSets(unittest.TestCase):
+    """Unit tests for scheduler request state transitions.
+
+    These tests do not require a running ROS core.
+    """
+
     ####################
     # request set tests
     ####################
+
     def test_empty_request_set(self):
         rset = RequestSet([], RQR_UUID)
         self.assertIsNotNone(rset)
@@ -274,6 +282,33 @@ requests:
         self.assertEqual(rset.get(DIFF_UUID), rset[DIFF_UUID])
         self.assertTrue(rset == RequestSet([msg1, msg2], RQR_UUID))
         self.assertTrue(rset == RequestSet([msg2, msg1], RQR_UUID))
+        self.assertTrue(rset != RequestSet([msg1], RQR_UUID))
+        self.assertTrue(rset != RequestSet([msg2], RQR_UUID))
+        self.assertTrue(rset != RequestSet([], RQR_UUID))
+        rs2 = copy.deepcopy(rset)
+        self.assertTrue(rset == rs2)
+        self.assertFalse(rset != rs2)
+        rs2[TEST_UUID]._transition(EVENT_GRANT)
+        self.assertTrue(rset != rs2)
+        self.assertFalse(rset == rs2)
+
+    def test_request_set_from_scheduler_requests(self):
+        msg1 = Request(id=unique_id.toMsg(TEST_UUID),
+                       resources=[TEST_WILDCARD])
+        msg2 = Request(id=unique_id.toMsg(DIFF_UUID),
+                       resources=[TEST_RESOURCE])
+        schreq = SchedulerRequests(requester=unique_id.toMsg(RQR_UUID),
+                                   requests=[msg1, msg2])
+        rset = RequestSet(schreq)
+        self.assertEqual(len(rset), 2)
+        self.assertTrue(TEST_UUID in rset)
+        self.assertTrue(DIFF_UUID in rset)
+        self.assertEqual(rset[TEST_UUID].msg, msg1)
+        self.assertEqual(rset[DIFF_UUID].msg, msg2)
+        self.assertEqual(rset.get(TEST_UUID), rset[TEST_UUID])
+        self.assertEqual(rset.get(DIFF_UUID), rset[DIFF_UUID])
+        self.assertTrue(rset == RequestSet(schreq))
+        self.assertTrue(rset == RequestSet(schreq, RQR_UUID))
         self.assertTrue(rset != RequestSet([msg1], RQR_UUID))
         self.assertTrue(rset != RequestSet([msg2], RQR_UUID))
         self.assertTrue(rset != RequestSet([], RQR_UUID))
@@ -400,6 +435,9 @@ requests:
 
 if __name__ == '__main__':
     import rosunit
-    rosunit.unitrun('scheduler_request_transitions',
+    rosunit.unitrun('rocon_scheduler_requests',
                     'test_transitions',
                     TestTransitions)
+    rosunit.unitrun('rocon_scheduler_requests',
+                    'test_request_sets',
+                    TestRequestSets)
