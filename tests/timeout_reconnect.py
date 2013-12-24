@@ -96,31 +96,28 @@ class TestTimeoutRequester(unittest.TestCase):
     def step4(self):
         rospy.loginfo('Step 4')
         self.verify([self.rq1, self.rq3, self.rq4])
-
-        # save requester ID and request set
-        self.requester_id = self.rqr.requester_id
-        self.rset = self.rqr.rset
-        del self.rqr                    # disconnect requester
-        self.wait_cycles = 4            # cycles to wait
+        rospy.loginfo('disconnect requester')
+        self.rqr.unregister()           # disconnect topics
+        self.wait_cycles = 0            # cycle count
         self.next_step = self.step5
 
     def step5(self):
-        rospy.loginfo('Step 5.' + str(5 - self.wait_cycles))
-        self.wait_cycles -= 1
-        if self.wait_cycles > 0:        # wait some more?
+        self.wait_cycles += 1
+        rospy.loginfo('Step 5.' + str(self.wait_cycles))
+        if self.wait_cycles < 12:       # not done waiting?
             return
 
         # reconnect requester using the same UUID
         rospy.loginfo('reconnect requester')
-        self.rqr = Requester(self.feedback, frequency=1.0,
-                             uuid=self.requester_id)
-        self.rqr.rset = self.rset       # restore former request set
+        self.rqr._set_timer()               # restart heartbeat
         self.rq5 = self.request_turtlebot() # make a new request
+        self.rqr.send_requests()
         self.next_step = self.step6
 
     def step6(self):
         rospy.loginfo('Step 6')
-        self.verify([self.rq5])
+        self.assertTrue(self.rq5 in self.rqr.rset)
+        #self.verify([self.rq5])
         self.next_step = None           # done
 
 

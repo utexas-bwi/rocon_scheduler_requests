@@ -139,12 +139,14 @@ class Requester:
         """ Default for new requests' priorities if none specified. """
 
         self.feedback = feedback        # requester feedback
-        sub_topic = common.feedback_topic(uuid, topic)
-        rospy.loginfo('ROCON requester feedback topic: ' + sub_topic)
-        self.sub = rospy.Subscriber(sub_topic, SchedulerRequests,
+        self.pub_topic = topic
+        self.sub_topic = common.feedback_topic(uuid, topic)
+        rospy.loginfo('ROCON requester feedback topic: ' + self.sub_topic)
+        self.sub = rospy.Subscriber(self.sub_topic, SchedulerRequests,
                                     self._feedback,
                                     queue_size=1, tcp_nodelay=True)
-        self.pub = rospy.Publisher(topic, SchedulerRequests, latch=True)
+        self.pub = rospy.Publisher(self.pub_topic, SchedulerRequests,
+                                   latch=True)
         self.time_delay = rospy.Duration(1.0 / frequency)
         self._set_timer()
 
@@ -179,7 +181,8 @@ class Requester:
         current request set to the scheduler.
 
         """
-        self.send_requests()
+        if self.timer:
+            self.send_requests()
 
     def new_request(self, resources, priority=None, uuid=None,
                     reservation=rospy.Time(),
@@ -254,3 +257,10 @@ class Requester:
             #                         self._heartbeat,
             #                         oneshot=True)
             self.timer = rospy.Timer(self.time_delay, self._heartbeat)
+
+    def unregister(self):
+        """ Disconnect from scheduler. """
+        self.timer.shutdown()
+        self.timer = None
+        #self.pub.unregister()
+        #self.sub.unregister()
