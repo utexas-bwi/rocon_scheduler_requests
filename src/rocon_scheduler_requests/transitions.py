@@ -450,6 +450,8 @@ class RequestSet:
     :param requester_id: (:class:`uuid.UUID`) Unique ID this requester
         or ``None``.
     :param contents: Class from which to instantiate set members.
+    :raises: :exc:`TypeError` if the *requester_id* is not specified
+        explicitly or as part of a ``SchedulerRequests`` message.
 
     :class:`.RequestSet` supports these standard container operations:
 
@@ -513,6 +515,8 @@ class RequestSet:
             self.requester_id = unique_id.fromMsg(reqs.requester)
             # Reset *reqs* to list of requests from the message.
             reqs = reqs.requests
+        if self.requester_id is None:
+            raise TypeError('Requester ID missing.')
 
         self.requests = {}
         """ Dictionary of active requests. """

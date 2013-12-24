@@ -215,6 +215,8 @@ class TestRequestSets(unittest.TestCase):
     ####################
 
     def test_empty_request_set(self):
+        self.assertRaises(TypeError, RequestSet)
+        self.assertRaises(TypeError, RequestSet, [])
         rset = RequestSet([], RQR_UUID)
         self.assertIsNotNone(rset)
         self.assertEqual(len(rset), 0)
