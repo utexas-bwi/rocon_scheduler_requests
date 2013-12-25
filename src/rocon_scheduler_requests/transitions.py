@@ -95,6 +95,10 @@ if not hasattr(Request, 'CLOSED'):
 from scheduler_msgs.msg import SchedulerRequests
 from . import TransitionError, WrongRequestError
 
+# Starting and terminal request states:
+STARTING_STATES = frozenset([Request.NEW, Request.RESERVED])
+TERMINAL_STATES = frozenset([Request.CLOSED])
+
 ## State transition merge table.
 #
 #  An immutable set of (old, new) status pairs.  All pairs in the
@@ -586,6 +590,20 @@ class RequestSet:
         """
         for rq in self.requests.values():
             rq.cancel(reason=reason)
+
+    def cancel_out_of_date(self, reason=None):
+        """ Cancel every out-of-date request in this set.
+
+        Only requests in a starting state are preserved.  This is done
+        whenever a requester first connects to the scheduler.  If it
+        presents requests that had previously been granted or
+        preempted, they will be canceled and then closed.
+
+        :param reason: Reason code for mass cancellation, or ``None``.
+        """
+        for rq in self.requests.values():
+            if rq.msg.status not in STARTING_STATES:
+                rq.cancel(reason=reason)
 
     def get(self, uuid, default=None):
         """ Get request, if known.

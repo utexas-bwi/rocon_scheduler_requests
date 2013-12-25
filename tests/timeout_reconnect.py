@@ -116,8 +116,7 @@ class TestTimeoutRequester(unittest.TestCase):
 
     def step6(self):
         rospy.loginfo('Step 6')
-        self.assertTrue(self.rq5 in self.rqr.rset)
-        #self.verify([self.rq5])
+        self.verify([self.rq5])
         self.next_step = None           # done
 
 

@@ -73,20 +73,24 @@ class _RequesterStatus:
 
     def __init__(self, sched, msg):
         """ Constructor. """
-
+        self.last_msg_time = msg.header.stamp
         self.sched = sched
-        """ Scheduler for this requester. """
+        """ Scheduler serving this requester. """
         self.requester_id = unique_id.fromMsg(msg.requester)
         """ :class:`uuid.UUID` of this requester. """
-        self.rset = RequestSet([], self.requester_id, contents=ResourceReply)
-        """ All current scheduler responses for this requester. """
+        self.rset = RequestSet(msg, contents=ResourceReply)
+        """ All active requests for this requester. """
 
         feedback_topic = common.feedback_topic(self.requester_id,
                                                self.sched.topic)
         rospy.loginfo('requester feedback topic: ' + feedback_topic)
         self.pub = rospy.Publisher(feedback_topic, SchedulerRequests,
                                    latch=True)
-        self.update(msg)        # set initial status
+
+        # Cancel any out-of-date requests the requester had lying around.
+        self.rset.cancel_out_of_date(reason=Request.TIMEOUT)
+        self.sched.callback(self.rset)  # handle initial message
+        self.send_feedback()
 
     def send_feedback(self):
         """ Send feedback message to requester. """
