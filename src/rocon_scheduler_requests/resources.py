@@ -45,10 +45,23 @@ This module tracks resources and their allocation.  The ROS
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import uuid
+from scheduler_msgs.msg import Resource
+
 ## Resource states:
 AVAILABLE = 0
 ALLOCATED = 1
 MISSING = 2
+
+
+class ResourceNotAvailableError(Exception):
+    """ Error exception: resource not available. """
+    pass
+
+
+class ResourceNotOwnedError(Exception):
+    """ Error exception: resource not owned. """
+    pass
 
 
 class RoconResource:
@@ -70,15 +83,19 @@ class RoconResource:
 
        :returns: String representation of this resource request.
 
+    These attributes are also provided:
+
     """
     def __init__(self, msg, status=AVAILABLE, request_id=None):
         """ Constructor. """
         self.msg = msg
         """ Corresponding *scheduler_msgs/Resource*. """
+        self.owner = request_id
+        """ :class:`uuid.UUID` of request to which this resource is
+        currently assigned, or ``None``.
+        """
         self.status = status
         """ Current status of this resource. """
-        self.request_id = request_id
-        """ UUID of request to which this resource is currently assigned."""
 
     def __hash__(self):
         """ :returns: hash value for this resource. """
@@ -88,11 +105,40 @@ class RoconResource:
         """ Format resource into a human-readable string. """
         return msg.platform_info + '/' + msg.name
 
+    def allocate(self, request_id):
+        """ Allocate this resource.
+
+        :param request_id: New owner of this resource.
+        :type request_id: :class:`uuid.UUID`
+
+        :raises: :exc:`.ResourceNotAvailableError` if not available
+        """
+        if (self.status != AVAILABLE):
+            raise ResourceNotAvailableError('resource not available: '
+                                            + str(self))
+        assert self.owner is None
+        self.owner = request_id
+        self.status = ALLOCATED
+
+    def release(self, request_id):
+        """ Release this resource.
+
+        :param request_id: Owning request.
+        :type request_id: :class:`uuid.UUID`
+
+        :raises: :exc:`.ResourceNotOwnedError` if not available
+        """
+        if (self.owner != request_id or request_id is None):
+            raise ResourceNotOwnedError('resource not owned by '
+                                        + str(request_id) + ': ' + str(self))
+        self.owner = None
+        if self.status == ALLOCATED:    # not gone missing?
+            self.status = AVAILABLE
 
 class ResourceSet:
     """
-    This class is a container for resources known to the scheduler.
-    It acts like a dictionary.
+    This class is a container for :class:`.RoconResource` objects
+    known to the scheduler.  It acts like a dictionary.
 
     :param resource_list: An optional list of ``Resource`` messages,
         like the ``resources`` component of a ``scheduler_msgs/Request``
@@ -111,7 +157,7 @@ class ResourceSet:
 
     .. describe:: resources[res] = msg
 
-       assign a RoconResource for this *res*.
+       Assign a :class:`.RoconResource` for this *res*.
 
        :param res: (str) ROCON name of the resource.
        :param msg: (``scheduler_msgs/Resource``) message to add.
