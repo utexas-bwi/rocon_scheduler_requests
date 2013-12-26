@@ -99,11 +99,11 @@ class RoconResource:
 
     def __hash__(self):
         """ :returns: hash value for this resource. """
-        return str(self)
+        return hash(str(self))
 
     def __str__(self):
         """ Format resource into a human-readable string. """
-        return msg.platform_info + '/' + msg.name
+        return self.msg.platform_info + '/' + self.msg.name
 
     def allocate(self, request_id):
         """ Allocate this resource.
@@ -134,6 +134,7 @@ class RoconResource:
         self.owner = None
         if self.status == ALLOCATED:    # not gone missing?
             self.status = AVAILABLE
+
 
 class ResourceSet:
     """
@@ -183,4 +184,22 @@ class ResourceSet:
         """ Dictionary of known :class:`.RoconResource` objects. """
         for res in resource_list:
             rocon_res = RoconResource(res)
-            resources[hash(rocon_res)] = rocon_res
+            self.resources[hash(rocon_res)] = rocon_res
+
+    def __eq__(self, other):
+        """ ResourceSet equality operator. """
+        if set(self.resources.keys()) != set(other.resources.keys()):
+            return False        # different resources hash IDs
+        for res_id, res in self.resources.items():
+            ## this does not work:
+            if res.msg != other[res_id].msg:
+                return False    # contents of some request changed
+        return True
+
+    def __len__(self):
+        """ Number of resources. """
+        return len(self.resources)
+
+    def __ne__(self, other):
+        """ ResourceSet != operator. """
+        return not self == other
