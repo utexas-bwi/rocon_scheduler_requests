@@ -37,6 +37,7 @@ This module tracks resources and their allocation.  The ROS
 `scheduler_msgs/Resource`_ message describes resources used by the
 `Robotics in Concert`_ (ROCON) project.
 
+.. _ROCON: http://www.robotconcert.org/wiki/Main_Page
 .. _`Robotics in Concert`: http://www.robotconcert.org/wiki/Main_Page
 .. _`scheduler_msgs/Resource`:
     http://docs.ros.org/api/scheduler_msgs/html/msg/Resource.html
@@ -46,12 +47,27 @@ This module tracks resources and their allocation.  The ROS
 from __future__ import absolute_import, print_function, unicode_literals
 
 import uuid
+import unique_id
 from scheduler_msgs.msg import Resource
 
 ## Resource states:
 AVAILABLE = 0
 ALLOCATED = 1
 MISSING = 2
+
+
+def rocon_name(msg):
+    """ Generate standard ROCON resource name from a message.
+
+    :param msg: ``scheduler_msgs/Resource`` message.
+    :returns: canonical ROCON name for this resource.
+    :rtype: str
+
+    The canonical name uniquely describes each resource within a ROCON_
+    Concert.
+
+    """
+    return 'rocon:///' + msg.platform_info
 
 
 class ResourceNotAvailableError(Exception):
@@ -66,7 +82,7 @@ class ResourceNotOwnedError(Exception):
 
 class RoconResource:
     """
-    Base class for tracking the status of a single ROCON resource.
+    Base class for tracking the status of a single ROCON_ resource.
 
     :param msg: ROCON scheduler resource message.
     :type msg: scheduler_msgs/Resource
@@ -77,11 +93,11 @@ class RoconResource:
 
     .. describe:: hash(res)
 
-       :returns: Hash key for this resource request.
+       :returns: Hash key for this resource.
 
     .. describe:: str(res)
 
-       :returns: String representation of this resource request.
+       :returns: String representation of this :class:`.RoconResource`.
 
     These attributes are also provided:
 
@@ -99,11 +115,16 @@ class RoconResource:
 
     def __hash__(self):
         """ :returns: hash value for this resource. """
-        return hash(str(self))
+        return hash(self.rocon_name())
 
     def __str__(self):
         """ Format resource into a human-readable string. """
-        return self.msg.platform_info + '/' + self.msg.name
+        remaps = ''
+        for remapping in self.msg.remappings:
+            remaps += '\n    ' + str(remapping)
+        return (self.rocon_name() + '\n  rapp: ' + self.msg.name
+                + '\n  id: ' + unique_id.toHexString(self.msg.id)
+                + '\n  remappings:' + remaps)
 
     def allocate(self, request_id):
         """ Allocate this resource.
@@ -135,6 +156,15 @@ class RoconResource:
         if self.status == ALLOCATED:    # not gone missing?
             self.status = AVAILABLE
 
+    def rocon_name(self):
+        """ Generate standard ROCON_ resource name for this message.
+
+        :returns: canonical ROCON name for this resource.
+        :rtype: str
+
+        """
+        return rocon_name(self.msg)
+
 
 class ResourceSet:
     """
@@ -153,27 +183,29 @@ class ResourceSet:
 
     .. describe:: resources[key]
 
-       :returns: The item corresponding to *key*.
+       :param key: (str) A ROCON resource name.
+       :returns: The :class:`RoconResource` corresponding to *key*.
        :raises: :exc:`KeyError` if no such *key*.
 
-    .. describe:: resources[key] = resource
+    .. describe:: resources[key] = res
 
-       Assign a :class:`.RoconResource` for this *key*.
+       Assign a :class:`.RoconResource` to this *key*.
 
-       :param key: (str) ROCON name of the resource.
-       :param resource: (``scheduler_msgs/Resource``) message to add.
+       :param key: (str) A ROCON resource name.
+       :param res: Resource to add.
+       :type res: :class:`.RoconResource` or ``scheduler_msgs/Resource``
 
     .. describe:: str(resources)
 
        :returns: String representation of :class:`.ResourceSet`.
 
-    .. describe:: res in resources
+    .. describe:: key in resources
 
-       :returns: ``True`` if *resources* has a key *res*, else ``False``.
+       :returns: ``True`` if *resources* contains *key*, else ``False``.
 
-    .. describe:: res not in resources
+    .. describe:: key not in resources
 
-       Equivalent to ``not res in resources``.
+       Equivalent to ``not key in resources``.
 
     These attributes are also provided:
 
