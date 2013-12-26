@@ -186,6 +186,10 @@ class ResourceSet:
             rocon_res = RoconResource(res)
             self.resources[hash(rocon_res)] = rocon_res
 
+    def __contains__(self, res):
+        """ Resource set membership. """
+        return hash(res) in self.resources
+
     def __eq__(self, other):
         """ ResourceSet equality operator. """
         if set(self.resources.keys()) != set(other.resources.keys()):
@@ -195,6 +199,15 @@ class ResourceSet:
             if res.msg != other[res_id].msg:
                 return False    # contents of some request changed
         return True
+
+    def __getitem__(self, key):
+        """
+        :param key: Key of desired resource.
+
+        :returns: named item.
+        :raises: :exc:`KeyError` if no such request
+        """
+        return self.resources[key]
 
     def __len__(self):
         """ Number of resources. """
