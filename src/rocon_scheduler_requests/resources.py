@@ -151,17 +151,17 @@ class ResourceSet:
 
        :returns: The number of resources in the set.
 
-    .. describe:: resources[res]
+    .. describe:: resources[key]
 
-       :returns: The item corresponding to *res*.
-       :raises: :exc:`KeyError` if no such *res*.
+       :returns: The item corresponding to *key*.
+       :raises: :exc:`KeyError` if no such *key*.
 
-    .. describe:: resources[res] = msg
+    .. describe:: resources[key] = resource
 
-       Assign a :class:`.RoconResource` for this *res*.
+       Assign a :class:`.RoconResource` for this *key*.
 
-       :param res: (str) ROCON name of the resource.
-       :param msg: (``scheduler_msgs/Resource``) message to add.
+       :param key: (str) ROCON name of the resource.
+       :param resource: (``scheduler_msgs/Resource``) message to add.
 
     .. describe:: str(resources)
 
