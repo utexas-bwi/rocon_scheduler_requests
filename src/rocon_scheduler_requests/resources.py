@@ -62,14 +62,23 @@ def rocon_name(res):
 
     :param res: :class:`.RoconResource`, ``scheduler_msgs/Resource``
         message, or other resource representation.
-    :returns: canonical ROCON name for this resource.
+    :returns: ROCON name for this resource.
     :rtype: str
 
-    The canonical name uniquely describes each resource within a ROCON_
-    Concert.
+    A fully resolved canonical name uniquely describes each resource
+    within a ROCON_ Concert.  Some requests may match multiple
+    resources by embedding regular expression syntax in the name.
+
+    TODO: If the *platform_info* is not a ROCON name starting with
+    'rocon://', assume it may include bash wildcard syntax and convert
+    that to an equivalent Python regular expression.
 
     """
-    return 'rocon:///' + res.platform_info
+    retval = res.platform_info
+    if retval[0:8] != 'rocon://':
+        retval = 'rocon:///' + retval
+        # :todo: convert old wildcard syntax to a regular expression
+    return retval
 
 
 class ResourceNotAvailableError(Exception):
@@ -111,7 +120,7 @@ class RoconResource:
     """
     def __init__(self, msg):
         """ Constructor. """
-        self.platform_info = msg.platform_info
+        self.platform_info = rocon_name(msg)
         """ Physical resource description. """
         self.rapps = set([msg.name])
         """ Set of ROCON apps this platform advertises. """
@@ -178,14 +187,14 @@ class RoconResource:
         may include Python regular expression syntax for matching
         multiple resource names.
 
-        TODO: If the pattern contains no '\', assume it uses bash
-        wildcard syntax and translate it into an equivalent Python
-        regular expression.
+        TODO: If the *pattern* is not a ROCON name starting with
+        'rocon://', assume it may use bash wildcard syntax and convert
+        that to an equivalent Python regular expression.
 
         """
         if pattern.name not in self.rapps:
             return False                # rapp not advertised here
-        return re.match(pattern.platform_info, self.platform_info)
+        return re.match(rocon_name(pattern), self.platform_info)
 
     def release(self, request_id):
         """ Release this resource.

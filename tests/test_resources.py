@@ -20,16 +20,19 @@ from rocon_scheduler_requests.resources import *
 TEST_UUID = unique_id.fromURL('package://rocon_scheduler_requests/test_uuid')
 DIFF_UUID = unique_id.fromURL('package://rocon_scheduler_requests/diff_uuid')
 TEST_RAPP = 'rocon_apps/teleop'
-TEST_RESOURCE = Resource(platform_info='linux.precise.ros.segbot.roberto',
-                         name=TEST_RAPP)
+TEST_RESOURCE = Resource(
+    platform_info='rocon:///linux.precise.ros.segbot.roberto',
+    name=TEST_RAPP)
 TEST_RESOURCE_NAME = 'rocon:///linux.precise.ros.segbot.roberto'
 TEST_RESOURCE_STRING = """rocon:///linux.precise.ros.segbot.roberto, status: 0
   owner: None
   rapps:
     rocon_apps/teleop"""
 
-TEST_ANOTHER = Resource(name=TEST_RAPP,
-                         platform_info='linux.precise.ros.segbot.marvin')
+# this Resource has an old-format platform_info string:
+TEST_ANOTHER = Resource(
+    platform_info='linux.precise.ros.segbot.marvin',
+    name=TEST_RAPP)
 TEST_ANOTHER_NAME = 'rocon:///linux.precise.ros.segbot.marvin'
 TEST_ANOTHER_STRING = """rocon:///linux.precise.ros.segbot.marvin, status: 0
   owner: None
@@ -37,7 +40,7 @@ TEST_ANOTHER_STRING = """rocon:///linux.precise.ros.segbot.marvin, status: 0
     rocon_apps/teleop"""
 
 TEST_REGEX = Resource(name=TEST_RAPP,
-                      platform_info=r'linux\.precise\.ros\.segbot\..*')
+                      platform_info=r'rocon:///linux\.precise\.ros\.segbot\..*')
 
 
 class TestResources(unittest.TestCase):
@@ -80,14 +83,14 @@ class TestResources(unittest.TestCase):
         self.assertTrue(res1.match(TEST_REGEX))
         self.assertTrue(res1.match(TEST_RESOURCE))
         self.assertFalse(res1.match(Resource(
-                    name='different/rapp',
-                    platform_info=r'linux\.precise\.ros\.segbot\..*')))
+            name='different/rapp',
+            platform_info=r'rocon:///linux\.precise\.ros\.segbot\..*')))
         self.assertFalse(res1.match(Resource(
-                    name=TEST_RAPP,
-                    platform_info=r'linux\.precise\.ros\.segbot\.marvin')))
+            name=TEST_RAPP,
+            platform_info=r'rocon:///linux\.precise\.ros\.segbot\.marvin')))
         self.assertTrue(res1.match(Resource(
-                    name=TEST_RAPP,
-                    platform_info=r'linux\..*\.ros\..*\.(marvin|roberto)')))
+            name=TEST_RAPP,
+            platform_info=r'rocon:///linux\..*\.ros\.(segbot|turtlebot)\..*')))
 
     def test_release(self):
         res1 = RoconResource(TEST_RESOURCE)
