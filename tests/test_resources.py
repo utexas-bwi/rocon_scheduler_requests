@@ -133,6 +133,7 @@ class TestResourceSets(unittest.TestCase):
         self.assertFalse(not res_set == ResourceSet([]))
         self.assertTrue((res_set != ResourceSet([TEST_RESOURCE])))
         self.assertFalse(res_set == ResourceSet([TEST_RESOURCE]))
+        self.assertEqual(str(res_set), 'ROCON resource set:')
 
     def test_one_resource_set(self):
         res_set = ResourceSet([TEST_RESOURCE])
@@ -145,13 +146,15 @@ class TestResourceSets(unittest.TestCase):
                          res_set[TEST_RESOURCE_NAME])
         self.assertFalse('' in res_set)
         self.assertTrue(TEST_RESOURCE_NAME in res_set)
-        self.assertFalse(TEST_ANOTHER_NAME in res_set)
+        self.assertTrue(TEST_ANOTHER_NAME not in res_set)
 
         # Test equality for non-empty res_sets.
         self.assertFalse(res_set == ResourceSet([]))
         self.assertTrue(not res_set == ResourceSet([]))
         self.assertFalse((res_set != ResourceSet([TEST_RESOURCE])))
         self.assertTrue(res_set == ResourceSet([TEST_RESOURCE]))
+        self.assertEqual(str(res_set),
+                         'ROCON resource set:\n  ' + TEST_RESOURCE_STRING)
 
     def test_two_resource_set(self):
         res_set = ResourceSet()

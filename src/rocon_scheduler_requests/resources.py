@@ -252,7 +252,8 @@ class ResourceSet:
 
     .. describe:: str(resources)
 
-       :returns: String representation of a :class:`.ResourceSet`.
+       :returns: Human-readable string representation of this
+           :class:`.ResourceSet`.
 
     These attributes are also provided:
 
@@ -300,6 +301,13 @@ class ResourceSet:
         if not isinstance(res, RoconResource):
             res = RoconResource(res)    # make a RoconResource instance
         self.resources[hash(key)] = res
+
+    def __str__(self):
+        """ Format resource set into a human-readable string. """
+        res_str = ''
+        for res in self.resources.values():
+            res_str += '\n  ' + str(res)
+        return ('ROCON resource set:' + res_str)
 
     def get(self, key, default=None):
         """ Get resource, if known.
