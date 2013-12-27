@@ -13,7 +13,7 @@ from rocon_scheduler_requests import Requester
 
 class TestTimeoutRequester(unittest.TestCase):
 
-    def test_example_requester_(self):
+    def test_timeout_requester_(self):
         """ Initialize ROCON scheduler node for example requester. """
         rospy.init_node("test_example_scheduler")
         self.rqr = Requester(self.feedback, frequency=1.0)
