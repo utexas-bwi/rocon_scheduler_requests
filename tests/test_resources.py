@@ -27,6 +27,7 @@ TEST_RESOURCE_STRING = """rocon:///linux.precise.ros.segbot.roberto
   rapp: test/rapp
   id: """ + str(TEST_UUID) + """
   remappings:"""
+
 TEST_WILDCARD = Resource(name=TEST_RAPP,
                          platform_info='linux.precise.ros.segbot.*')
 TEST_WILDCARD_NAME = 'rocon:///linux.precise.ros.segbot.*'
@@ -34,6 +35,9 @@ TEST_WILDCARD_STRING = """rocon:///linux.precise.ros.segbot.*
   rapp: test/rapp
   id: 00000000-0000-0000-0000-000000000000
   remappings:"""
+
+TEST_REGEX = Resource(name=TEST_RAPP,
+                      platform_info=r'linux\.precise\.ros\.segbot\..*')
 
 
 class TestResources(unittest.TestCase):
@@ -72,6 +76,21 @@ class TestResources(unittest.TestCase):
         self.assertEqual(res1.owner, TEST_UUID)
         self.assertRaises(ResourceNotAvailableError, res1.allocate, DIFF_UUID)
         self.assertRaises(ResourceNotAvailableError, res1.allocate, TEST_UUID)
+
+
+    def test_matches(self):
+        res1 = RoconResource(TEST_RESOURCE)
+        self.assertTrue(res1.match(TEST_REGEX))
+        self.assertTrue(res1.match(TEST_RESOURCE))
+        self.assertFalse(res1.match(Resource(
+                    name='diff/rapp',
+                    platform_info=r'linux\.precise\.ros\.segbot\..*')))
+        self.assertFalse(res1.match(Resource(
+                    name='test/rapp',
+                    platform_info=r'linux\.precise\.ros\.segbot\.marvin')))
+        self.assertTrue(res1.match(Resource(
+                    name='test/rapp',
+                    platform_info=r'linux\..*\.ros\..*\.(marvin|roberto)')))
 
     def test_release(self):
         res1 = RoconResource(TEST_RESOURCE)

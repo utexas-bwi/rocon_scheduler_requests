@@ -46,6 +46,7 @@ This module tracks resources and their allocation.  The ROS
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import re
 import uuid
 import unique_id
 from scheduler_msgs.msg import Resource
@@ -140,6 +141,23 @@ class RoconResource:
         assert self.owner is None
         self.owner = request_id
         self.status = ALLOCATED
+
+    def match(self, pattern):
+        """ Match this resource to a wildcard pattern.
+
+        :param pattern: Name to match with possible wildcard request.
+        :type pattern: ``scheduler_msgs/Resource``
+        :returns: True if this specific resource matches.
+
+        The rapp name in the *pattern* must match exactly, but its
+        *platform_info* may provide a Python regular expression to
+        match against this resource.
+
+        """
+        if pattern.name != self.msg.name:
+            return False                # rapp does not match
+        # :todo: if bash wildcard syntax used, translate into Python RE
+        return re.match(pattern.platform_info, self.msg.platform_info)
 
     def release(self, request_id):
         """ Release this resource.
