@@ -239,7 +239,7 @@ class ResourceSet:
         :returns: named item.
         :raises: :exc:`KeyError` if no such request
         """
-        return self.resources[key]
+        return self.resources[hash(key)]
 
     def __len__(self):
         """ Number of resources. """
@@ -248,3 +248,9 @@ class ResourceSet:
     def __ne__(self, other):
         """ ResourceSet != operator. """
         return not self == other
+
+    def __setitem__(self, key, res):
+        """ Assign a :class:`.RoconResource` to this *key*. """
+        if not isinstance(res, RoconResource):
+            res = RoconResource(res)    # make a RoconResource instance
+        self.resources[hash(key)] = res
