@@ -116,8 +116,8 @@ class TestTransitions(unittest.TestCase):
     def test_close(self):
         self.assert_valid(ResourceReply, Request.CANCELING,
                           'close', Request.CLOSED)
-        self.assert_valid(ResourceReply, Request.CLOSED,
-                          'close', Request.CLOSED)
+        self.assert_invalid(ResourceReply, Request.CLOSED,
+                            'close', TransitionError)
         self.assert_invalid(ResourceReply, Request.GRANTED,
                             'close', TransitionError)
         self.assert_invalid(ResourceReply, Request.NEW,
@@ -131,11 +131,11 @@ class TestTransitions(unittest.TestCase):
 
     def test_grant(self):
         self.assert_invalid(ResourceReply, Request.CANCELING,
-                               'grant', TransitionError, [TEST_RESOURCE])
+                            'grant', TransitionError, [TEST_RESOURCE])
         self.assert_invalid(ResourceReply, Request.CLOSED,
-                               'grant', TransitionError, [TEST_RESOURCE])
-        self.assert_valid(ResourceReply, Request.GRANTED,
-                          'grant', Request.GRANTED, [TEST_RESOURCE])
+                            'grant', TransitionError, [TEST_RESOURCE])
+        self.assert_invalid(ResourceReply, Request.GRANTED,
+                            'grant', TransitionError, [TEST_RESOURCE])
         rq = self.assert_valid(ResourceReply, Request.NEW,
                                'grant', Request.GRANTED, [TEST_RESOURCE])
         self.assertEqual(rq.msg.resources, [TEST_RESOURCE])
@@ -198,10 +198,8 @@ class TestTransitions(unittest.TestCase):
                                'wait', Request.WAITING, Request.UNAVAILABLE)
         if HAVE_REASON:
             self.assertEqual(rq.msg.reason, Request.UNAVAILABLE)
-        rq = self.assert_valid(ResourceReply, Request.WAITING,
-                               'wait', Request.WAITING)
-        if HAVE_REASON:
-            self.assertEqual(rq.msg.reason, Request.NONE)
+        rq = self.assert_invalid(ResourceReply, Request.WAITING,
+                                 'wait', TransitionError)
 
 
 class TestRequestSets(unittest.TestCase):

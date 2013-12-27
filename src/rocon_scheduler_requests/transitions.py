@@ -169,12 +169,10 @@ EVENT_CANCEL = _EventTranitions('cancel', {
 #
 EVENT_CLOSE = _EventTranitions('close', {
     Request.CANCELING: Request.CLOSED,
-    Request.CLOSED: Request.CLOSED,
     Request.PREEMPTING: Request.CLOSED,
     })
 
 EVENT_GRANT = _EventTranitions('grant', {
-    Request.GRANTED: Request.GRANTED,
     Request.NEW: Request.GRANTED,
     Request.RESERVED: Request.GRANTED,
     Request.WAITING: Request.GRANTED,
@@ -193,11 +191,10 @@ EVENT_PREEMPT = _EventTranitions('preempt', {
 EVENT_WAIT = _EventTranitions('wait', {
     Request.NEW: Request.WAITING,
     Request.RESERVED: Request.WAITING,
-    Request.WAITING: Request.WAITING,
     })
 
 
-class RequestBase:
+class RequestBase(object):
     """
     Base class for tracking the status of a single resource request.
 
@@ -341,6 +338,13 @@ class ResourceReply(RequestBase):
     Provides all attributes defined for :class:`.RequestBase`.
 
     """
+    def __init__(self, msg):
+        """ Constructor """
+        super(ResourceReply, self).__init__(msg)
+        self.allocations = []
+        """ List of resources actually allocated for this request (not
+        just those requested). """
+
     def abort(self):
         ##   comment out docstring to remove from documentation:
         #""" Abort a request due to internal failure (always valid).
@@ -382,6 +386,7 @@ class ResourceReply(RequestBase):
         """
         self._transition(EVENT_GRANT, reason=Request.NONE)
         self.msg.resources = resources
+        self.allocations = resources
 
     def _reconcile(self, update):
         """

@@ -71,8 +71,8 @@ class TestTimeoutScheduler(unittest.TestCase):
                 self.avail.appendleft(resource)
 
     def free(self, requester_id, rq):
-        """ Free the resource allocated for this request. """
-        self.avail.append(rq.msg.resources[0])
+        """ Free all resources allocated for this request. """
+        self.avail.extend(rq.allocations)
         rospy.loginfo('Request canceled: ' + str(rq.get_uuid()))
         rq.close()
         self.dispatch()                 # grant waiting requests
