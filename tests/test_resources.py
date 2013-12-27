@@ -109,6 +109,8 @@ class TestResourceSets(unittest.TestCase):
         self.assertFalse(RoconResource(TEST_RESOURCE) in res_set)
         self.assertTrue('arbitrary name' not in res_set)
         self.assertTrue(TEST_RESOURCE_NAME not in res_set)
+        self.assertIsNone(res_set.get(TEST_RESOURCE_NAME))
+        self.assertEqual(res_set.get(TEST_RESOURCE_NAME, 3.14), 3.14)
 
         # Test equality for empty res_sets.
         self.assertTrue(res_set == ResourceSet([]))
@@ -121,6 +123,10 @@ class TestResourceSets(unittest.TestCase):
         self.assertEqual(len(res_set), 1)
         self.assertTrue(RoconResource(TEST_RESOURCE) in res_set)
         self.assertTrue(rocon_name(TEST_RESOURCE) in res_set)
+        self.assertEqual(res_set.get(TEST_RESOURCE_NAME),
+                         res_set[TEST_RESOURCE_NAME])
+        self.assertEqual(res_set.get(TEST_RESOURCE_NAME, 3.14),
+                         res_set[TEST_RESOURCE_NAME])
         self.assertFalse('' in res_set)
         self.assertTrue(TEST_RESOURCE_NAME in res_set)
         self.assertFalse(TEST_WILDCARD_NAME in res_set)

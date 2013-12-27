@@ -254,3 +254,15 @@ class ResourceSet:
         if not isinstance(res, RoconResource):
             res = RoconResource(res)    # make a RoconResource instance
         self.resources[hash(key)] = res
+
+    def get(self, key, default=None):
+        """ Get resource, if known.
+
+        :param key: ROCON name of desired resource.
+        :type key: str
+        :param default: value to return if no such resource.
+
+        :returns: named :class:`.RoconResource` if successful, else *default*.
+
+        """
+        return self.resources.get(hash(key), default)
