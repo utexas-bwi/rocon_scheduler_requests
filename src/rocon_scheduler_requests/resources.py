@@ -57,30 +57,6 @@ ALLOCATED = 1
 MISSING = 2
 
 
-def rocon_name(res):
-    """ Generate standard ROCON resource name from a message.
-
-    :param res: :class:`.RoconResource`, ``scheduler_msgs/Resource``
-        message, or other resource representation.
-    :returns: ROCON name for this resource.
-    :rtype: str
-
-    A fully resolved canonical name uniquely describes each resource
-    within a ROCON_ Concert.  Some requests may match multiple
-    resources by embedding regular expression syntax in the name.
-
-    TODO: If the *platform_info* is not a ROCON name starting with
-    'rocon://', assume it may include bash wildcard syntax and convert
-    that to an equivalent Python regular expression.
-
-    """
-    retval = res.platform_info
-    if retval[0:8] != 'rocon://':
-        retval = 'rocon:///' + retval
-        # :todo: convert old wildcard syntax to a regular expression
-    return retval
-
-
 class ResourceNotAvailableError(Exception):
     """ Error exception: resource not available. """
     pass
@@ -89,6 +65,36 @@ class ResourceNotAvailableError(Exception):
 class ResourceNotOwnedError(Exception):
     """ Error exception: resource not owned. """
     pass
+
+
+def rocon_name(platform_info):
+    """ Generate canonical ROCON resource name.
+
+    :param platform_info: Platform info string from a
+        :class:`.RoconResource`, ``scheduler_msgs/Resource`` message,
+        or other resource representation.
+
+    :returns: (str) Canonical ROCON name for this resource.
+
+    A fully-resolved canonical name uniquely describes each resource
+    within a ROCON_ Concert.  Some requests may match multiple
+    resources by embedding regular expression syntax in the name.
+
+    If the *platform_info* is not already a ROCON name starting with
+    'rocon://', assume it may use the dotted syntax and convert bash
+    wildcard asterisks to the equivalent Python regular expression.
+
+    """
+    if platform_info[0:8] == 'rocon://':
+        return platform_info            # already canonical
+
+    # Assume dotted representation, convert that to canonical format.
+    retval = 'rocon://'
+    for part in platform_info.split('.'):
+        if part == '*':                 # bash wildcard syntax?
+            part = '\\.*'               # convert to Python RE
+        retval += '/' + part
+    return retval
 
 
 class RoconResource:
@@ -120,7 +126,7 @@ class RoconResource:
     """
     def __init__(self, msg):
         """ Constructor. """
-        self.platform_info = rocon_name(msg)
+        self.platform_info = rocon_name(msg.platform_info)
         """ Fully-resolved canonical ROCON resource name. """
         self.rapps = set([msg.name])
         """ The :class:`set` of ROCON app name strings this platform
@@ -146,7 +152,7 @@ class RoconResource:
 
     def __hash__(self):
         """ :returns: hash value for this resource. """
-        return hash(rocon_name(self))
+        return hash(rocon_name(self.platform_info))
 
     def __ne__(self, other):
         """ RoconResource != operator. """
@@ -157,7 +163,8 @@ class RoconResource:
         rappstr = ''
         for rapp_name in self.rapps:
             rappstr += '\n    ' + str(rapp_name)
-        return (rocon_name(self) + ', status: ' + str(self.status)
+        return (rocon_name(self.platform_info)
+                + ', status: ' + str(self.status)
                 + '\n  owner: ' + str(self.owner)
                 + '\n  rapps:' + rappstr)
 
@@ -171,7 +178,7 @@ class RoconResource:
         """
         if (self.status != AVAILABLE):
             raise ResourceNotAvailableError('resource not available: '
-                                            + rocon_name(self))
+                                            + rocon_name(self.platform_info))
         assert self.owner is None
         self.owner = request_id
         self.status = ALLOCATED
@@ -195,7 +202,7 @@ class RoconResource:
         """
         if pattern.name not in self.rapps:
             return False                # rapp not advertised here
-        return re.match(rocon_name(pattern), self.platform_info)
+        return re.match(rocon_name(pattern.platform_info), self.platform_info)
 
     def release(self, request_id):
         """ Release this resource.
@@ -208,7 +215,7 @@ class RoconResource:
         if (self.owner != request_id or request_id is None):
             raise ResourceNotOwnedError('resource not owned by '
                                         + str(request_id) + ': '
-                                        + rocon_name(self))
+                                        + rocon_name(self.platform_info))
         self.owner = None
         if self.status == ALLOCATED:    # not gone missing?
             self.status = AVAILABLE
