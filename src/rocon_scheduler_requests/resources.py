@@ -121,9 +121,10 @@ class RoconResource:
     def __init__(self, msg):
         """ Constructor. """
         self.platform_info = rocon_name(msg)
-        """ Physical resource description. """
+        """ Fully-resolved canonical ROCON resource name. """
         self.rapps = set([msg.name])
-        """ Set of ROCON apps this platform advertises. """
+        """ The :class:`set` of ROCON app name strings this platform
+        advertises. """
         self.owner = None
         """ :class:`uuid.UUID` of request to which this resource is
         currently assigned, or ``None``.

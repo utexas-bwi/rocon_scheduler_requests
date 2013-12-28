@@ -118,14 +118,21 @@ class TestRoconResource(unittest.TestCase):
         self.assertTrue(res1.match(TEST_REGEX))
         self.assertTrue(res1.match(TEST_RESOURCE))
         self.assertFalse(res1.match(Resource(
-            name='different/rapp',
-            platform_info=r'rocon:///linux\.precise\.ros\.segbot\..*')))
-        self.assertFalse(res1.match(Resource(
             name=TEST_RAPP,
             platform_info=r'rocon:///linux\.precise\.ros\.segbot\.marvin')))
         self.assertTrue(res1.match(Resource(
             name=TEST_RAPP,
             platform_info=r'rocon:///linux\..*\.ros\.(segbot|turtlebot)\..*')))
+
+        # different rapps:
+        diff_rapp = Resource(
+            name='different/rapp',
+            platform_info=r'rocon:///linux\.precise\.ros\.segbot\..*')
+        self.assertFalse(res1.match(diff_rapp))
+        res1.rapps.add('different/rapp')
+        self.assertTrue(res1.match(diff_rapp))
+        res1.rapps.remove('different/rapp')
+        self.assertFalse(res1.match(diff_rapp))
 
     def test_release(self):
         res1 = RoconResource(Resource(
