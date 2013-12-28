@@ -56,6 +56,7 @@ class TestRoconResource(unittest.TestCase):
     def test_rocon_name(self):
         self.assertEqual(rocon_name(TEST_RESOURCE), TEST_RESOURCE_NAME)
         self.assertEqual(rocon_name(TEST_ANOTHER), TEST_ANOTHER_NAME)
+        self.assertNotEqual(rocon_name(TEST_ANOTHER), TEST_RESOURCE_NAME)
 
     def test_constructor(self):
         res1 = RoconResource(TEST_ANOTHER)
@@ -66,9 +67,12 @@ class TestRoconResource(unittest.TestCase):
         res2 = RoconResource(TEST_RESOURCE)
         self.assertEqual(rocon_name(res2), TEST_RESOURCE_NAME)
         self.assertMultiLineEqual(str(res2), TEST_RESOURCE_STRING)
+        self.assertNotEqual(str(res2), TEST_ANOTHER_STRING)
 
     def test_allocate(self):
-        res1 = RoconResource(TEST_RESOURCE)
+        res1 = RoconResource(Resource(
+            platform_info='rocon:///linux.precise.ros.segbot.roberto',
+            name=TEST_RAPP))
         self.assertEqual(res1.status, AVAILABLE)
         self.assertEqual(res1.owner, None)
         res1.allocate(TEST_UUID)
@@ -78,8 +82,12 @@ class TestRoconResource(unittest.TestCase):
         self.assertRaises(ResourceNotAvailableError, res1.allocate, TEST_UUID)
 
     def test_equality(self):
-        res1 = RoconResource(TEST_RESOURCE)
-        self.assertEqual(res1, RoconResource(TEST_RESOURCE))
+        res1 = RoconResource(Resource(
+            platform_info='linux.precise.ros.segbot.roberto',
+            name='rocon_apps/teleop'))
+        self.assertEqual(res1, RoconResource(Resource(
+            platform_info='linux.precise.ros.segbot.roberto',
+            name='rocon_apps/teleop')))
 
         # different platform_info
         self.assertNotEqual(res1, RoconResource(TEST_ANOTHER))
@@ -90,13 +98,19 @@ class TestRoconResource(unittest.TestCase):
             name='other_package/teleop')))
 
         # different owner
-        res2 = RoconResource(TEST_RESOURCE)
-        res1.allocate(TEST_UUID)
+        res2 = RoconResource(Resource(
+            platform_info='rocon:///linux.precise.ros.segbot.roberto',
+            name='rocon_apps/teleop'))
+        res2.allocate(TEST_UUID)
         self.assertNotEqual(res1, res2)
 
         # different status
-        res3 = RoconResource(TEST_RESOURCE)
+        res3 = RoconResource(Resource(
+            platform_info='rocon:///linux.precise.ros.segbot.roberto',
+            name='rocon_apps/teleop'))
         res3.status = MISSING
+        self.assertEqual(res1.owner, res3.owner)
+        self.assertNotEqual(res1.status, res3.status)
         self.assertNotEqual(res1, res3)
 
     def test_matches(self):
@@ -114,7 +128,9 @@ class TestRoconResource(unittest.TestCase):
             platform_info=r'rocon:///linux\..*\.ros\.(segbot|turtlebot)\..*')))
 
     def test_release(self):
-        res1 = RoconResource(TEST_RESOURCE)
+        res1 = RoconResource(Resource(
+            platform_info='rocon:///linux.precise.ros.segbot.roberto',
+            name=TEST_RAPP))
         self.assertEqual(res1.status, AVAILABLE)
         self.assertEqual(res1.owner, None)
         res1.allocate(TEST_UUID)
@@ -124,7 +140,9 @@ class TestRoconResource(unittest.TestCase):
         res1.release(TEST_UUID)
         self.assertEqual(res1.status, AVAILABLE)
 
-        res2 = RoconResource(TEST_RESOURCE)
+        res2 = RoconResource(Resource(
+            platform_info='rocon:///linux.precise.ros.segbot.roberto',
+            name=TEST_RAPP))
         res2.allocate(TEST_UUID)
         self.assertEqual(res2.status, ALLOCATED)
         res2.status = MISSING           # resource now missing
