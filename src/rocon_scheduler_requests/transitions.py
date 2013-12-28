@@ -316,16 +316,6 @@ class ResourceRequest(RequestBase):
             if update.msg.availability != rospy.Time():
                 self.msg.availability = update.msg.availability
 
-    def release(self):
-        ##   comment out docstring to remove from documentation:
-        #""" Release a previously-requested resource.
-        #
-        #.. deprecated:: 0.0.1
-        #   use :py:meth:`.cancel` instead.
-        #
-        #"""
-        self.cancel()
-
 
 class ResourceReply(RequestBase):
     """
@@ -345,33 +335,12 @@ class ResourceReply(RequestBase):
         """ List of resources actually allocated for this request (not
         just those requested). """
 
-    def abort(self):
-        ##   comment out docstring to remove from documentation:
-        #""" Abort a request due to internal failure (always valid).
-        #
-        #.. deprecated:: 0.0.1
-        #   use :py:meth:`.preempt` instead.
-        #
-        #"""
-        self.preempt()
-
     def close(self):
         """ Close resource request.
 
         :raises: :exc:`.TransitionError`
         """
         self._transition(EVENT_CLOSE)
-
-    def free(self):
-        ##   comment out docstring to remove from documentation:
-        #""" Free up previously-assigned resources that were canceled.
-        #
-        #:raises: :exc:`.TransitionError`
-        #
-        #.. deprecated:: 0.0.1
-        #   use :py:meth:`.close` instead.
-        #"""
-        self.close()
 
     def grant(self, resources):
         """ Grant some specific requested resources.
@@ -424,18 +393,6 @@ class ResourceReply(RequestBase):
         if self.msg.status != Request.GRANTED:
             reason = self.msg.reason    # leave reason unchanged
         self._transition(EVENT_PREEMPT, reason)
-
-    def reject(self):
-        ##   comment out docstring to remove from documentation:
-        #""" Reject an invalid request.
-        #
-        #:raises: :exc:`.TransitionError`
-        #
-        #.. deprecated:: 0.0.1
-        #   use :py:meth:`.preempt` instead.
-        #
-        #"""
-        self.preempt()
 
     def wait(self, reason=Request.NONE):
         """
