@@ -153,7 +153,7 @@ class RoconResource:
 
     def __hash__(self):
         """ :returns: hash value for this resource. """
-        return hash(rocon_name(self.platform_info))
+        return hash(self.platform_info)
 
     def __ne__(self, other):
         """ RoconResource != operator. """
@@ -164,8 +164,7 @@ class RoconResource:
         rappstr = ''
         for rapp_name in self.rapps:
             rappstr += '\n    ' + str(rapp_name)
-        return (rocon_name(self.platform_info)
-                + ', status: ' + str(self.status)
+        return (self.platform_info + ', status: ' + str(self.status)
                 + '\n  owner: ' + str(self.owner)
                 + '\n  rapps:' + rappstr)
 
@@ -179,7 +178,7 @@ class RoconResource:
         """
         if (self.status != AVAILABLE):
             raise ResourceNotAvailableError('resource not available: '
-                                            + rocon_name(self.platform_info))
+                                            + self.platform_info)
         assert self.owner is None
         self.owner = request_id
         self.status = ALLOCATED
@@ -233,7 +232,7 @@ class RoconResource:
         if (self.owner != request_id or request_id is None):
             raise ResourceNotOwnedError('resource not owned by '
                                         + str(request_id) + ': '
-                                        + rocon_name(self.platform_info))
+                                        + self.platform_info)
         self.owner = None
         if self.status == ALLOCATED:    # not gone missing?
             self.status = AVAILABLE
