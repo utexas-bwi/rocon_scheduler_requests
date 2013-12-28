@@ -43,14 +43,14 @@ TEST_REGEX = Resource(name=TEST_RAPP,
                       platform_info=r'rocon:///linux\.precise\.ros\.segbot\..*')
 
 
-class TestResources(unittest.TestCase):
-    """Unit tests for resource state transitions.
+class TestRoconResource(unittest.TestCase):
+    """Unit tests for ROCON resource class.
 
     These tests do not require a running ROS core.
     """
 
     ####################
-    # resource tests
+    # ROCON resource tests
     ####################
 
     def test_rocon_name(self):
@@ -61,11 +61,11 @@ class TestResources(unittest.TestCase):
         res1 = RoconResource(TEST_ANOTHER)
         self.assertIsNotNone(res1)
         self.assertEqual(rocon_name(res1), TEST_ANOTHER_NAME)
-        self.assertEqual(str(res1), TEST_ANOTHER_STRING)
+        self.assertMultiLineEqual(str(res1), TEST_ANOTHER_STRING)
 
         res2 = RoconResource(TEST_RESOURCE)
         self.assertEqual(rocon_name(res2), TEST_RESOURCE_NAME)
-        self.assertEqual(str(res2), TEST_RESOURCE_STRING)
+        self.assertMultiLineEqual(str(res2), TEST_RESOURCE_STRING)
 
     def test_allocate(self):
         res1 = RoconResource(TEST_RESOURCE)
@@ -77,6 +77,27 @@ class TestResources(unittest.TestCase):
         self.assertRaises(ResourceNotAvailableError, res1.allocate, DIFF_UUID)
         self.assertRaises(ResourceNotAvailableError, res1.allocate, TEST_UUID)
 
+    def test_equality(self):
+        res1 = RoconResource(TEST_RESOURCE)
+        self.assertEqual(res1, RoconResource(TEST_RESOURCE))
+
+        # different platform_info
+        self.assertNotEqual(res1, RoconResource(TEST_ANOTHER))
+
+        # different rapp name
+        self.assertNotEqual(res1, RoconResource(Resource(
+            platform_info='linux.precise.ros.segbot.roberto',
+            name='other_package/teleop')))
+
+        # different owner
+        res2 = RoconResource(TEST_RESOURCE)
+        res1.allocate(TEST_UUID)
+        self.assertNotEqual(res1, res2)
+
+        # different status
+        res3 = RoconResource(TEST_RESOURCE)
+        res3.status = MISSING
+        self.assertNotEqual(res1, res3)
 
     def test_matches(self):
         res1 = RoconResource(TEST_RESOURCE)
@@ -111,7 +132,7 @@ class TestResources(unittest.TestCase):
         self.assertEqual(res2.status, MISSING)
 
 
-class TestResourceSets(unittest.TestCase):
+class TestResourceSet(unittest.TestCase):
     """Unit tests for resource set operations.
 
     These tests do not require a running ROS core.
@@ -156,8 +177,8 @@ class TestResourceSets(unittest.TestCase):
         self.assertTrue(not res_set == ResourceSet([]))
         self.assertFalse((res_set != ResourceSet([TEST_RESOURCE])))
         self.assertTrue(res_set == ResourceSet([TEST_RESOURCE]))
-        self.assertEqual(str(res_set),
-                         'ROCON resource set:\n  ' + TEST_RESOURCE_STRING)
+        self.assertMultiLineEqual(
+            str(res_set), 'ROCON resource set:\n  ' + TEST_RESOURCE_STRING)
 
     def test_two_resource_set(self):
         res_set = ResourceSet()
@@ -185,7 +206,7 @@ if __name__ == '__main__':
     import rosunit
     rosunit.unitrun('rocon_scheduler_requests',
                     'test_transitions',
-                    TestResources)
+                    TestRoconResource)
     rosunit.unitrun('rocon_scheduler_requests',
                     'test_request_sets',
-                    TestResourceSets)
+                    TestResourceSet)
