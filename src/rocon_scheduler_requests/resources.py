@@ -81,7 +81,7 @@ def rocon_name(platform_info):
     resources by embedding regular expression syntax in the name.
 
     If the *platform_info* is not already a ROCON name starting with
-    'rocon://', assume it may use the dotted syntax and convert bash
+    'rocon://', assume it may use the dotted syntax and convert shell
     wildcard asterisks to the equivalent Python regular expression.
 
     """
@@ -91,7 +91,7 @@ def rocon_name(platform_info):
     # Assume dotted representation, convert that to canonical format.
     retval = 'rocon://'
     for part in platform_info.split('.'):
-        if part == '*':                 # bash wildcard syntax?
+        if part == '*':                 # shell wildcard syntax?
             part = '\\.*'               # convert to Python RE
         retval += '/' + part
     return retval
@@ -110,11 +110,12 @@ class RoconResource:
 
     .. describe:: res == other
 
-       :returns: True if this :class:`.RoconResource` is equal to the *other*.
+       :returns: ``True`` if this :class:`.RoconResource` equals the *other*.
 
     .. describe:: res != other
 
-       :returns: True if this :class:`.RoconResource` differs from the *other*.
+       :returns: ``True`` if this :class:`.RoconResource` differs from
+           the *other*.
 
     .. describe:: str(res)
 
@@ -183,26 +184,43 @@ class RoconResource:
         self.owner = request_id
         self.status = ALLOCATED
 
-    def match(self, pattern):
-        """ Match this resource to a wildcard pattern.
+    def match(self, res):
+        """ Match this resource to a requested one.
 
-        :param pattern: Name to match with possible wildcard request.
-        :type pattern: ``scheduler_msgs/Resource``
-        :returns: True if this specific resource matches.
+        :param res: Resource request to match.
+        :type res: ``scheduler_msgs/Resource`` or :class:`.RoconResource`
+        :returns: ``True`` if this specific resource matches.
 
-        The rapp name in the *pattern* must be one of those advertised
-        by this ROCON resource.  The *platform_info* in the *pattern*
-        may include Python regular expression syntax for matching
-        multiple resource names.
+        To match, the *res.name* must be one of the rapps advertised
+        by this ROCON resource.  The *res.platform_info* may include
+        Python regular expression syntax for matching multiple
+        resource names.
 
-        TODO: If the *pattern* is not a ROCON name starting with
-        'rocon://', assume it may use bash wildcard syntax and convert
-        that to an equivalent Python regular expression.
+        If the *res.platform_info* is not a canonical ROCON name
+        starting with 'rocon://', it will be converted from shell
+        wildcard syntax into an equivalent Python regular expression.
 
         """
-        if pattern.name not in self.rapps:
-            return False                # rapp not advertised here
-        return re.match(rocon_name(pattern.platform_info), self.platform_info)
+        return self.match_pattern(rocon_name(res.platform_info), res.name)
+
+    def match_pattern(self, pattern, rapp):
+        """ Match this resource to a ROCON name and rapp.
+
+        :param pattern: Canonical ROCON name to match, maybe a regular
+            expression.
+        :type pattern: str
+        :param rapp: ROCON app name.
+        :type rapp: str
+        :returns: ``True`` if this specific resource matches.
+
+        The *rapp* must be one of those advertised by this ROCON
+        resource.  The *pattern* may include Python regular expression
+        syntax for matching multiple resource names.
+
+        """
+        if rapp not in self.rapps:      # rapp not advertised here?
+            return False
+        return re.match(pattern, self.platform_info)
 
     def release(self, request_id):
         """ Release this resource.
@@ -260,11 +278,11 @@ class ResourceSet:
 
     .. describe:: resources == another
 
-       :returns: True if this :class:`.ResourceSet` is equal to *another*.
+       :returns: ``True`` if this :class:`.ResourceSet` is equal to *another*.
 
     .. describe:: resources != another
 
-       :returns: True if this :class:`.ResourceSet` and *another* have
+       :returns: ``True`` if this :class:`.ResourceSet` and *another* have
            different contents.
 
     .. describe:: str(resources)

@@ -110,7 +110,7 @@ class TestRoconResource(unittest.TestCase):
         self.assertNotEqual(res1.status, res3.status)
         self.assertNotEqual(res1, res3)
 
-    def test_matches(self):
+    def test_match(self):
         res1 = RoconResource(TEST_RESOURCE)
         self.assertTrue(res1.match(Resource(
             name=TEST_RAPP,
@@ -135,6 +135,25 @@ class TestRoconResource(unittest.TestCase):
         self.assertTrue(res1.match(diff_rapp))
         res1.rapps.remove('different/rapp')
         self.assertFalse(res1.match(diff_rapp))
+
+    def test_match_pattern(self):
+        res1 = RoconResource(TEST_RESOURCE)
+        self.assertTrue(res1.match_pattern(
+            'rocon:///linux/precise/ros/segbot/.*', TEST_RAPP))
+        self.assertFalse(res1.match_pattern(
+            'rocon:///linux/precise/ros/marvin/.*', TEST_RAPP))
+        self.assertTrue(res1.match_pattern(
+            'rocon:///linux/.*/ros/(segbot|turtlebot)/.*', TEST_RAPP))
+
+        # different rapps:
+        self.assertFalse(res1.match_pattern(
+            'rocon:///linux/precise/ros/segbot/.*', 'different/rapp'))
+        res1.rapps.add('different/rapp')
+        self.assertTrue(res1.match_pattern(
+            'rocon:///linux/precise/ros/segbot/.*', 'different/rapp'))
+        res1.rapps.remove('different/rapp')
+        self.assertFalse(res1.match_pattern(
+            'rocon:///linux/precise/ros/segbot/.*', 'different/rapp'))
 
     def test_release(self):
         res1 = RoconResource(Resource(
