@@ -218,7 +218,7 @@ class TestRequestSets(unittest.TestCase):
         rset = RequestSet([], RQR_UUID)
         self.assertIsNotNone(rset)
         self.assertEqual(len(rset), 0)
-        self.assertTrue(TEST_UUID not in rset)
+        self.assertNotIn(TEST_UUID, rset)
         sch_msg = SchedulerRequests(requester=unique_id.toMsg(RQR_UUID),
                                     requests=[])
         self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
@@ -228,13 +228,10 @@ requests:"""
 
         # Test equality for empty rsets: the requester_id is
         # significant, but the contents type is ignored.
-        self.assertTrue(rset == RequestSet([], RQR_UUID))
-        self.assertTrue(rset == RequestSet([], RQR_UUID,
-                                           contents=ResourceReply))
-        self.assertFalse((rset != RequestSet([], RQR_UUID)))
-        self.assertFalse(not rset == RequestSet([], RQR_UUID))
-        self.assertFalse(rset == RequestSet([], TEST_UUID))
-        self.assertTrue(rset != RequestSet([], TEST_UUID))
+        self.assertEqual(rset, RequestSet([], RQR_UUID))
+        self.assertEqual(rset, RequestSet([], RQR_UUID,
+                                          contents=ResourceReply))
+        self.assertNotEqual(rset, RequestSet([], TEST_UUID))
 
     def test_one_request_set(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
@@ -242,18 +239,15 @@ requests:"""
                        status=Request.NEW)
         rset = RequestSet([msg1], RQR_UUID, contents=ResourceReply)
         self.assertEqual(len(rset), 1)
-        self.assertTrue(TEST_UUID in rset)
+        self.assertIn(TEST_UUID, rset)
         self.assertEqual(rset[TEST_UUID].msg, msg1)
         self.assertEqual(rset.get(TEST_UUID), rset[TEST_UUID])
-        self.assertFalse(DIFF_UUID in rset)
+        self.assertNotIn(DIFF_UUID, rset)
         self.assertIsNone(rset.get(DIFF_UUID))
         self.assertEqual(rset.get(DIFF_UUID, 10), 10)
-        self.assertTrue(rset == RequestSet([msg1], RQR_UUID))
-        self.assertTrue(rset == RequestSet([msg1], RQR_UUID,
-                                           contents=ResourceReply))
-        rs2 = copy.deepcopy(rset)
-        self.assertTrue(rset == rs2)
-
+        self.assertEqual(rset, RequestSet([msg1], RQR_UUID))
+        self.assertEqual(rset, RequestSet([msg1], RQR_UUID,
+                                          contents=ResourceReply))
         rset_str = """requester_id: 01234567-89ab-cdef-0123-456789abcdef
 requests:
   id: 01234567-89ab-cdef-fedc-ba9876543210
@@ -262,10 +256,30 @@ requests:
       linux.precise.ros.segbot.*/test_rapp
     status: 0"""
         self.assertEqual(str(rset), rset_str)
-
         sch_msg = SchedulerRequests(requester=unique_id.toMsg(RQR_UUID),
                                     requests=[msg1])
         self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
+
+        # vary message contents:
+        rs2 = copy.deepcopy(rset)
+        self.assertEqual(rset, rs2)
+        rq = rs2.get(TEST_UUID)
+        rq.msg.priority = 10
+        self.assertNotEqual(rset, rs2)
+        rq.msg.priority = 0
+        self.assertEqual(rset, rs2)
+        rq.msg.availability = rospy.Time(1000.0)
+        self.assertNotEqual(rset, rs2)
+        rq.msg.availability = rospy.Time()
+        self.assertEqual(rset, rs2)
+        rq.msg.hold_time = rospy.Duration(1000.0)
+        self.assertNotEqual(rset, rs2)
+        rq.msg.hold_time = rospy.Duration()
+        self.assertEqual(rset, rs2)
+        rq.msg.resources = [TEST_RESOURCE]
+        self.assertNotEqual(rset, rs2)
+        rq.msg.resources = [TEST_WILDCARD]
+        self.assertEqual(rset, rs2)
 
     def test_two_request_set(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
@@ -274,23 +288,21 @@ requests:
                        resources=[TEST_RESOURCE])
         rset = RequestSet([msg1, msg2], RQR_UUID)
         self.assertEqual(len(rset), 2)
-        self.assertTrue(TEST_UUID in rset)
-        self.assertTrue(DIFF_UUID in rset)
+        self.assertIn(TEST_UUID, rset)
+        self.assertIn(DIFF_UUID, rset)
         self.assertEqual(rset[TEST_UUID].msg, msg1)
         self.assertEqual(rset[DIFF_UUID].msg, msg2)
         self.assertEqual(rset.get(TEST_UUID), rset[TEST_UUID])
         self.assertEqual(rset.get(DIFF_UUID), rset[DIFF_UUID])
-        self.assertTrue(rset == RequestSet([msg1, msg2], RQR_UUID))
-        self.assertTrue(rset == RequestSet([msg2, msg1], RQR_UUID))
-        self.assertTrue(rset != RequestSet([msg1], RQR_UUID))
-        self.assertTrue(rset != RequestSet([msg2], RQR_UUID))
-        self.assertTrue(rset != RequestSet([], RQR_UUID))
+        self.assertEqual(rset, RequestSet([msg1, msg2], RQR_UUID))
+        self.assertEqual(rset, RequestSet([msg2, msg1], RQR_UUID))
+        self.assertNotEqual(rset, RequestSet([msg1], RQR_UUID))
+        self.assertNotEqual(rset, RequestSet([msg2], RQR_UUID))
+        self.assertNotEqual(rset, RequestSet([], RQR_UUID))
         rs2 = copy.deepcopy(rset)
-        self.assertTrue(rset == rs2)
-        self.assertFalse(rset != rs2)
+        self.assertEqual(rset, rs2)
         rs2[TEST_UUID]._transition(EVENT_GRANT)
-        self.assertTrue(rset != rs2)
-        self.assertFalse(rset == rs2)
+        self.assertNotEqual(rset, rs2)
 
     def test_request_set_from_scheduler_requests(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
@@ -301,23 +313,21 @@ requests:
                                    requests=[msg1, msg2])
         rset = RequestSet(schreq)
         self.assertEqual(len(rset), 2)
-        self.assertTrue(TEST_UUID in rset)
-        self.assertTrue(DIFF_UUID in rset)
+        self.assertIn(TEST_UUID, rset)
+        self.assertIn(DIFF_UUID, rset)
         self.assertEqual(rset[TEST_UUID].msg, msg1)
         self.assertEqual(rset[DIFF_UUID].msg, msg2)
         self.assertEqual(rset.get(TEST_UUID), rset[TEST_UUID])
         self.assertEqual(rset.get(DIFF_UUID), rset[DIFF_UUID])
-        self.assertTrue(rset == RequestSet(schreq))
-        self.assertTrue(rset == RequestSet(schreq, RQR_UUID))
-        self.assertTrue(rset != RequestSet([msg1], RQR_UUID))
-        self.assertTrue(rset != RequestSet([msg2], RQR_UUID))
-        self.assertTrue(rset != RequestSet([], RQR_UUID))
+        self.assertEqual(rset, RequestSet(schreq))
+        self.assertEqual(rset, RequestSet(schreq, RQR_UUID))
+        self.assertNotEqual(rset, RequestSet([msg1], RQR_UUID))
+        self.assertNotEqual(rset, RequestSet([msg2], RQR_UUID))
+        self.assertNotEqual(rset, RequestSet([], RQR_UUID))
         rs2 = copy.deepcopy(rset)
-        self.assertTrue(rset == rs2)
-        self.assertFalse(rset != rs2)
+        self.assertEqual(rset, rs2)
         rs2[TEST_UUID]._transition(EVENT_GRANT)
-        self.assertTrue(rset != rs2)
-        self.assertFalse(rset == rs2)
+        self.assertNotEqual(rset, rs2)
 
     def test_empty_merge(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
@@ -325,7 +335,7 @@ requests:
                        status=Request.NEW)
         rset = RequestSet([msg1], RQR_UUID)
         self.assertEqual(len(rset), 1)
-        self.assertTrue(TEST_UUID in rset)
+        self.assertIn(TEST_UUID, rset)
         sch_msg = SchedulerRequests(requester=unique_id.toMsg(RQR_UUID),
                                     requests=[msg1])
         self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
@@ -333,7 +343,7 @@ requests:
         # merge an empty request set: rset should remain the same
         rset.merge(RequestSet([], RQR_UUID, contents=ResourceReply))
         self.assertEqual(len(rset), 1)
-        self.assertTrue(TEST_UUID in rset)
+        self.assertIn(TEST_UUID, rset)
         self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
 
     def test_closed_merge(self):
@@ -342,7 +352,7 @@ requests:
                        status=Request.CLOSED)
         rset = RequestSet([msg1], RQR_UUID, contents=ResourceReply)
         self.assertEqual(len(rset), 1)
-        self.assertTrue(TEST_UUID in rset)
+        self.assertIn(TEST_UUID, rset)
         sch_msg = SchedulerRequests(requester=unique_id.toMsg(RQR_UUID),
                                     requests=[msg1])
         self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
@@ -351,7 +361,7 @@ requests:
         empty_rset = RequestSet([], RQR_UUID)
         rset.merge(empty_rset)
         self.assertEqual(len(rset), 0)
-        self.assertFalse(TEST_UUID in rset)
+        self.assertNotIn(TEST_UUID, rset)
         self.assertNotEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
         self.assertEqual(rset, empty_rset)
 
@@ -361,7 +371,7 @@ requests:
                        status=Request.CANCELING)
         rset = RequestSet([msg1], RQR_UUID)
         self.assertEqual(len(rset), 1)
-        self.assertTrue(TEST_UUID in rset)
+        self.assertIn(TEST_UUID, rset)
         sch_msg = SchedulerRequests(requester=unique_id.toMsg(RQR_UUID),
                                     requests=[msg1])
         self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
@@ -373,7 +383,7 @@ requests:
         rel_rset = RequestSet([msg2], RQR_UUID, contents=ResourceReply)
         rset.merge(rel_rset)
         self.assertEqual(len(rset), 0)
-        self.assertFalse(TEST_UUID in rset)
+        self.assertNotIn(TEST_UUID, rset)
         self.assertEqual(rset, RequestSet([], RQR_UUID,
                                           contents=ResourceReply))
         self.assertNotEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
@@ -388,8 +398,8 @@ requests:
                        status=Request.NEW)
         rset = RequestSet([msg1, msg2], RQR_UUID)
         self.assertEqual(len(rset), 2)
-        self.assertTrue(TEST_UUID in rset)
-        self.assertTrue(DIFF_UUID in rset)
+        self.assertIn(TEST_UUID, rset)
+        self.assertIn(DIFF_UUID, rset)
         self.assertEqual(rset[DIFF_UUID].msg.status, Request.NEW)
 
         # merge a canceled request: TEST_UUID should be deleted, but
@@ -400,8 +410,8 @@ requests:
         rel_rset = RequestSet([msg3], RQR_UUID)
         rset.merge(rel_rset)
         self.assertEqual(len(rset), 1)
-        self.assertTrue(TEST_UUID not in rset)
-        self.assertTrue(DIFF_UUID in rset)
+        self.assertNotIn(TEST_UUID, rset)
+        self.assertIn(DIFF_UUID, rset)
         self.assertEqual(rset[DIFF_UUID].msg.status, Request.NEW)
 
         # make a fresh object like the original msg2 for comparison
@@ -426,7 +436,7 @@ requests:
                        status=Request.GRANTED)
         rset.merge(RequestSet([msg2], RQR_UUID, contents=ResourceReply))
         self.assertEqual(len(rset), 1)
-        self.assertTrue(TEST_UUID in rset)
+        self.assertIn(TEST_UUID, rset)
         self.assertEqual(rset[TEST_UUID].msg.status, Request.GRANTED)
         self.assertEqual(rset[TEST_UUID].msg.resources, [TEST_RESOURCE])
         sch_msg = SchedulerRequests(requester=unique_id.toMsg(RQR_UUID),
