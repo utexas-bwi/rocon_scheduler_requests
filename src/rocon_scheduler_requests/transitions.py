@@ -308,13 +308,13 @@ class ResourceRequest(RequestBase):
         if update is None:      # this request not yet known to scheduler?
             return              # leave it alone
         if update.get_uuid() != self.get_uuid():
-            raise WrongRequestError('UUID does not match')
+            raise WrongRequestError('UUID does not match')  # test gap
         if self._validate(update.msg.status):
             self.msg.status = update.msg.status
             self.msg.priority = update.msg.priority
             self.msg.resources = update.msg.resources
             if update.msg.availability != rospy.Time():
-                self.msg.availability = update.msg.availability
+                self.msg.availability = update.msg.availability  # test gap
 
 
 class ResourceReply(RequestBase):
@@ -368,6 +368,7 @@ class ResourceReply(RequestBase):
         :raises: :exc:`.WrongRequestError`
 
         """
+        # test gap:
         if update is None:      # this request not mentioned in updates
             update = ResourceRequest(self.msg)
             update.msg.status = Request.CLOSED
@@ -508,13 +509,13 @@ class RequestSet:
             if rq.msg.status != other_msg.status:
                 return False
             if rq.msg.priority != other_msg.priority:
-                return False
+                return False            # test gap
             if rq.msg.availability != other_msg.availability:
-                return False
+                return False            # test gap
             if rq.msg.hold_time != other_msg.hold_time:
-                return False
+                return False            # test gap
             if rq.msg.resources != other_msg.resources:
-                return False
+                return False            # test gap
         return True
 
     def __getitem__(self, uuid):
@@ -537,7 +538,7 @@ class RequestSet:
 
     def __setitem__(self, uuid, msg):
         """ Assign a Request message for this *uuid*. """
-        self.requests[uuid] = self.contents(msg)
+        self.requests[uuid] = self.contents(msg)  # test gap
 
     def __str__(self):
         rval = 'requester_id: ' + str(self.requester_id) + '\nrequests:'
@@ -550,6 +551,7 @@ class RequestSet:
 
         :param reason: Reason code for mass cancellation, or ``None``.
         """
+        # test gap:
         for rq in self.requests.values():
             rq.cancel(reason=reason)
 
@@ -563,6 +565,7 @@ class RequestSet:
 
         :param reason: Reason code for mass cancellation, or ``None``.
         """
+        # test gap:
         for rq in self.requests.values():
             if rq.msg.status not in STARTING_STATES:
                 rq.cancel(reason=reason)
@@ -593,7 +596,7 @@ class RequestSet:
         :rtype: list (Python2) or dictionary view (Python3)
 
         """
-        return self.requests.keys()
+        return self.requests.keys()     # test gap
 
     def _list_requests(self):
         """
@@ -630,7 +633,7 @@ class RequestSet:
             if (rid not in self.requests and
                     (new_rq.msg.status == Request.NEW or
                      new_rq.msg.status == Request.RESERVED)):
-                self.requests[rid] = self.contents(new_rq.msg)
+                self.requests[rid] = self.contents(new_rq.msg)  # test gap
 
         # Reconcile each existing request with the updates.  Make a
         # copy of the dictionary items, so it can be altered in the loop.
@@ -657,7 +660,7 @@ class RequestSet:
         msg = SchedulerRequests(requester=unique_id.toMsg(self.requester_id),
                                 requests=self._list_requests())
         if stamp is None:
-            stamp = rospy.Time.now()
+            stamp = rospy.Time.now()    # test gap
         msg.header.stamp = stamp
         return msg
 
@@ -667,4 +670,4 @@ class RequestSet:
         :rtype: list (Python2) or dictionary view (Python3)
 
         """
-        return self.requests.values()
+        return self.requests.values()   # test gap
