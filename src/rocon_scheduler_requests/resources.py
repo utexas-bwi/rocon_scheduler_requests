@@ -52,16 +52,6 @@ import unique_id
 from scheduler_msgs.msg import Resource
 
 
-## Resource states:
-class _Enum(set):
-    def __getattr__(self, name):
-        if name in self:
-            return name
-        raise AttributeError
-
-STATUS = _Enum(['AVAILABLE', 'ALLOCATED', 'MISSING'])
-
-
 class ResourceNotAvailableError(Exception):
     """ Error exception: resource not available. """
     pass
@@ -100,6 +90,17 @@ def rocon_name(platform_info):
             part = '\\.*'               # convert to Python RE
         retval += '/' + part
     return retval
+
+
+## ROCON resource states:
+class _Enum(set):
+    def __getattr__(self, name):
+        if name in self:
+            return name
+        raise AttributeError
+
+STATUS = _Enum(['AVAILABLE', 'ALLOCATED', 'MISSING'])
+""" ROCON resource status values. """
 
 
 class RoconResource:
