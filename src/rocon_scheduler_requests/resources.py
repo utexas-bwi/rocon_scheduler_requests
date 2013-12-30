@@ -50,6 +50,17 @@ import re
 import uuid
 import unique_id
 from scheduler_msgs.msg import Resource
+try:
+    from scheduler_msgs.msg import CurrentStatus
+except ImportError:
+    class CurrentStatus:
+        # provide a substitute for the CurrentStatus message:
+        AVAILABLE, ALLOCATED, MISSING = range(3)
+        def __init__(self, platform_info='', rapps=[]):
+            self.platform_info = platform_info
+            self.rapps = rapps
+            self.status = CurrentStatus.AVAILABLE
+            self.owner = None
 
 
 class ResourceNotAvailableError(Exception):
@@ -92,17 +103,6 @@ def rocon_name(platform_info):
     return retval
 
 
-## ROCON resource states:
-class _Enum(set):
-    def __getattr__(self, name):
-        if name in self:
-            return name
-        raise AttributeError
-
-STATUS = _Enum(['AVAILABLE', 'ALLOCATED', 'MISSING'])
-""" ROCON resource status values. """
-
-
 class RoconResource:
     """
     Class for tracking the status of a single ROCON_ resource.
@@ -142,7 +142,7 @@ class RoconResource:
         """ :class:`uuid.UUID` of request to which this resource is
         currently assigned, or ``None``.
         """
-        self.status = STATUS.AVAILABLE
+        self.status = CurrentStatus.AVAILABLE
         """ Current status of this resource. """
 
     def __eq__(self, other):
@@ -170,7 +170,7 @@ class RoconResource:
         rappstr = ''
         for rapp_name in self.rapps:
             rappstr += '\n    ' + str(rapp_name)
-        return (self.platform_info + ', status: ' + self.status
+        return (self.platform_info + ', status: ' + str(self.status)
                 + '\n  owner: ' + str(self.owner)
                 + '\n  rapps:' + rappstr)
 
@@ -182,12 +182,12 @@ class RoconResource:
 
         :raises: :exc:`.ResourceNotAvailableError` if not available
         """
-        if (self.status != STATUS.AVAILABLE):
+        if (self.status != CurrentStatus.AVAILABLE):
             raise ResourceNotAvailableError('resource not available: '
                                             + self.platform_info)
         assert self.owner is None
         self.owner = request_id
-        self.status = STATUS.ALLOCATED
+        self.status = CurrentStatus.ALLOCATED
 
     def match(self, res):
         """ Match this resource to a requested one.
@@ -240,8 +240,8 @@ class RoconResource:
                                         + str(request_id) + ': '
                                         + self.platform_info)
         self.owner = None
-        if self.status == STATUS.ALLOCATED:  # not gone missing?
-            self.status = STATUS.AVAILABLE
+        if self.status == CurrentStatus.ALLOCATED:  # not gone missing?
+            self.status = CurrentStatus.AVAILABLE
 
 
 class ResourceSet:

@@ -11,6 +11,10 @@ import unittest
 # ROS dependencies
 import unique_id
 from scheduler_msgs.msg import Resource
+try:
+    from scheduler_msgs.msg import CurrentStatus
+except ImportError:
+    from rocon_scheduler_requests.resources import CurrentStatus
 
 # module being tested:
 from rocon_scheduler_requests.resources import *
@@ -24,7 +28,7 @@ TEST_RESOURCE = Resource(
     name=TEST_RAPP)
 TEST_RESOURCE_NAME = 'rocon:///linux/precise/ros/segbot/roberto'
 TEST_RESOURCE_STRING = (
-    """rocon:///linux/precise/ros/segbot/roberto, status: AVAILABLE
+    """rocon:///linux/precise/ros/segbot/roberto, status: 0
   owner: None
   rapps:
     rocon_apps/teleop""")
@@ -35,7 +39,7 @@ TEST_ANOTHER = Resource(
     name=TEST_RAPP)
 TEST_ANOTHER_NAME = 'rocon:///linux/precise/ros/segbot/marvin'
 TEST_ANOTHER_STRING = (
-    """rocon:///linux/precise/ros/segbot/marvin, status: AVAILABLE
+    """rocon:///linux/precise/ros/segbot/marvin, status: 0
   owner: None
   rapps:
     rocon_apps/teleop""")
@@ -71,10 +75,10 @@ class TestRoconResource(unittest.TestCase):
         res1 = RoconResource(Resource(
             platform_info='rocon:///linux/precise/ros/segbot/roberto',
             name=TEST_RAPP))
-        self.assertEqual(res1.status, STATUS.AVAILABLE)
+        self.assertEqual(res1.status, CurrentStatus.AVAILABLE)
         self.assertEqual(res1.owner, None)
         res1.allocate(TEST_UUID)
-        self.assertEqual(res1.status, STATUS.ALLOCATED)
+        self.assertEqual(res1.status, CurrentStatus.ALLOCATED)
         self.assertEqual(res1.owner, TEST_UUID)
         self.assertRaises(ResourceNotAvailableError, res1.allocate, DIFF_UUID)
         self.assertRaises(ResourceNotAvailableError, res1.allocate, TEST_UUID)
@@ -106,7 +110,7 @@ class TestRoconResource(unittest.TestCase):
         res3 = RoconResource(Resource(
             platform_info='rocon:///linux/precise/ros/segbot/roberto',
             name='rocon_apps/teleop'))
-        res3.status = STATUS.MISSING
+        res3.status = CurrentStatus.MISSING
         self.assertEqual(res1.owner, res3.owner)
         self.assertNotEqual(res1.status, res3.status)
         self.assertNotEqual(res1, res3)
@@ -160,23 +164,23 @@ class TestRoconResource(unittest.TestCase):
         res1 = RoconResource(Resource(
             platform_info='rocon:///linux/precise/ros/segbot/roberto',
             name=TEST_RAPP))
-        self.assertEqual(res1.status, STATUS.AVAILABLE)
+        self.assertEqual(res1.status, CurrentStatus.AVAILABLE)
         self.assertEqual(res1.owner, None)
         res1.allocate(TEST_UUID)
-        self.assertEqual(res1.status, STATUS.ALLOCATED)
+        self.assertEqual(res1.status, CurrentStatus.ALLOCATED)
         self.assertEqual(res1.owner, TEST_UUID)
         self.assertRaises(ResourceNotOwnedError, res1.release, DIFF_UUID)
         res1.release(TEST_UUID)
-        self.assertEqual(res1.status, STATUS.AVAILABLE)
+        self.assertEqual(res1.status, CurrentStatus.AVAILABLE)
 
         res2 = RoconResource(Resource(
             platform_info='rocon:///linux/precise/ros/segbot/roberto',
             name=TEST_RAPP))
         res2.allocate(TEST_UUID)
-        self.assertEqual(res2.status, STATUS.ALLOCATED)
-        res2.status = STATUS.MISSING    # resource now missing
+        self.assertEqual(res2.status, CurrentStatus.ALLOCATED)
+        res2.status = CurrentStatus.MISSING    # resource now missing
         res2.release(TEST_UUID)
-        self.assertEqual(res2.status, STATUS.MISSING)
+        self.assertEqual(res2.status, CurrentStatus.MISSING)
 
 
 class TestResourceSet(unittest.TestCase):
