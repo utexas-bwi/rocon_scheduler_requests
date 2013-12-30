@@ -35,8 +35,6 @@
 
 Python interface for ROCON schedulers handling resource requests.
 
-.. _`uuid_msgs/UniqueID`:
-     http://ros.org/doc/api/uuid_msgs/html/msg/UniqueID.html
 .. _UUID: http://en.wikipedia.org/wiki/Uuid
 
 """
