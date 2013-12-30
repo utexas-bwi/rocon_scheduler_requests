@@ -260,8 +260,8 @@ class ResourceSet:
     This class is a container for :class:`.RoconResource` objects
     known to the scheduler.  It acts like a dictionary.
 
-    :param msg: A ``scheduler_msgs/KnownResources`` or
-        ``scheduler_msgs/Request`` message or an optional list of
+    :param msg: An optional ``scheduler_msgs/KnownResources`` or
+        ``scheduler_msgs/Request`` message or a list of
         ``CurrentStatus`` or ``Resource`` messages, like the
         ``resources`` component of one of those messages.
 
