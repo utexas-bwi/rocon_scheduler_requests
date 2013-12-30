@@ -260,9 +260,10 @@ class ResourceSet:
     This class is a container for :class:`.RoconResource` objects
     known to the scheduler.  It acts like a dictionary.
 
-    :param resource_list: An optional list of ``Resource`` messages,
-        like the ``resources`` component of a ``scheduler_msgs/Request``
-        message.
+    :param msg: A ``scheduler_msgs/KnownResources`` or
+        ``scheduler_msgs/Request`` message or an optional list of
+        ``CurrentStatus`` or ``Resource`` messages, like the
+        ``resources`` component of one of those messages.
 
     :class:`.ResourceSet` supports these standard container operations:
 
@@ -309,13 +310,16 @@ class ResourceSet:
     These attributes are also provided:
 
     """
-    def __init__(self, resource_list=[]):
+    def __init__(self, msg=None):
         """ Constructor. """
         self.resources = {}
         """ Dictionary of known :class:`.RoconResource` objects. """
-        for res in resource_list:
-            rocon_res = RoconResource(res)
-            self.resources[hash(rocon_res)] = rocon_res
+        if msg is not None:
+            if hasattr(msg, 'resources'):
+                msg = msg.resources
+            for res in msg:
+                rocon_res = RoconResource(res)
+                self.resources[hash(rocon_res)] = rocon_res
 
     def __contains__(self, res):
         """ Resource set membership. """

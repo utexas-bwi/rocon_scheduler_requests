@@ -214,7 +214,7 @@ class TestResourceSet(unittest.TestCase):
         self.assertEqual(str(res_set), 'ROCON resource set:')
 
     def test_one_resource_set(self):
-        res_set = ResourceSet([TEST_RESOURCE])
+        res_set = ResourceSet(KnownResources(resources=[TEST_RESOURCE]))
         self.assertEqual(len(res_set), 1)
         self.assertTrue(RoconResource(TEST_RESOURCE) in res_set)
         self.assertTrue(TEST_RESOURCE_NAME in res_set)
