@@ -23,6 +23,9 @@ from rocon_scheduler_requests.resources import *
 TEST_UUID = unique_id.fromURL('package://rocon_scheduler_requests/test_uuid')
 DIFF_UUID = unique_id.fromURL('package://rocon_scheduler_requests/diff_uuid')
 TEST_RAPP = 'rocon_apps/teleop'
+TEST_STATUS = CurrentStatus(
+    platform_info='rocon:///linux/precise/ros/segbot/roberto',
+    rapps=[TEST_RAPP])
 TEST_RESOURCE = Resource(
     platform_info='rocon:///linux/precise/ros/segbot/roberto',
     name=TEST_RAPP)
@@ -66,7 +69,7 @@ class TestRoconResource(unittest.TestCase):
         self.assertEqual(res1.platform_info, TEST_ANOTHER_NAME)
         self.assertMultiLineEqual(str(res1), TEST_ANOTHER_STRING)
 
-        res2 = RoconResource(TEST_RESOURCE)
+        res2 = RoconResource(TEST_STATUS)
         self.assertEqual(res2.platform_info, TEST_RESOURCE_NAME)
         self.assertMultiLineEqual(str(res2), TEST_RESOURCE_STRING)
         self.assertNotEqual(str(res2), TEST_ANOTHER_STRING)
@@ -116,7 +119,7 @@ class TestRoconResource(unittest.TestCase):
         self.assertNotEqual(res1, res3)
 
     def test_match(self):
-        res1 = RoconResource(TEST_RESOURCE)
+        res1 = RoconResource(TEST_STATUS)
         self.assertTrue(res1.match(Resource(
             name=TEST_RAPP,
             platform_info=r'rocon:///linux/precise/ros/segbot/.*')))
@@ -197,7 +200,7 @@ class TestResourceSet(unittest.TestCase):
         res_set = ResourceSet()
         self.assertIsNotNone(res_set)
         self.assertEqual(len(res_set), 0)
-        self.assertFalse(RoconResource(TEST_RESOURCE) in res_set)
+        self.assertFalse(RoconResource(TEST_STATUS) in res_set)
         self.assertTrue('arbitrary name' not in res_set)
         self.assertTrue(TEST_RESOURCE_NAME not in res_set)
         self.assertIsNone(res_set.get(TEST_RESOURCE_NAME))
@@ -207,7 +210,7 @@ class TestResourceSet(unittest.TestCase):
         self.assertTrue(res_set == ResourceSet([]))
         self.assertFalse(not res_set == ResourceSet([]))
         self.assertTrue((res_set != ResourceSet([TEST_RESOURCE])))
-        self.assertFalse(res_set == ResourceSet([TEST_RESOURCE]))
+        self.assertFalse(res_set == ResourceSet([TEST_STATUS]))
         self.assertEqual(str(res_set), 'ROCON resource set:')
 
     def test_one_resource_set(self):
@@ -238,7 +241,7 @@ class TestResourceSet(unittest.TestCase):
         self.assertNotIn(TEST_RESOURCE_NAME, res_set)
         self.assertNotIn(TEST_ANOTHER_NAME, res_set)
 
-        res_set[TEST_RESOURCE_NAME] = RoconResource(TEST_RESOURCE)
+        res_set[TEST_RESOURCE_NAME] = RoconResource(TEST_STATUS)
         self.assertEqual(len(res_set), 1)
         self.assertIn(TEST_RESOURCE_NAME, res_set)
         self.assertNotIn(TEST_ANOTHER_NAME, res_set)

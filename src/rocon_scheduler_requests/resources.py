@@ -54,13 +54,21 @@ try:
     from scheduler_msgs.msg import CurrentStatus
 except ImportError:
     class CurrentStatus:
-        # provide a substitute for the CurrentStatus message:
+        # provide a stub for the CurrentStatus message:
         AVAILABLE, ALLOCATED, MISSING = range(3)
+
         def __init__(self, platform_info='', rapps=[]):
             self.platform_info = platform_info
             self.rapps = rapps
             self.status = CurrentStatus.AVAILABLE
             self.owner = None
+try:
+    from scheduler_msgs.msg import KnownResources
+except ImportError:
+    class KnownResources:
+        # provide a stub for the KnownResources message:
+        def __init__(self, resources=[]):
+            self.resources = resources
 
 
 class ResourceNotAvailableError(Exception):
@@ -108,7 +116,7 @@ class RoconResource:
     Class for tracking the status of a single ROCON_ resource.
 
     :param msg: ROCON scheduler resource message.
-    :type msg: scheduler_msgs/Resource
+    :type msg: scheduler_msgs/CurrentStatus or scheduler_msgs/Resource
 
     .. describe:: hash(res)
 
@@ -135,9 +143,12 @@ class RoconResource:
         """ Constructor. """
         self.platform_info = rocon_name(msg.platform_info)
         """ Fully-resolved canonical ROCON resource name. """
-        self.rapps = set([msg.name])
-        """ The :class:`set` of ROCON application name strings this platform
-        advertises. """
+        try:
+            self.rapps = set(msg.rapps)
+            """ The :class:`set` of ROCON application name strings
+            this platform advertises. """
+        except AttributeError:
+            self.rapps = set([msg.name])
         self.owner = None
         """ :class:`uuid.UUID` of request to which this resource is
         currently assigned, or ``None``.
