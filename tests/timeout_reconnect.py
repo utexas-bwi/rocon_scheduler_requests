@@ -97,7 +97,7 @@ class TestTimeoutRequester(unittest.TestCase):
         rospy.loginfo('Step 4')
         self.verify([self.rq1, self.rq3, self.rq4])
         rospy.loginfo('disconnect requester')
-        self.rqr.unregister()           # disconnect topics
+        self.rqr._unregister()          # simulate disconnection
         self.wait_cycles = 0            # cycle count
         self.next_step = self.step5
 

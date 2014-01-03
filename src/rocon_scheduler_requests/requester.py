@@ -255,7 +255,7 @@ class Requester:
             #                         oneshot=True)
             self.timer = rospy.Timer(self.time_delay, self._heartbeat)
 
-    def unregister(self):
+    def _unregister(self):
         """ Disconnect from scheduler. """
         self.timer.shutdown()
         self.timer = None
