@@ -58,11 +58,6 @@ class TestRoconResource(unittest.TestCase):
     # ROCON resource tests
     ####################
 
-    def test_rocon_name(self):
-        self.assertEqual(rocon_name(TEST_RESOURCE_NAME), TEST_RESOURCE_NAME)
-        self.assertEqual(rocon_name(TEST_ANOTHER_NAME), TEST_ANOTHER_NAME)
-        self.assertNotEqual(rocon_name(TEST_ANOTHER_NAME), TEST_RESOURCE_NAME)
-
     def test_constructor(self):
         res1 = RoconResource(TEST_ANOTHER)
         self.assertIsNotNone(res1)
@@ -173,6 +168,7 @@ class TestRoconResource(unittest.TestCase):
         self.assertEqual(res1.status, CurrentStatus.ALLOCATED)
         self.assertEqual(res1.owner, TEST_UUID)
         self.assertRaises(ResourceNotOwnedError, res1.release, DIFF_UUID)
+        self.assertEqual(res1.status, CurrentStatus.ALLOCATED)
         res1.release(TEST_UUID)
         self.assertEqual(res1.status, CurrentStatus.AVAILABLE)
 
@@ -184,6 +180,26 @@ class TestRoconResource(unittest.TestCase):
         res2.status = CurrentStatus.MISSING    # resource now missing
         res2.release(TEST_UUID)
         self.assertEqual(res2.status, CurrentStatus.MISSING)
+
+        res3 = RoconResource(Resource(
+            platform_info='rocon:///linux/precise/ros/segbot/roberto',
+            name=TEST_RAPP))
+        res3.allocate(TEST_UUID)
+        res3.release()
+        self.assertEqual(res3.status, CurrentStatus.AVAILABLE)
+
+        res4 = RoconResource(Resource(
+            platform_info='rocon:///linux/precise/ros/segbot/roberto',
+            name=TEST_RAPP))
+        res4.allocate(TEST_UUID)
+        res4.status = CurrentStatus.MISSING    # resource now missing
+        res4.release()
+        self.assertEqual(res4.status, CurrentStatus.MISSING)
+
+    def test_rocon_name(self):
+        self.assertEqual(rocon_name(TEST_RESOURCE_NAME), TEST_RESOURCE_NAME)
+        self.assertEqual(rocon_name(TEST_ANOTHER_NAME), TEST_ANOTHER_NAME)
+        self.assertNotEqual(rocon_name(TEST_ANOTHER_NAME), TEST_RESOURCE_NAME)
 
 
 class TestResourceSet(unittest.TestCase):

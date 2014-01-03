@@ -238,15 +238,16 @@ class RoconResource:
             return False
         return re.match(pattern, self.platform_info)
 
-    def release(self, request_id):
+    def release(self, request_id=None):
         """ Release this resource.
 
-        :param request_id: Owning request.
-        :type request_id: :class:`uuid.UUID`
+        :param request_id: Optional owning request.
+        :type request_id: :class:`uuid.UUID` or ``None``
 
-        :raises: :exc:`.ResourceNotOwnedError` if not available
+        :raises: :exc:`.ResourceNotOwnedError` if *request_id* is
+            specified and is not the owner.
         """
-        if (self.owner != request_id or request_id is None):
+        if (request_id is not None and self.owner != request_id):
             raise ResourceNotOwnedError('resource not owned by '
                                         + str(request_id) + ': '
                                         + self.platform_info)
