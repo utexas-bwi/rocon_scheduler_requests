@@ -246,7 +246,7 @@ class RequestBase(object):
         """ Format requested resource into a human-readable string. """
         retval = ''
         for res in self.msg.resources:
-            retval += '\n      ' + res.platform_info + '/' + res.name
+            retval += '\n      ' + res.platform_info + '#' + res.name
         return retval
 
     def _transition(self, event, reason=None):
