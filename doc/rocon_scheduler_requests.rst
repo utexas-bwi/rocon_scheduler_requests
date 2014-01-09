@@ -27,7 +27,6 @@ The following pages describe lower-level interfaces:
 
    common
    exceptions
-   resources
    requester
    scheduler
    transitions

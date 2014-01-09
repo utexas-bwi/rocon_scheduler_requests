@@ -1,6 +1,6 @@
 <package>
   <name>rocon_scheduler_requests</name>
-  <version>0.0.0</version>
+  <version>0.6.6</version>
   <description>
     Python and C++ interfaces for managing ROCON scheduler requests.
   </description>
