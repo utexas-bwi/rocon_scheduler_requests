@@ -49,14 +49,12 @@ import rospy
 import unique_id
 
 # ROS messages
-from scheduler_msgs.msg import Request
-from scheduler_msgs.msg import SchedulerRequests
+from scheduler_msgs.msg import Request, SchedulerRequests
 
 # internal modules
 from . import common
 from . import TransitionError, WrongRequestError
 from .transitions import RequestSet
-from .transitions import ResourceRequest
 
 
 class Requester:

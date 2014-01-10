@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 """ Requester usage example. """
 import rospy
-from scheduler_msgs.msg import Resource
-from rocon_scheduler_requests.transitions import Request
+from scheduler_msgs.msg import Request, Resource
 from rocon_scheduler_requests import Requester
 
 

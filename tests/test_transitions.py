@@ -10,8 +10,7 @@ import unittest
 
 # ROS dependencies
 import unique_id
-from scheduler_msgs.msg import Request
-from scheduler_msgs.msg import Resource
+from scheduler_msgs.msg import Request, Resource
 
 # module being tested:
 from rocon_scheduler_requests.transitions import *
@@ -141,8 +140,7 @@ class TestTransitions(unittest.TestCase):
         rq = self.assert_valid(ResourceReply, Request.NEW,
                                'grant', Request.GRANTED, [TEST_RESOURCE])
         self.assertEqual(rq.msg.resources, [TEST_RESOURCE])
-        if HAVE_REASON:
-            self.assertEqual(rq.msg.reason, Request.NONE)
+        self.assertEqual(rq.msg.reason, Request.NONE)
         self.assert_valid(ResourceReply, Request.RESERVED,
                           'grant', Request.GRANTED, [TEST_RESOURCE])
         self.assert_invalid(ResourceReply, Request.PREEMPTING,
@@ -157,14 +155,12 @@ class TestTransitions(unittest.TestCase):
         rq = self.assert_valid(ResourceReply, Request.CLOSED,
                                'preempt', Request.CLOSED,
                                Request.PREEMPTED)
-        if HAVE_REASON:
-            self.assertNotEqual(rq.msg.reason, Request.PREEMPTED)
-            self.assertEqual(rq.msg.reason, Request.NONE)
+        self.assertNotEqual(rq.msg.reason, Request.PREEMPTED)
+        self.assertEqual(rq.msg.reason, Request.NONE)
         rq = self.assert_valid(ResourceReply, Request.GRANTED,
                                'preempt', Request.PREEMPTING,
                                Request.PREEMPTED)
-        if HAVE_REASON:
-            self.assertEqual(rq.msg.reason, Request.PREEMPTED)
+        self.assertEqual(rq.msg.reason, Request.PREEMPTED)
         self.assert_valid(ResourceReply, Request.NEW,
                           'preempt', Request.NEW)
         self.assert_valid(ResourceReply, Request.PREEMPTING,
@@ -192,14 +188,12 @@ class TestTransitions(unittest.TestCase):
                             'wait', TransitionError)
         rq = self.assert_valid(ResourceReply, Request.NEW,
                                'wait', Request.WAITING, Request.BUSY)
-        if HAVE_REASON:
-            self.assertEqual(rq.msg.reason, Request.BUSY)
+        self.assertEqual(rq.msg.reason, Request.BUSY)
         self.assert_invalid(ResourceReply, Request.PREEMPTING,
                             'wait', TransitionError)
         rq = self.assert_valid(ResourceReply, Request.RESERVED,
                                'wait', Request.WAITING, Request.UNAVAILABLE)
-        if HAVE_REASON:
-            self.assertEqual(rq.msg.reason, Request.UNAVAILABLE)
+        self.assertEqual(rq.msg.reason, Request.UNAVAILABLE)
         rq = self.assert_invalid(ResourceReply, Request.WAITING,
                                  'wait', TransitionError)
 

@@ -37,21 +37,6 @@ This module tracks resource request state transitions, which occur as
 `scheduler_msgs/Request`_ messages flow between schedulers and
 requesters.
 
-.. warning::
-
-   Some of the ``scheduler_msgs.Request.status`` labels have changed,
-   and older scheduler_msgs_ releases use different names.  As an
-   interim work-around, this module provides a compatible Request
-   message which works with either message version.  Use it like
-   this::
-
-       from rocon_scheduler_requests.transitions import Request
-
-   Once all the released scheduler_msgs_ labels have been updated,
-   switch back to the usual message import::
-
-       from scheduler_msgs.msg import Request
-
 As individual ``Request`` messages are passed back and forth between
 the original requester and the scheduler, their ``status`` passes
 through several state transitions.  Gray states are created by the
@@ -74,25 +59,7 @@ from __future__ import absolute_import, print_function
 import rospy
 import unique_id
 
-# temporarily provide status label backwards compatibility
-HAVE_REASON = True
-from scheduler_msgs.msg import Request
-if not hasattr(Request, 'CLOSED'):
-    # Define revised Request.status labels.
-    # See: (robotics-in-concert/rocon_msgs#60)
-    Request.CANCELING = Request.RELEASING
-    Request.CLOSED = Request.RELEASED
-    # The reason code will not flow in messages, but it can be set
-    # and tested without throwing exceptions.
-    Request.NONE = 0
-    Request.PREEMPTED = 1
-    Request.BUSY = 2
-    Request.UNAVAILABLE = 3
-    Request.TIMEOUT = 4
-    Request.reason = Request.NONE
-    HAVE_REASON = False
-
-from scheduler_msgs.msg import SchedulerRequests
+from scheduler_msgs.msg import Request, SchedulerRequests
 from . import TransitionError, WrongRequestError
 
 # Starting and terminal request states:
@@ -264,7 +231,7 @@ class RequestBase(object):
             raise TransitionError('invalid event ' + event.name
                                   + ' in state ' + str(self.msg.status))
         self.msg.status = new_status
-        if reason is not None and HAVE_REASON:
+        if reason is not None:
             self.msg.reason = reason
 
     def _validate(self, new_status):

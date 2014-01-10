@@ -7,8 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import unittest
 from collections import deque
 import rospy
-from scheduler_msgs.msg import Resource
-from rocon_scheduler_requests.transitions import Request
+from scheduler_msgs.msg import Request, Resource
 from rocon_scheduler_requests import Scheduler, TransitionError
 
 

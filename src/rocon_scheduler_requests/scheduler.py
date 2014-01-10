@@ -46,9 +46,7 @@ import rospy
 import unique_id
 
 # ROS messages
-from scheduler_msgs.msg import SchedulerRequests
-#from scheduler_msgs.msg import Request
-from .transitions import Request        # temporary substitute
+from scheduler_msgs.msg import Request, SchedulerRequests
 
 # internal modules
 from . import common
