@@ -170,11 +170,11 @@ class RequestBase(object):
     :param msg: ROCON scheduler request message.
     :type msg: scheduler_msgs/Request
 
-    Use one of these derived classes, depending on the direction of
-    message flow:
+    Requesters and schedulers should use one of these derived classes,
+    depending on their role in the protocol:
 
-    * :class:`.ResourceRequest` requester -> scheduler
-    * :class:`.ResourceReply` scheduler -> requester
+    * Requester: :class:`.ResourceRequest`
+    * Scheduler: :class:`.ActiveRequest`
 
     .. describe:: str(rq)
 
@@ -248,14 +248,13 @@ class RequestBase(object):
 
 class ResourceRequest(RequestBase):
     """
-    This class represents a single resource request from the point of
-    view of the original requester.
+    This represents a single resource request created by and for its
+    original requester.
 
     :param msg: ROCON scheduler request message.
     :type msg: scheduler_msgs/Request
 
     Provides all attributes defined for :class:`.RequestBase`.
-
     """
     def _reconcile(self, update):
         """
@@ -263,7 +262,7 @@ class ResourceRequest(RequestBase):
 
         :param update: Latest information for this request, or
                        ``None`` if no longer present.
-        :type update: :class:`.ResourceReply` or ``None``
+        :type update: :class:`.ActiveRequest` or ``None``
 
         :raises: :exc:`.WrongRequestError`
 
@@ -284,20 +283,18 @@ class ResourceRequest(RequestBase):
                 self.msg.availability = update.msg.availability  # test gap
 
 
-class ResourceReply(RequestBase):
+class ActiveRequest(RequestBase):
     """
-    This class represents a single resource reply from the point of
-    view of the scheduler.
+    This represents a single active resource known to the scheduler.
 
     :param msg: ROCON scheduler request message.
     :type msg: scheduler_msgs/Request
 
     Provides all attributes defined for :class:`.RequestBase`.
-
     """
     def __init__(self, msg):
         """ Constructor """
-        super(ResourceReply, self).__init__(msg)
+        super(ActiveRequest, self).__init__(msg)
         self.allocations = []
         """ List of resources actually allocated for this request (not
         just those requested). """
@@ -383,7 +380,9 @@ class RequestSet:
         ``SchedulerRequests`` message.
     :param requester_id: (:class:`uuid.UUID`) Unique ID this requester
         or ``None``.
-    :param contents: Class from which to instantiate set members.
+    :param contents: Class from which to instantiate set members,
+        either :class:`.ResourceRequest` (the default) for a requester
+        or :class:`.ActiveRequest` for a scheduler.
     :raises: :exc:`TypeError` if the *requester_id* is not specified
         explicitly or as part of a ``SchedulerRequests`` message.
 

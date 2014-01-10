@@ -115,59 +115,59 @@ class TestTransitions(unittest.TestCase):
                           'cancel', Request.CANCELING)
 
     def test_close(self):
-        self.assert_valid(ResourceReply, Request.CANCELING,
+        self.assert_valid(ActiveRequest, Request.CANCELING,
                           'close', Request.CLOSED)
-        self.assert_invalid(ResourceReply, Request.CLOSED,
+        self.assert_invalid(ActiveRequest, Request.CLOSED,
                             'close', TransitionError)
-        self.assert_invalid(ResourceReply, Request.GRANTED,
+        self.assert_invalid(ActiveRequest, Request.GRANTED,
                             'close', TransitionError)
-        self.assert_invalid(ResourceReply, Request.NEW,
+        self.assert_invalid(ActiveRequest, Request.NEW,
                             'close', TransitionError)
-        self.assert_valid(ResourceReply, Request.PREEMPTING,
+        self.assert_valid(ActiveRequest, Request.PREEMPTING,
                           'close', Request.CLOSED)
-        self.assert_invalid(ResourceReply, Request.RESERVED,
+        self.assert_invalid(ActiveRequest, Request.RESERVED,
                             'close', TransitionError)
-        self.assert_invalid(ResourceReply, Request.WAITING,
+        self.assert_invalid(ActiveRequest, Request.WAITING,
                             'close', TransitionError)
 
     def test_grant(self):
-        self.assert_invalid(ResourceReply, Request.CANCELING,
+        self.assert_invalid(ActiveRequest, Request.CANCELING,
                             'grant', TransitionError, [TEST_RESOURCE])
-        self.assert_invalid(ResourceReply, Request.CLOSED,
+        self.assert_invalid(ActiveRequest, Request.CLOSED,
                             'grant', TransitionError, [TEST_RESOURCE])
-        self.assert_invalid(ResourceReply, Request.GRANTED,
+        self.assert_invalid(ActiveRequest, Request.GRANTED,
                             'grant', TransitionError, [TEST_RESOURCE])
-        rq = self.assert_valid(ResourceReply, Request.NEW,
+        rq = self.assert_valid(ActiveRequest, Request.NEW,
                                'grant', Request.GRANTED, [TEST_RESOURCE])
         self.assertEqual(rq.msg.resources, [TEST_RESOURCE])
         self.assertEqual(rq.msg.reason, Request.NONE)
-        self.assert_valid(ResourceReply, Request.RESERVED,
+        self.assert_valid(ActiveRequest, Request.RESERVED,
                           'grant', Request.GRANTED, [TEST_RESOURCE])
-        self.assert_invalid(ResourceReply, Request.PREEMPTING,
+        self.assert_invalid(ActiveRequest, Request.PREEMPTING,
                                'grant', TransitionError, [TEST_RESOURCE])
-        self.assert_valid(ResourceReply, Request.WAITING,
+        self.assert_valid(ActiveRequest, Request.WAITING,
                           'grant', Request.GRANTED, [TEST_RESOURCE])
 
     def test_preempt(self):
         # valid in every state, but only affects GRANTED requests
-        self.assert_valid(ResourceReply, Request.CANCELING,
+        self.assert_valid(ActiveRequest, Request.CANCELING,
                           'preempt', Request.CANCELING)
-        rq = self.assert_valid(ResourceReply, Request.CLOSED,
+        rq = self.assert_valid(ActiveRequest, Request.CLOSED,
                                'preempt', Request.CLOSED,
                                Request.PREEMPTED)
         self.assertNotEqual(rq.msg.reason, Request.PREEMPTED)
         self.assertEqual(rq.msg.reason, Request.NONE)
-        rq = self.assert_valid(ResourceReply, Request.GRANTED,
+        rq = self.assert_valid(ActiveRequest, Request.GRANTED,
                                'preempt', Request.PREEMPTING,
                                Request.PREEMPTED)
         self.assertEqual(rq.msg.reason, Request.PREEMPTED)
-        self.assert_valid(ResourceReply, Request.NEW,
+        self.assert_valid(ActiveRequest, Request.NEW,
                           'preempt', Request.NEW)
-        self.assert_valid(ResourceReply, Request.PREEMPTING,
+        self.assert_valid(ActiveRequest, Request.PREEMPTING,
                           'preempt', Request.PREEMPTING)
-        self.assert_valid(ResourceReply, Request.RESERVED,
+        self.assert_valid(ActiveRequest, Request.RESERVED,
                           'preempt', Request.RESERVED)
-        self.assert_valid(ResourceReply, Request.WAITING,
+        self.assert_valid(ActiveRequest, Request.WAITING,
                           'preempt', Request.WAITING)
 
     def test_validate(self):
@@ -180,21 +180,21 @@ class TestTransitions(unittest.TestCase):
 
 
     def test_wait(self):
-        self.assert_invalid(ResourceReply, Request.CANCELING,
+        self.assert_invalid(ActiveRequest, Request.CANCELING,
                             'wait', TransitionError)
-        self.assert_invalid(ResourceReply, Request.CLOSED,
+        self.assert_invalid(ActiveRequest, Request.CLOSED,
                             'wait', TransitionError)
-        self.assert_invalid(ResourceReply, Request.GRANTED,
+        self.assert_invalid(ActiveRequest, Request.GRANTED,
                             'wait', TransitionError)
-        rq = self.assert_valid(ResourceReply, Request.NEW,
+        rq = self.assert_valid(ActiveRequest, Request.NEW,
                                'wait', Request.WAITING, Request.BUSY)
         self.assertEqual(rq.msg.reason, Request.BUSY)
-        self.assert_invalid(ResourceReply, Request.PREEMPTING,
+        self.assert_invalid(ActiveRequest, Request.PREEMPTING,
                             'wait', TransitionError)
-        rq = self.assert_valid(ResourceReply, Request.RESERVED,
+        rq = self.assert_valid(ActiveRequest, Request.RESERVED,
                                'wait', Request.WAITING, Request.UNAVAILABLE)
         self.assertEqual(rq.msg.reason, Request.UNAVAILABLE)
-        rq = self.assert_invalid(ResourceReply, Request.WAITING,
+        rq = self.assert_invalid(ActiveRequest, Request.WAITING,
                                  'wait', TransitionError)
 
 
@@ -226,14 +226,14 @@ requests:"""
         # significant, but the contents type is ignored.
         self.assertEqual(rset, RequestSet([], RQR_UUID))
         self.assertEqual(rset, RequestSet([], RQR_UUID,
-                                          contents=ResourceReply))
+                                          contents=ActiveRequest))
         self.assertNotEqual(rset, RequestSet([], TEST_UUID))
 
     def test_one_request_set(self):
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_WILDCARD],
                        status=Request.NEW)
-        rset = RequestSet([msg1], RQR_UUID, contents=ResourceReply)
+        rset = RequestSet([msg1], RQR_UUID, contents=ActiveRequest)
         self.assertEqual(len(rset), 1)
         self.assertIn(TEST_UUID, rset)
         self.assertEqual(rset[TEST_UUID].msg, msg1)
@@ -243,7 +243,7 @@ requests:"""
         self.assertEqual(rset.get(DIFF_UUID, 10), 10)
         self.assertEqual(rset, RequestSet([msg1], RQR_UUID))
         self.assertEqual(rset, RequestSet([msg1], RQR_UUID,
-                                          contents=ResourceReply))
+                                          contents=ActiveRequest))
         rset_str = """requester_id: 01234567-89ab-cdef-0123-456789abcdef
 requests:
   id: 01234567-89ab-cdef-fedc-ba9876543210
@@ -337,7 +337,7 @@ requests:
         self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
 
         # merge an empty request set: rset should remain the same
-        rset.merge(RequestSet([], RQR_UUID, contents=ResourceReply))
+        rset.merge(RequestSet([], RQR_UUID, contents=ActiveRequest))
         self.assertEqual(len(rset), 1)
         self.assertIn(TEST_UUID, rset)
         self.assertEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
@@ -346,7 +346,7 @@ requests:
         msg1 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_WILDCARD],
                        status=Request.CLOSED)
-        rset = RequestSet([msg1], RQR_UUID, contents=ResourceReply)
+        rset = RequestSet([msg1], RQR_UUID, contents=ActiveRequest)
         self.assertEqual(len(rset), 1)
         self.assertIn(TEST_UUID, rset)
         sch_msg = SchedulerRequests(requester=unique_id.toMsg(RQR_UUID),
@@ -376,12 +376,12 @@ requests:
         msg2 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_WILDCARD],
                        status=Request.CLOSED)
-        rel_rset = RequestSet([msg2], RQR_UUID, contents=ResourceReply)
+        rel_rset = RequestSet([msg2], RQR_UUID, contents=ActiveRequest)
         rset.merge(rel_rset)
         self.assertEqual(len(rset), 0)
         self.assertNotIn(TEST_UUID, rset)
         self.assertEqual(rset, RequestSet([], RQR_UUID,
-                                          contents=ResourceReply))
+                                          contents=ActiveRequest))
         self.assertNotEqual(rset.to_msg(stamp=rospy.Time()), sch_msg)
         self.assertNotEqual(rset, rel_rset)
 
@@ -430,7 +430,7 @@ requests:
         msg2 = Request(id=unique_id.toMsg(TEST_UUID),
                        resources=[TEST_RESOURCE],
                        status=Request.GRANTED)
-        rset.merge(RequestSet([msg2], RQR_UUID, contents=ResourceReply))
+        rset.merge(RequestSet([msg2], RQR_UUID, contents=ActiveRequest))
         self.assertEqual(len(rset), 1)
         self.assertIn(TEST_UUID, rset)
         self.assertEqual(rset[TEST_UUID].msg.status, Request.GRANTED)

@@ -10,6 +10,7 @@ Change history
 0.6.6 (forthcoming)
 -------------------
 
+ * Rename ``ResourceReply`` class ``ActiveRequest`` (`#27`_)
  * Move ``resources`` module to another package (`#26`_).
  * Remove some *deprecated* methods: abort(), free(), reject(),
    release() (`#21`_)
@@ -23,3 +24,4 @@ Change history
 
 .. _`#21`: https://github.com/utexas-bwi/rocon_scheduler_requests/issues/21
 .. _`#26`: https://github.com/utexas-bwi/rocon_scheduler_requests/issues/26
+.. _`#27`: https://github.com/utexas-bwi/rocon_scheduler_requests/issues/27

@@ -50,7 +50,7 @@ from scheduler_msgs.msg import Request, SchedulerRequests
 
 # internal modules
 from . import common
-from .transitions import ResourceReply, RequestSet
+from .transitions import ActiveRequest, RequestSet
 
 
 class _RequesterStatus:
@@ -74,7 +74,7 @@ class _RequesterStatus:
         """ Scheduler serving this requester. """
         self.requester_id = unique_id.fromMsg(msg.requester)
         """ :class:`uuid.UUID` of this requester. """
-        self.rset = RequestSet(msg, contents=ResourceReply)
+        self.rset = RequestSet(msg, contents=ActiveRequest)
         """ All active requests for this requester. """
 
         feedback_topic = common.feedback_topic(self.requester_id,
@@ -101,7 +101,7 @@ class _RequesterStatus:
         """
         self.last_msg_time = msg.header.stamp
         # Make a new RequestSet from this message
-        new_rset = RequestSet(msg, contents=ResourceReply)
+        new_rset = RequestSet(msg, contents=ActiveRequest)
         if self.rset != new_rset:       # something new?
             self.rset.merge(new_rset)
             self.sched.callback(self.rset)
@@ -150,7 +150,7 @@ class Scheduler:
     The *callback* function is called when new or updated requests are
     received.  It is expected to iterate over its
     :class:`.RequestSet`, checking the status of every
-    :class:`.ResourceReply` it contains, modifying them appropriately.
+    :class:`.ActiveRequest` it contains, modifying them appropriately.
     The results will be sent to the requester after this callback
     returns.
 
