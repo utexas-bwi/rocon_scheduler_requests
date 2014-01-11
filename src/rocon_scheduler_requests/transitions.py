@@ -60,7 +60,7 @@ import rospy
 import unique_id
 
 from scheduler_msgs.msg import Request, SchedulerRequests
-from . import TransitionError, WrongRequestError
+from . import TransitionError
 
 # Starting and terminal request states:
 STARTING_STATES = frozenset([Request.NEW, Request.RESERVED])
@@ -89,7 +89,7 @@ TRANS_TABLE = frozenset([
     (Request.NEW, Request.WAITING),
 
     (Request.PREEMPTING, Request.CANCELING),
-    (Request.PREEMPTING, Request.CLOSED),
+    (Request.PREEMPTING, Request.CLOSED),       # really??
     (Request.PREEMPTING, Request.PREEMPTING),
 
     (Request.RESERVED, Request.CANCELING),
@@ -170,8 +170,8 @@ class RequestBase(object):
     :param msg: ROCON scheduler request message.
     :type msg: scheduler_msgs/Request
 
-    Requesters and schedulers should use one of these derived classes,
-    depending on their role in the protocol:
+    Requesters and schedulers will use one of the following derived
+    classes, with higher-level interfaces creating it automatically:
 
     * Requester: :class:`.ResourceRequest`
     * Scheduler: :class:`.ActiveRequest`
@@ -191,8 +191,7 @@ class RequestBase(object):
 
         :param reason: Reason code for cancellation, or ``None``.
 
-        *Always valid for requesters and schedulers.*
-
+        *Always valid for both requesters and schedulers.*
         """
         self._transition(EVENT_CANCEL, reason)
 
@@ -204,7 +203,7 @@ class RequestBase(object):
 
     def __str__(self):
         """ Generate string representation. """
-        return 'id: ' + str(unique_id.fromMsg(self.msg.id)) \
+        return 'id: ' + str(self.get_uuid()) \
             + '\n    priority: ' + str(self.msg.priority) \
             + '\n    resources: ' + self._str_resources() \
             + '\n    status: ' + str(self.msg.status)
@@ -224,7 +223,6 @@ class RequestBase(object):
         :type event: :class:`._EventTranitions`
         :param reason: Reason code for transition, or ``None``.
         :raises: :exc:`.TransitionError` if not a valid transition.
-
         """
         new_status = event.trans.get(self.msg.status)
         if new_status is None:
@@ -239,9 +237,7 @@ class RequestBase(object):
         Validate status update for this resource request.
 
         :param new_status: Proposed new status for this request.
-
         :returns: ``True`` if this is a valid state transition.
-
         """
         return (self.msg.status, new_status) in TRANS_TABLE
 
@@ -256,25 +252,21 @@ class ResourceRequest(RequestBase):
 
     Provides all attributes defined for :class:`.RequestBase`.
     """
-    def _reconcile(self, update):
+    def reconcile(self, update):
         """
-        Reconcile scheduler updates with requester status.
+        Reconcile scheduler updates with requester status for a merge
+        operation.
 
         :param update: Latest information for this request, or
-                       ``None`` if no longer present.
-        :type update: :class:`.ActiveRequest` or ``None``
-
-        :raises: :exc:`.WrongRequestError`
+            ``None`` if no longer present.
+        :type update: :class:`.ResourceRequest` or ``None``
 
         Only the requester creates new requests.  If something is
         missing from the scheduler feedback, that just means the
-        scheduler has not yet heard about it.
-
+        scheduler has not gotten to it yet.
         """
         if update is None:      # this request not yet known to scheduler?
             return              # leave it alone
-        if update.get_uuid() != self.get_uuid():
-            raise WrongRequestError('UUID does not match')  # test gap
         if self._validate(update.msg.status):
             self.msg.status = update.msg.status
             self.msg.priority = update.msg.priority
@@ -321,23 +313,23 @@ class ActiveRequest(RequestBase):
         self.msg.resources = resources
         self.allocations = resources
 
-    def _reconcile(self, update):
+    def reconcile(self, update):
         """
-        Reconcile updated request with current scheduler status.
+        Reconcile updated request with current scheduler status for a
+        merge operation.
 
         :param update: Latest information for this request, or
-                       ``None`` if no longer present.
-        :type update: :class:`.ResourceRequest` or ``None``
-
-        :raises: :exc:`.WrongRequestError`
-
+            ``None`` if no longer present.
+        :type update: :class:`.ActiveRequest` or ``None``
         """
         # test gap:
-        if update is None:      # this request not mentioned in updates
+        if update is None:
+            # Only the requester creates new requests.  Since no
+            # update is present, the requester has either deleted this
+            # request, or a new requester instance no longer knows
+            # about it.  So, consider it closed.
             update = ResourceRequest(self.msg)
             update.msg.status = Request.CLOSED
-        elif update.get_uuid() != self.get_uuid():
-            raise WrongRequestError('UUID does not match')
         if self._validate(update.msg.status):
             self.msg.status = update.msg.status
             self.msg.hold_time = update.msg.hold_time
@@ -594,8 +586,7 @@ class RequestSet:
         # Add any new requests not previously known.
         for rid, new_rq in updates.items():
             if (rid not in self.requests and
-                    (new_rq.msg.status == Request.NEW or
-                     new_rq.msg.status == Request.RESERVED)):
+                    new_rq.msg.status in STARTING_STATES):
                 self.requests[rid] = self.contents(new_rq.msg)  # test gap
 
         # Reconcile each existing request with the updates.  Make a
@@ -608,7 +599,7 @@ class RequestSet:
                         new_rq is None)):
                 del self.requests[rid]  # no longer needed
             else:
-                rq._reconcile(new_rq)
+                rq.reconcile(new_rq)
 
     def to_msg(self, stamp=None):
         """ Convert to ROS ``scheduler_msgs/SchedulerRequest`` message.
