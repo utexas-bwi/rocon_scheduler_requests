@@ -41,9 +41,14 @@ class TestTimeoutRequester(unittest.TestCase):
         """ Timer event handler for periodic request updates.
 
         Invokes self.next_step(), unless ``None``.
+
+        This method runs in a different thread from the feedback
+        callback, so acquire the Big Requester Lock for running each
+        action step, even though most of them do not require it.
         """
         if self.next_step is not None:  # more to do?
-            self.next_step()
+            with self.rqr.lock:
+                self.next_step()
         else:                           # no more steps
             rospy.signal_shutdown('test completed.')
 

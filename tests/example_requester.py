@@ -32,8 +32,9 @@ class ExampleRequester:
     def periodic_update(self, event):
         """ Timer event handler for periodic request updates. """
         try:
-            # cancel the previously-issued request
-            self.rqr.rset[self.request_id].cancel()
+            # cancel the previous request, holding the Big Requester Lock
+            with self.rqr.lock:
+                self.rqr.rset[self.request_id].cancel()
         except KeyError:
             # previous request is gone, request another similar robot
             self.request_turtlebot()

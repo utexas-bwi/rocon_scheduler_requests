@@ -32,18 +32,24 @@ class TestExampleRequester(unittest.TestCase):
         rospy.spin()                    # spin in the main thread
 
     def allocate(self, event):
-        """ Timer handler: simulated resource availability event. """
-        if self.queued_request:
-            self.queued_request.grant([TEST_RESOURCE])
-            rospy.loginfo('Request granted: '
-                          + str(self.queued_request.get_uuid()))
-            if self.number_of_requests == 2:
-                # preempt this request immediately
-                self.queued_request.preempt()
-                rospy.loginfo('Request preempted: '
+        """ Timer handler: simulated resource availability event.
+
+        This method runs in a different thread from the scheduler
+        callback, so acquire the Big Scheduler Lock before doing
+        anything.
+        """
+        with self.sch.lock:
+            if self.queued_request:
+                self.queued_request.grant([TEST_RESOURCE])
+                rospy.loginfo('Request granted: '
                               + str(self.queued_request.get_uuid()))
-            self.queued_request = None
-            self.sch.notify(self.queued_requester)
+                if self.number_of_requests == 2:
+                    # preempt this request immediately
+                    self.queued_request.preempt()
+                    rospy.loginfo('Request preempted: '
+                                  + str(self.queued_request.get_uuid()))
+                self.queued_request = None
+                self.sch.notify(self.queued_requester)
 
     def queue(self, requester_id, request):
         """

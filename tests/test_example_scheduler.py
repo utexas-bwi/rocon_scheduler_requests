@@ -38,11 +38,17 @@ class TestExampleScheduler(unittest.TestCase):
                 rq.cancel()     # release preempted resource immediately
 
     def periodic_update(self, event):
-        """ Timer event handler for periodic request updates. """
+        """ Timer event handler for periodic request updates. 
+
+        This method runs in a different thread from the feedback
+        callback, so acquire the Big Requester Lock for running each
+        action step, even though most of them do not require it.
+        """
         # Invoke self.actions in order.
         if len(self.actions) > 0:       # actions remain?
             next_step = self.actions.popleft()
-            next_step()
+            with self.rqr.lock:
+                next_step()
         else:                           # no more actions
             rospy.signal_shutdown('test completed.')
 

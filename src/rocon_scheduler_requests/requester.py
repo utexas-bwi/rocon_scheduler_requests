@@ -1,6 +1,6 @@
 # Software License Agreement (BSD License)
 #
-# Copyright (C) 2013, Jack O'Quin
+# Copyright (C) 2013-2014, Jack O'Quin
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -46,6 +46,7 @@ import copy
 
 # ROS dependencies
 import rospy
+import threading
 import unique_id
 
 # ROS messages
@@ -94,19 +95,14 @@ class Requester:
                     from the scheduler.
        :type rset: :class:`.RequestSet`
 
-    The *feedback* function is expected to iterate over its
-    :class:`.RequestSet`, checking the status of every
-    :class:`.ResourceRequest` it contains, and modify them
-    appropriately.  If any changes occur, the scheduler will be
-    notified after this callback returns.
 
-    Like all ROS Python callbacks, the *feedback* function runs in the
-    main :py:mod:`rospy` thread.  Updates made there are thread-safe
-    with respect to other changes made in the main thread or in
-    :py:mod:`rospy` timer, topic or service callbacks.  A node doing
-    its own threading must provide appropriate serialization when
-    using this interface.  Doing all updates in the main Python thread
-    is sufficient.
+    The *feedback* function is called when new feedback is received
+    from the scheduler, already holding the :ref:`Big Requester Lock
+    <Big_Requester_Lock>`.  It is expected to iterate over its
+    :class:`.RequestSet`, checking the status of every
+    :class:`.ResourceRequest` it contains, modifying them
+    appropriately, then return without waiting. If any changes occur,
+    the scheduler will be notified after this callback returns.
 
     Usage example:
 
@@ -119,7 +115,20 @@ class Requester:
                  topic=common.SCHEDULER_TOPIC,
                  frequency=common.HEARTBEAT_HZ):
         """ Constructor. """
+        self.lock = threading.RLock()
+        """
+        .. _Big_Requester_Lock:
 
+        Big Requester Lock.
+
+        This recursive Python threading lock serializes access to
+        requester data.  The requester *feedback* function is always
+        invoked holding it.  All :class:`.Requester` methods acquire
+        it automatically, whenever needed.
+
+        In any other thread, acquire it when updating shared request
+        set objects.  Never hold it when sleeping or waiting for I/O.
+        """
         if uuid is None:
             uuid = unique_id.fromRandom()
         self.requester_id = uuid
@@ -153,20 +162,21 @@ class Requester:
         :py:meth:`.send_requests` to notify the scheduler immediately.
 
         """
-        self.rset.cancel_all()
+        with self.lock:
+            self.rset.cancel_all()
 
     def _feedback(self, msg):
         """ Scheduler feedback message handler. """
-        prev_rset = copy.deepcopy(self.rset)
-        self.rset.merge(RequestSet(msg))
-
-        if self.rset != prev_rset:      # anything changed?
-
-            # invoke user-defined callback function
-            self.feedback(self.rset)
-
-            if self.rset != prev_rset:  # msg or callback changed something?
-                self.send_requests()    # send updated requests immediately
+        with self.lock:
+            prev_rset = copy.deepcopy(self.rset)
+            self.rset.merge(RequestSet(msg))
+            if self.rset != prev_rset:  # anything changed?
+                # invoke user-defined callback function
+                self.feedback(self.rset)
+                if self.rset != prev_rset:
+                    # msg or callback changed something, so send
+                    # updated requests immediately
+                    self.send_requests()
 
     def _heartbeat(self, event):
         """ Scheduler request heartbeat timer handler.
@@ -224,7 +234,8 @@ class Requester:
                       status=status,
                       availability=reservation,
                       hold_time=hold_time)
-        self.rset[uuid] = msg
+        with self.lock:
+            self.rset[uuid] = msg
         return uuid
 
     def send_requests(self):
@@ -242,20 +253,18 @@ class Requester:
            without further delay.
 
         """
-        self.pub.publish(self.rset.to_msg())
+        with self.lock:
+            self.pub.publish(self.rset.to_msg())
 
     def _set_timer(self):
         """ Schedule heartbeat timer callback. """
         if not rospy.is_shutdown():
-            #self.timer.shutdown()
-            #self.timer = rospy.Timer(self.time_delay,
-            #                         self._heartbeat,
-            #                         oneshot=True)
             self.timer = rospy.Timer(self.time_delay, self._heartbeat)
 
     def _unregister(self):
-        """ Disconnect from scheduler. """
+        """ Stop sending heartbeat messages to scheduler.
+
+        Mainly for testing, *not for normal use.*
+        """
         self.timer.shutdown()
         self.timer = None
-        #self.pub.unregister()
-        #self.sub.unregister()

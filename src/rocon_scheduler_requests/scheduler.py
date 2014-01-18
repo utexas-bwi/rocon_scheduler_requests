@@ -1,6 +1,6 @@
 # Software License Agreement (BSD License)
 #
-# Copyright (C) 2013, Jack O'Quin
+# Copyright (C) 2013-2014, Jack O'Quin
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,7 @@ Python interface for ROCON schedulers handling resource requests.
 from __future__ import absolute_import, print_function, unicode_literals
 
 import rospy
+import threading
 import unique_id
 
 # ROS messages
@@ -58,6 +59,10 @@ class _RequesterStatus:
     This class tracks the status of all resource requests made by a
     single requester.  It subscribes to the requester feedback topic,
     and provides updated information when appropriate.
+
+    Being internal to the :class:`.Scheduler`, methods of this class
+    are invoked already holding the :ref:`Big Scheduler Lock
+    <Big_Scheduler_Lock>`.
 
     :param sched: (:class:`.Scheduler`) Scheduler object with which
         this requester is connected.
@@ -148,11 +153,12 @@ class Scheduler:
            requests for some active requester.
 
     The *callback* function is called when new or updated requests are
-    received.  It is expected to iterate over its
+    received, alreadyd holding the :ref:`Big Scheduler Lock
+    <Big_Scheduler_Lock>`.  It is expected to iterate over its
     :class:`.RequestSet`, checking the status of every
-    :class:`.ActiveRequest` it contains, modifying them appropriately.
-    The results will be sent to the requester after this callback
-    returns.
+    :class:`.ActiveRequest` it contains, modifying them appropriately,
+    then return without waiting.  The results will be sent to the
+    requester after this callback returns.
 
     Usage example:
 
@@ -166,6 +172,20 @@ class Scheduler:
         """ Constructor. """
         self.callback = callback
         """ Callback function for request updates. """
+        self.lock = threading.RLock()
+        """
+        .. _Big_Scheduler_Lock:
+
+        Big Scheduler Lock.
+
+        This recursive Python threading lock serializes access to
+        scheduler data.  The scheduler *callback* is always invoked
+        holding it.  All :class:`.Scheduler` methods acquire it
+        automatically, whenever needed.
+
+        In any other thread, acquire it when updating shared request
+        set objects.  Never hold it when sleeping or waiting for I/O.
+        """
         self.requesters = {}
         """ Dictionary of active requesters and their requests. """
         self.topic = topic
@@ -180,20 +200,22 @@ class Scheduler:
 
     def _allocate_resources(self, msg):
         """ Scheduler resource allocation message handler. """
-        rqr_id = unique_id.fromMsg(msg.requester)
-        rqr = self.requesters.get(rqr_id)
-        if rqr:                 # known requester?
-            rqr.update(msg)
-        else:                   # new requester
-            self.requesters[rqr_id] = _RequesterStatus(self, msg)
+        with self.lock:
+            rqr_id = unique_id.fromMsg(msg.requester)
+            rqr = self.requesters.get(rqr_id)
+            if rqr:                     # known requester?
+                rqr.update(msg)
+            else:                       # new requester
+                self.requesters[rqr_id] = _RequesterStatus(self, msg)
 
     def _watchdog(self, event):
         """ Scheduler request watchdog timer handler. """
         # Must iterate over a copy of the dictionary items, because
         # some may be deleted inside the loop.
-        for rqr_id, rqr in self.requesters.items():
-            if rqr.timeout(self.time_limit, event):
-                del self.requesters[rqr_id]
+        with self.lock:
+            for rqr_id, rqr in self.requesters.items():
+                if rqr.timeout(self.time_limit, event):
+                    del self.requesters[rqr_id]
 
     def notify(self, requester_id):
         """ Notify requester of status updates.
@@ -204,4 +226,5 @@ class Scheduler:
         :raises: :exc:`KeyError` if unknown requester identifier.
 
         """
-        self.requesters[requester_id].send_feedback()
+        with self.lock:
+            self.requesters[requester_id].send_feedback()
