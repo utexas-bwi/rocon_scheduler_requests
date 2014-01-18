@@ -13,11 +13,12 @@ class ExampleScheduler:
         # simplifying assumptions: all requests want a single robot,
         # and any of these will do:
         self.avail = deque([            # FIFO queue of available robots
-            Resource(name='example_rapp',
-                     platform_info='linux.precise.ros.turtlebot.roberto'),
-            Resource(name='example_rapp',
-                     platform_info='linux.precise.ros.turtlebot.marvin'),
-            ])
+            Resource(
+                name='example_rapp',
+                platform_info='rocon:///linux/precise/ros/turtlebot/roberto'),
+            Resource(
+                name='example_rapp',
+                platform_info='rocon:///linux/precise/ros/turtlebot/marvin')])
         self.ready_queue = deque()      # FIFO queue of waiting requests
         self.sch = Scheduler(self.callback)
         rospy.spin()

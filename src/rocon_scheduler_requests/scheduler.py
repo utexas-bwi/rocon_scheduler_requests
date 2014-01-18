@@ -153,7 +153,7 @@ class Scheduler:
            requests for some active requester.
 
     The *callback* function is called when new or updated requests are
-    received, alreadyd holding the :ref:`Big Scheduler Lock
+    received, already holding the :ref:`Big Scheduler Lock
     <Big_Scheduler_Lock>`.  It is expected to iterate over its
     :class:`.RequestSet`, checking the status of every
     :class:`.ActiveRequest` it contains, modifying them appropriately,

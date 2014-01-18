@@ -13,7 +13,7 @@ from rocon_scheduler_requests import Scheduler
 # Resource to grant
 TEST_RESOURCE = Resource(
     name='test_rapp',
-    platform_info='linux.precise.ros.turtlebot.roberto')
+    platform_info='rocon:///linux/precise/ros/turtlebot/roberto')
 
 # Global variables
 # :todo: make these class variables
