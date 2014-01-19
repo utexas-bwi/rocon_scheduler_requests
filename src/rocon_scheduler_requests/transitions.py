@@ -158,6 +158,7 @@ EVENT_PREEMPT = _EventTranitions('preempt', {
 EVENT_WAIT = _EventTranitions('wait', {
     Request.NEW: Request.WAITING,
     Request.RESERVED: Request.WAITING,
+    Request.WAITING: Request.WAITING,
     })
 
 

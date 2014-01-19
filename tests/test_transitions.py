@@ -194,8 +194,9 @@ class TestTransitions(unittest.TestCase):
         rq = self.assert_valid(ActiveRequest, Request.RESERVED,
                                'wait', Request.WAITING, Request.UNAVAILABLE)
         self.assertEqual(rq.msg.reason, Request.UNAVAILABLE)
-        rq = self.assert_invalid(ActiveRequest, Request.WAITING,
-                                 'wait', TransitionError)
+        rq = self.assert_valid(ActiveRequest, Request.WAITING,
+                               'wait', Request.WAITING, Request.UNAVAILABLE)
+        self.assertEqual(rq.msg.reason, Request.UNAVAILABLE)
 
 
 class TestRequestSets(unittest.TestCase):
