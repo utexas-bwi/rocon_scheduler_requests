@@ -43,7 +43,7 @@ class ExampleScheduler:
             try:                        # grant request & notify requester
                 rq.grant([resource])
                 self.sch.notify(requester_id)
-                rospy.loginfo('Request granted: ' + str(rq.get_uuid()))
+                rospy.loginfo('Request granted: ' + str(rq.uuid))
             except (TransitionError, KeyError):
                 # request no longer active or requester missing?
                 # Put resource back at the front of the queue.
@@ -52,7 +52,7 @@ class ExampleScheduler:
     def free(self, requester_id, rq):
         """ Free all resources allocated for this request. """
         self.avail.extend(rq.allocations)
-        rospy.loginfo('Request canceled: ' + str(rq.get_uuid()))
+        rospy.loginfo('Request canceled: ' + str(rq.uuid))
         rq.close()
         self.dispatch()                 # grant waiting requests
 
@@ -63,7 +63,7 @@ class ExampleScheduler:
         except TransitionError:         # request no longer active?
             return
         self.ready_queue.append((requester_id, rq))
-        rospy.loginfo('Request queued: ' + str(rq.get_uuid()))
+        rospy.loginfo('Request queued: ' + str(rq.uuid))
         self.dispatch()
 
 if __name__ == '__main__':

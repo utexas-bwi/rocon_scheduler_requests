@@ -42,12 +42,12 @@ class TestExampleRequester(unittest.TestCase):
             if self.queued_request:
                 self.queued_request.grant([TEST_RESOURCE])
                 rospy.loginfo('Request granted: '
-                              + str(self.queued_request.get_uuid()))
+                              + str(self.queued_request.uuid))
                 if self.number_of_requests == 2:
                     # preempt this request immediately
                     self.queued_request.preempt()
                     rospy.loginfo('Request preempted: '
-                                  + str(self.queued_request.get_uuid()))
+                                  + str(self.queued_request.uuid))
                 self.queued_request = None
                 self.sch.notify(self.queued_requester)
 
@@ -61,7 +61,7 @@ class TestExampleRequester(unittest.TestCase):
         self.queued_request = request
         self.timer = rospy.Timer(rospy.Duration(1.0),
                                  self.allocate, oneshot=True)
-        rospy.loginfo('Request queued: ' + str(request.get_uuid()))
+        rospy.loginfo('Request queued: ' + str(request.uuid))
 
     def callback(self, rset):
         """ Scheduler request callback.
@@ -75,7 +75,7 @@ class TestExampleRequester(unittest.TestCase):
                 self.queue(rset.requester_id, rq)
             elif rq.msg.status == Request.CANCELING:
                 rq.close()
-                rospy.loginfo('Request canceled: ' + str(rq.get_uuid()))
+                rospy.loginfo('Request canceled: ' + str(rq.uuid))
                 self.number_of_requests -= 1
                 if self.number_of_requests <= 0:
                     rospy.signal_shutdown('test completed.')

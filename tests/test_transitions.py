@@ -80,16 +80,14 @@ class TestTransitions(unittest.TestCase):
     status: 0""")
         self.assertEqual(rq1.msg.status, Request.NEW)
         self.assertEqual(rq1.msg.resources, [TEST_WILDCARD])
-
-        # why is this broken???
-        #self.assertEqual(rq1.get_uuid, TEST_UUID)
+        self.assertEqual(rq1.uuid, TEST_UUID)
 
         rq2 = ResourceRequest(Request(id=unique_id.toMsg(DIFF_UUID),
                                       resources=[TEST_RESOURCE],
                                       status=Request.NEW))
         self.assertEqual(rq2.msg.status, Request.NEW)
         self.assertEqual(rq2.msg.resources, [TEST_RESOURCE])
-        self.assertEqual(rq2.get_uuid(), DIFF_UUID)
+        self.assertEqual(rq2.uuid, DIFF_UUID)
         self.assertEqual(str(rq2),
                          """id: 01234567-cdef-fedc-89ab-ba9876543210
     priority: 0

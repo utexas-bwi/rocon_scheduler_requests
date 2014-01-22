@@ -185,7 +185,9 @@ class RequestBase(object):
     def __init__(self, msg):
         """ Constructor. """
         self.msg = msg
-        """ Corresponding *scheduler_msgs/Request*. """
+        """ Corresponding *scheduler_msgs/Request* message. """
+        self.uuid = unique_id.fromMsg(msg.id)
+        """ The :class:`uuid.UUID` of this request. """
 
     def cancel(self, reason=None):
         """ Cancel a previously-requested resource.
@@ -198,13 +200,16 @@ class RequestBase(object):
 
     def get_uuid(self):
         """ :returns: UUID of this request.
+
+        *Deprecated*: use ``uuid`` attribute directly.
+
         :rtype: :class:`uuid.UUID`
         """
-        return unique_id.fromMsg(self.msg.id)
+        return self.uuid
 
     def __str__(self):
         """ Generate string representation. """
-        return 'id: ' + str(self.get_uuid()) \
+        return 'id: ' + str(self.uuid) \
             + '\n    priority: ' + str(self.msg.priority) \
             + '\n    resources: ' + self._str_resources() \
             + '\n    status: ' + str(self.msg.status)
@@ -448,7 +453,7 @@ class RequestSet:
         """ Dictionary of active requests. """
         for msg in reqs:
             rq = self.contents(msg)
-            self.requests[rq.get_uuid()] = rq
+            self.requests[rq.uuid] = rq
 
     def __contains__(self, uuid):
         """ Request set membership. """

@@ -27,14 +27,14 @@ class TestExampleScheduler(unittest.TestCase):
         for rq in rset.values():
             print('  ' + str(rq))
             if rq.msg.status == Request.WAITING:
-                print('Request queued: ' + str(rq.get_uuid()))
+                print('Request queued: ' + str(rq.uuid))
             elif rq.msg.status == Request.GRANTED:
-                print('Request granted: ' + str(rq.get_uuid()))
+                print('Request granted: ' + str(rq.uuid))
             elif rq.msg.status == Request.CLOSED:
-                print('Request closed: ' + str(rq.get_uuid()))
+                print('Request closed: ' + str(rq.uuid))
             elif rq.msg.status == Request.PREEMPTING:
                 print('Request preempted (reason=' + str(rq.msg.reason)
-                      + '): ' + str(rq.get_uuid()))
+                      + '): ' + str(rq.uuid))
                 rq.cancel()     # release preempted resource immediately
 
     def periodic_update(self, event):

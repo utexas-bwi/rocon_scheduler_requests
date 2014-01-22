@@ -18,15 +18,14 @@ class ExampleRequester:
         """ Scheduler feedback function. """
         for rq in rset.values():
             if rq.msg.status == Request.WAITING:
-                rospy.loginfo('Request queued: ' + str(rq.get_uuid()))
+                rospy.loginfo('Request queued: ' + str(rq.uuid))
             elif rq.msg.status == Request.GRANTED:
-                rospy.loginfo('Request granted: ' + str(rq.get_uuid()))
+                rospy.loginfo('Request granted: ' + str(rq.uuid))
             elif rq.msg.status == Request.CLOSED:
-                rospy.loginfo('Request closed: ' + str(rq.get_uuid()))
+                rospy.loginfo('Request closed: ' + str(rq.uuid))
             elif rq.msg.status == Request.PREEMPTING:
                 rospy.loginfo('Request preempted (reason='
-                              + str(rq.msg.reason) + '): '
-                              + str(rq.get_uuid()))
+                              + str(rq.msg.reason) + '): ' + str(rq.uuid))
                 rq.cancel()     # release preempted resource immediately
 
     def periodic_update(self, event):
