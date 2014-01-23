@@ -32,7 +32,7 @@ class TestTimeoutRequester(unittest.TestCase):
             elif rq.msg.status == Request.CLOSED:
                 rospy.loginfo('  request closed: ' + str(rq.uuid))
             elif rq.msg.status == Request.PREEMPTING:
-                rospy.loginfog('  request preempted (reason='
+                rospy.loginfo('  request preempted (reason='
                               + str(rq.msg.reason) + '): ' + str(rq.uuid))
                 rq.cancel()     # release preempted resources immediately
 
