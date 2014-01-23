@@ -198,15 +198,6 @@ class RequestBase(object):
         """
         self._transition(EVENT_CANCEL, reason)
 
-    def get_uuid(self):
-        """ :returns: UUID of this request.
-
-        *Deprecated*: use ``uuid`` attribute directly.
-
-        :rtype: :class:`uuid.UUID`
-        """
-        return self.uuid
-
     def __str__(self):
         """ Generate string representation. """
         return 'id: ' + str(self.uuid) \
