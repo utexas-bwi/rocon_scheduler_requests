@@ -56,8 +56,7 @@ class TestExampleScheduler(unittest.TestCase):
         """ Request any tutlebot able to run *example_rapp*.
         :returns: UUID of new request sent.
         """
-        bot = Resource(name='example_rapp',
-                       platform_info='*.*.ros.turtlebot.*')
+        bot = Resource(rapp='example_rapp', uri='rocon:/turtlebot')
         request_id = self.rqr.new_request([bot])
         self.rqr.send_requests()
         return request_id

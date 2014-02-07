@@ -20,11 +20,9 @@ class TestTimeoutScheduler(unittest.TestCase):
         # and any of these will do:
         self.avail = deque(           # FIFO queue of available robots
             [Resource(
-                name='example_rapp',
-                platform_info='rocon:///linux/precise/ros/turtlebot/roberto'),
+                rapp='example_rapp', uri='rocon:/turtlebot/roberto'),
              Resource(
-                name='example_rapp',
-                platform_info='rocon:///linux/precise/ros/turtlebot/marvin')])
+                rapp='example_rapp', uri='rocon:/turtlebot/marvin')])
         self.ready_queue = deque()      # FIFO queue of waiting requests
         self.seen_requester = False
         self.timer = rospy.Timer(rospy.Duration(2.0), self.check_finished)

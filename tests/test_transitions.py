@@ -20,11 +20,11 @@ TEST_UUID = uuid.UUID('01234567-89ab-cdef-fedc-ba9876543210')
 DIFF_UUID = uuid.UUID('01234567-cdef-fedc-89ab-ba9876543210')
 TEST_RAPP = 'test_rapp'
 TEST_RESOURCE = Resource(
-    name=TEST_RAPP,
-    platform_info='rocon:///linux/precise/ros/segbot/roberto')
+    rapp=TEST_RAPP,
+    uri='rocon:///linux/precise/ros/segbot/roberto')
 TEST_WILDCARD = Resource(
-    name=TEST_RAPP,
-    platform_info='rocon:///linux/precise/ros/segbot/\.*')
+    rapp=TEST_RAPP,
+    uri='rocon:///linux/precise/ros/segbot/\.*')
 
 
 class TestTransitions(unittest.TestCase):

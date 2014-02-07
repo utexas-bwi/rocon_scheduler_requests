@@ -40,8 +40,7 @@ class ExampleRequester:
 
     def request_turtlebot(self):
         """ Request any tutlebot able to run *example_rapp*. """
-        bot = Resource(name='example_rapp',
-                       platform_info='*.*.ros.turtlebot.*')
+        bot = Resource(rapp='example_rapp', uri='rocon:/turtlebot')
         self.request_id = self.rqr.new_request([bot])
         self.rqr.send_requests()
 
