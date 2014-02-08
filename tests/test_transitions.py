@@ -19,12 +19,8 @@ RQR_UUID = uuid.UUID('01234567-89ab-cdef-0123-456789abcdef')
 TEST_UUID = uuid.UUID('01234567-89ab-cdef-fedc-ba9876543210')
 DIFF_UUID = uuid.UUID('01234567-cdef-fedc-89ab-ba9876543210')
 TEST_RAPP = 'test_rapp'
-TEST_RESOURCE = Resource(
-    rapp=TEST_RAPP,
-    uri='rocon:///linux/precise/ros/segbot/roberto')
-TEST_WILDCARD = Resource(
-    rapp=TEST_RAPP,
-    uri='rocon:///linux/precise/ros/segbot/\.*')
+TEST_RESOURCE = Resource(rapp=TEST_RAPP, uri='rocon:/segbot/roberto')
+TEST_WILDCARD = Resource(rapp=TEST_RAPP, uri='rocon:/segbot')
 
 
 class TestTransitions(unittest.TestCase):
@@ -76,7 +72,7 @@ class TestTransitions(unittest.TestCase):
                          """id: 01234567-89ab-cdef-fedc-ba9876543210
     priority: 0
     resources: 
-      rocon:///linux/precise/ros/segbot/\.*#test_rapp
+      rocon:/segbot#test_rapp
     status: 0""")
         self.assertEqual(rq1.msg.status, Request.NEW)
         self.assertEqual(rq1.msg.resources, [TEST_WILDCARD])
@@ -92,7 +88,7 @@ class TestTransitions(unittest.TestCase):
                          """id: 01234567-cdef-fedc-89ab-ba9876543210
     priority: 0
     resources: 
-      rocon:///linux/precise/ros/segbot/roberto#test_rapp
+      rocon:/segbot/roberto#test_rapp
     status: 0""")
 
     def test_cancel(self):
@@ -248,7 +244,7 @@ requests:
   id: 01234567-89ab-cdef-fedc-ba9876543210
     priority: 0
     resources: 
-      rocon:///linux/precise/ros/segbot/\.*#test_rapp
+      rocon:/segbot#test_rapp
     status: 0"""
         self.assertEqual(str(rset), rset_str)
         sch_msg = SchedulerRequests(requester=unique_id.toMsg(RQR_UUID),
