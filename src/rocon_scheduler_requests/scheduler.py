@@ -88,6 +88,8 @@ class _RequesterStatus:
         self.pub = rospy.Publisher(feedback_topic, SchedulerRequests,
                                    latch=True)
 
+    def contact(self):
+        """ Contact newly-connected requester. """
         # Cancel any out-of-date requests the requester had lying around.
         self.rset.cancel_out_of_date(reason=Request.TIMEOUT)
         self.sched.callback(self.rset)  # handle initial message
@@ -206,7 +208,9 @@ class Scheduler:
             if rqr:                     # known requester?
                 rqr.update(msg)
             else:                       # new requester
-                self.requesters[rqr_id] = _RequesterStatus(self, msg)
+                rqr = _RequesterStatus(self, msg)
+                self.requesters[rqr_id] = rqr
+                rqr.contact()
 
     def _watchdog(self, event):
         """ Scheduler request watchdog timer handler. """
