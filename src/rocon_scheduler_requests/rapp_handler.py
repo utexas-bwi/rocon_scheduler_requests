@@ -64,14 +64,19 @@ class RappHandler(object):
         Initialise the class with the relevant data required to start and stop
         rapps on this concert client.
 
-        :param msg concert_msgs/ConcertClient: detailed information about a concert client.
+        :param msg concert_msgs/ConcertClient: detailed information
+            about a concert client.
         """
         self.name = msg.name
         self.gateway_name = msg.gateway_name
         self.uri = msg.platform_info.uri
         self.rapps = [rapp.name for rapp in msg.apps]
-        self.start_rapp = rospy.ServiceProxy('/' + self.gateway_name + '/start_app', rapp_manager_srvs.StartApp)
-        self.stop_rapp = rospy.ServiceProxy('/' + self.gateway_name + '/stop_app', rapp_manager_srvs.StopApp)
+        self.start_rapp = rospy.ServiceProxy('/' + self.gateway_name
+                                             + '/start_app',
+                                             rapp_manager_srvs.StartApp)
+        self.stop_rapp = rospy.ServiceProxy('/' + self.gateway_name
+                                            + '/stop_app',
+                                            rapp_manager_srvs.StopApp)
 
     def start(self, rapp, remappings):
         """
@@ -87,7 +92,9 @@ class RappHandler(object):
         request.remappings = remappings
         try:
             self.start_rapp(request)
-        except (rospy.service.ServiceException, rospy.exceptions.ROSInterruptException) as e:  # Service not found or ros is shutting down
+        except (rospy.service.ServiceException,
+                rospy.exceptions.ROSInterruptException) as e:
+            # Service not found or ros is shutting down
             raise FailedToStartRappError("%s" % str(e))
 
     def stop(self):
@@ -99,5 +106,7 @@ class RappHandler(object):
         request = rapp_manager_srvs.StopAppRequest()
         try:
             self.stop_rapp(request)
-        except (rospy.service.ServiceException, rospy.exceptions.ROSInterruptException) as e:  # Service not found or ros is shutting down
+        except (rospy.service.ServiceException,
+                rospy.exceptions.ROSInterruptException) as e:
+            # Service not found or ros is shutting down
             raise FailedToStopRappError("%s" % str(e))
